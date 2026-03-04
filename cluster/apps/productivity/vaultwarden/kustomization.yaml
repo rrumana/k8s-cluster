@@ -6,12 +6,8 @@ namespace: productivity
 resources:
   - externalsecret.yaml
   - pvc.yaml
-  - deployment-cutover-shared-postgres.yaml
+  - deployment.yaml
   - service.yaml
-  # Intentionally excluded for now:
-  # - migrate-vaultwarden-sqlite-to-shared-postgres.yaml
-  # Cutover switch:
-  # - deployment-cutover-shared-postgres.yaml (replace deployment.yaml)
 
 commonLabels:
   app.kubernetes.io/name: vaultwarden

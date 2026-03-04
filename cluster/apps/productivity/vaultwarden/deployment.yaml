@@ -28,6 +28,11 @@ spec:
         env:
         - name: DOMAIN
           value: "https://vault.k8s.rcrumana.xyz"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-db-shared
+              key: DATABASE_URL
         volumeMounts:
         - name: data
           mountPath: /data
