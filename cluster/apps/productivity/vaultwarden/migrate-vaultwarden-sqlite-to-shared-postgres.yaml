@@ -23,7 +23,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -euo pipefail
+              set -eu
               if [ ! -f /vaultwarden/db.sqlite3 ]; then
                 echo "Expected source sqlite database at /vaultwarden/db.sqlite3"
                 exit 1

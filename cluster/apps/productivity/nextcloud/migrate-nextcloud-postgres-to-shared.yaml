@@ -56,7 +56,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -euo pipefail
+              set -eu
               for i in $(seq 1 60); do
                 pg_isready -h "$SRC_PGHOST" -p "$SRC_PGPORT" -U "$SRC_PGUSER" >/dev/null 2>&1 && break
                 sleep 5

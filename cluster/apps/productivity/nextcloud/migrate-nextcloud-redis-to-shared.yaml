@@ -42,7 +42,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -euo pipefail
+              set -eu
               redis-cli -h "$SRC_REDIS_HOST" -p "$SRC_REDIS_PORT" -a "$SRC_REDIS_PASSWORD" --no-auth-warning PING >/dev/null
               redis-cli -h "$DST_REDIS_HOST" -p "$DST_REDIS_PORT" -a "$DST_REDIS_PASSWORD" --no-auth-warning PING >/dev/null
 
