@@ -18,7 +18,7 @@ spec:
         valueFiles:
           - $values/cluster/apps/productivity/nextcloud/values.yaml
           # Cutover enablement:
-          # - $values/cluster/apps/productivity/nextcloud/values-cutover-shared-datastores.yaml
+          - $values/cluster/apps/productivity/nextcloud/values-cutover-shared-datastores.yaml
     - repoURL: https://github.com/rrumana/k8s-homelab-2.git
       targetRevision: main
       ref: values
