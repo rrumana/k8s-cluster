@@ -8,6 +8,7 @@ resources:
   - pvc.yaml
   - deployment.yaml
   - service.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: vaultwarden

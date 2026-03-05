@@ -5,6 +5,7 @@ namespace: productivity
 
 resources:
   - externalsecret.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: homarr

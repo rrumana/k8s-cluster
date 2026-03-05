@@ -20,6 +20,7 @@ resources:
   - deployment.yaml
   - hpa.yaml
   - pdb.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: librechat

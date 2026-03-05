@@ -6,8 +6,8 @@ namespace: web
 resources:
   - deployment.yaml
   - service.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: portfolio-staging
   app.kubernetes.io/managed-by: argocd
-

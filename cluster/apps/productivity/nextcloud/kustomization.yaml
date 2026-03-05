@@ -6,6 +6,7 @@ namespace: productivity
 resources:
   - externalsecret.yaml
   - pvc.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: nextcloud

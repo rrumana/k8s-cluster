@@ -1,0 +1,35 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: librechat
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: librechat
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        controlledResources:
+          - cpu
+          - memory
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: librechat-rag-api
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: librechat-rag-api
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        controlledResources:
+          - cpu
+          - memory

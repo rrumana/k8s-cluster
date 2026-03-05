@@ -1,0 +1,35 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: headscale
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: headscale
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        controlledResources:
+          - cpu
+          - memory
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: headscale-ui
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: headscale-ui
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        controlledResources:
+          - cpu
+          - memory

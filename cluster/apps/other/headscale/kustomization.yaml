@@ -11,6 +11,7 @@ resources:
   - deployment.yaml
   - ui-service.yaml
   - ui-deployment.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: headscale
