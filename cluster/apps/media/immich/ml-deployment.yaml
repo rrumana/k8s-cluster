@@ -19,13 +19,16 @@ spec:
     spec:
       containers:
         - name: immich-machine-learning
-          image: ghcr.io/immich-app/immich-machine-learning:v2.5.6
+          image: ghcr.io/immich-app/immich-machine-learning:v2.5.6-rocm
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: immich-config
             - secretRef:
                 name: immich-secret
+          env:
+            - name: HSA_OVERRIDE_GFX_VERSION
+              value: "11.5.1"
           volumeMounts:
             - name: model-cache
               mountPath: /cache
@@ -33,9 +36,11 @@ spec:
             requests:
               memory: "512Mi"
               cpu: "250m"
+              amd.com/gpu: "1"
             limits:
               memory: "4Gi"
               cpu: "24"
+              amd.com/gpu: "1"
       volumes:
         - name: model-cache
           persistentVolumeClaim:
