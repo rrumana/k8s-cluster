@@ -13,7 +13,8 @@ spec:
   memorySize: 2GB
   shardCount: 1
   replication: true
-  databaseServicePort: 6379
+  databasePort: 6379
+  databaseSecretName: redis-queue-auth
   persistence: aofEverySecond
   evictionPolicy: noeviction
   type: redis

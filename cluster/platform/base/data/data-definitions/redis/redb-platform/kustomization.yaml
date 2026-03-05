@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: databases
 
 resources:
+  - redis-queue-auth-externalsecret.yaml
   - redis-cache.yaml
   - redis-queue.yaml
