@@ -41,6 +41,14 @@ rules:
       - list
       - watch
       - delete
+  - apiGroups: [metrics.k8s.io]
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups: [autoscaling.k8s.io]
     resources:
       - verticalpodautoscalers
