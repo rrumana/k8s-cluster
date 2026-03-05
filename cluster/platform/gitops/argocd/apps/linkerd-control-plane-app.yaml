@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://helm.linkerd.io/stable
+    - repoURL: https://helm.linkerd.io/edge
       chart: linkerd-control-plane
-      targetRevision: "1.16.12"
+      targetRevision: "2025.10.7"
       helm:
         releaseName: linkerd-control-plane
         valueFiles:

@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.linkerd.io/stable
+    repoURL: https://helm.linkerd.io/edge
     chart: linkerd-crds
-    targetRevision: "1.8.1"
+    targetRevision: "2025.10.7"
     helm:
       releaseName: linkerd-crds
       values: |
