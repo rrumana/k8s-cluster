@@ -29,6 +29,12 @@ spec:
           env:
             - name: HSA_OVERRIDE_GFX_VERSION
               value: "11.5.1"
+            - name: HSA_USE_SVM
+              value: "0"
+            - name: MACHINE_LEARNING_WORKER_TIMEOUT
+              value: "300"
+            - name: MACHINE_LEARNING_CACHE_FOLDER
+              value: "/cache"
           volumeMounts:
             - name: model-cache
               mountPath: /cache
@@ -40,10 +46,10 @@ spec:
             privileged: true
           resources:
             requests:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "250m"
             limits:
-              memory: "4Gi"
+              memory: "8Gi"
               cpu: "24"
       volumes:
         - name: model-cache
