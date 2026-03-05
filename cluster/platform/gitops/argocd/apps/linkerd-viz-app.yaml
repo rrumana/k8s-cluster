@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://helm.linkerd.io/stable
       chart: linkerd-viz
-      targetRevision: "30.12.11"
+      targetRevision: "30.12.12"
       helm:
         releaseName: linkerd-viz
         valueFiles:
