@@ -3,8 +3,8 @@ kind: ConfigMap
 metadata:
   name: llama-static-b-config
 data:
-  MODEL_NAME: "Qwen3-Next-80B-A3B-Thinking"
-  MODEL_REPO: "unsloth/Qwen3-Next-80B-A3B-Thinking-GGUF"
+  MODEL_NAME: "Qwen3-Next-80B-A3B-Instruct"
+  MODEL_REPO: "unsloth/Qwen3-Next-80B-A3B-Instruct-GGUF"
   MODEL_QUANT: "Q3_K_M"
   MODEL_FILENAME: ""
   MODEL_PATH: "/models/static-b/model.gguf"

@@ -19,6 +19,7 @@ resources:
   - llama-swap-configmap.yaml
   - llama-swap-deployment.yaml
   - llama-swap-service.yaml
+  - vpa.yaml
 
 commonLabels:
   app.kubernetes.io/name: llama-backend
