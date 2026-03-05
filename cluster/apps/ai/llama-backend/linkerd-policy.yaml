@@ -29,7 +29,7 @@ spec:
     matchLabels:
       app: librechat-mongodb
   port: mongodb
-  proxyProtocol: Opaque
+  proxyProtocol: opaque
 ---
 apiVersion: policy.linkerd.io/v1beta1
 kind: Server
