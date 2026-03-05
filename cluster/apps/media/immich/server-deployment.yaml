@@ -32,6 +32,8 @@ spec:
           volumeMounts:
             - name: upload
               mountPath: /usr/src/app/upload
+            - name: dri
+              mountPath: /dev/dri
             - name: localtime
               mountPath: /etc/localtime
               readOnly: true
@@ -58,6 +60,10 @@ spec:
         - name: upload
           persistentVolumeClaim:
             claimName: immich-photos
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
         - name: localtime
           hostPath:
             path: /etc/localtime
