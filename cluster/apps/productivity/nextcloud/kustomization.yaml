@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: productivity
 
 resources:
+  - linkerd-policy.yaml
   - externalsecret.yaml
   - pvc.yaml
   - vpa.yaml

@@ -1,0 +1,60 @@
+apiVersion: policy.linkerd.io/v1beta1
+kind: Server
+metadata:
+  name: whiteboard
+spec:
+  podSelector:
+    matchLabels:
+      app: whiteboard
+  port: http
+  proxyProtocol: HTTP/1
+---
+apiVersion: policy.linkerd.io/v1beta1
+kind: Server
+metadata:
+  name: elasticsearch-http
+spec:
+  podSelector:
+    matchLabels:
+      app: elasticsearch
+  port: http
+  proxyProtocol: HTTP/1
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: MeshTLSAuthentication
+metadata:
+  name: nextcloud-architecture-clients
+spec:
+  identityRefs:
+    - kind: ServiceAccount
+      name: default
+    - kind: ServiceAccount
+      name: nextcloud
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: whiteboard-nextcloud-clients
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: whiteboard
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: MeshTLSAuthentication
+      name: nextcloud-architecture-clients
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: elasticsearch-nextcloud-clients
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: elasticsearch-http
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: MeshTLSAuthentication
+      name: nextcloud-architecture-clients

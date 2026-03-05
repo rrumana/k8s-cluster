@@ -33,6 +33,9 @@ replicaCount: 1
 strategy:
   type: Recreate
 
+podAnnotations:
+  linkerd.io/inject: enabled
+
 dnsPolicy: None
 dnsConfig:
   nameservers:

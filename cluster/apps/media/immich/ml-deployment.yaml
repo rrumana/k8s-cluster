@@ -13,6 +13,8 @@ spec:
       component: machine-learning
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: immich
         component: machine-learning

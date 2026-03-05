@@ -13,6 +13,8 @@ spec:
       app: elasticsearch
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: elasticsearch
     spec:

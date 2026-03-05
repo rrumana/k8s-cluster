@@ -9,6 +9,8 @@ spec:
     matchLabels: { app: collabora }
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels: { app: collabora }
     spec:
       containers:
