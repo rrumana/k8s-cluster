@@ -75,14 +75,17 @@ internalDatabase:
 externalDatabase:
   enabled: true
   type: postgresql
-  host: nextcloud-postgresql
+  host: pg-productivity-rw.databases.svc.cluster.local
   port: 5432
   database: nextcloud
   user: nextcloud
   existingSecret:
     enabled: true
-    secretName: nextcloud-db
+    secretName: nextcloud-db-shared
+    usernameKey: username
     passwordKey: password
+    hostKey: host
+    databaseKey: database
 
 podSecurityContext:
   fsGroup: 33
@@ -105,68 +108,16 @@ cronjob:
   schedule: "*/5 * * * *"
 
 postgresql:
-  enabled: true
-  volumePermissions:
-    enabled: false
-  auth:
-    existingSecret: nextcloud-db
-    username: nextcloud
-    database: nextcloud
-    secretKeys:
-      adminPasswordKey: postgres-password
-      userPasswordKey: password
-  primary:
-    podSecurityContext:
-      enabled: true
-      fsGroup: 1001
-      fsGroupChangePolicy: OnRootMismatch
-    containerSecurityContext:
-      enabled: true
-      runAsUser: 1001
-      runAsGroup: 1001
-    persistence:
-      enabled: true
-      existingClaim: nextcloud-postgresql-data
-    initContainers:
-      - name: fix-perms
-        image: busybox:1.36
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-        command:
-          - sh
-          - -c
-          - |
-            set -eux
-            if [ -d /bitnami/postgresql/data ]; then
-              chown -R 1001:1001 /bitnami/postgresql/data
-            else
-              chown -R 1001:1001 /bitnami/postgresql
-            fi
-        volumeMounts:
-          - mountPath: "/bitnami/postgresql"
-            name: "data"
-      - name: upgrade
-        image: "pgautoupgrade/pgautoupgrade:17-alpine"
-        env:
-          - name: "PGAUTO_ONESHOT"
-            value: "yes"
-          - name: "POSTGRES_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                name: nextcloud-db
-                key: postgres-password
-        volumeMounts:
-          - mountPath: "/bitnami/postgresql"
-            name: "data"
+  enabled: false
 
 redis:
+  enabled: false
+
+externalRedis:
   enabled: true
-  architecture: standalone
-  auth:
-    existingSecret: nextcloud-redis
-    existingSecretPasswordKey: redis-password
-  master:
-    persistence:
-      enabled: true
-      existingClaim: nextcloud-redis-data
+  host: redis-cache.databases.svc.cluster.local
+  port: "15976"
+  existingSecret:
+    enabled: true
+    secretName: nextcloud-redis-shared
+    passwordKey: password

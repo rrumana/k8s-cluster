@@ -10,29 +10,3 @@ spec:
   resources:
     requests:
       storage: 64Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-postgresql-data
-  annotations:
-    argocd.argoproj.io/sync-wave: "-20"
-spec:
-  storageClassName: ceph-block
-  accessModes: [ "ReadWriteOnce" ]
-  resources:
-    requests:
-      storage: 2Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nextcloud-redis-data
-  annotations:
-    argocd.argoproj.io/sync-wave: "-20"
-spec:
-  storageClassName: ceph-block
-  accessModes: [ "ReadWriteOnce" ]
-  resources:
-    requests:
-      storage: 2Gi

@@ -80,52 +80,6 @@ spec:
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-  name: nextcloud-postgresql-data-backup
-  namespace: productivity
-spec:
-  sourcePVC: nextcloud-postgresql-data
-  trigger:
-    schedule: "35 5 * * *"
-  restic:
-    copyMethod: Snapshot
-    volumeSnapshotClassName: ceph-block-snap
-    repository: volsync-minio
-    pruneIntervalDays: 14
-    moverSecurityContext:
-      runAsUser: 0
-      runAsGroup: 0
-      fsGroup: 0
-    retain:
-      daily: 7
-      weekly: 4
-      monthly: 3
----
-apiVersion: volsync.backube/v1alpha1
-kind: ReplicationSource
-metadata:
-  name: nextcloud-redis-data-backup
-  namespace: productivity
-spec:
-  sourcePVC: nextcloud-redis-data
-  trigger:
-    schedule: "50 5 * * *"
-  restic:
-    copyMethod: Snapshot
-    volumeSnapshotClassName: ceph-block-snap
-    repository: volsync-minio
-    pruneIntervalDays: 14
-    moverSecurityContext:
-      runAsUser: 0
-      runAsGroup: 0
-      fsGroup: 0
-    retain:
-      daily: 7
-      weekly: 4
-      monthly: 3
----
-apiVersion: volsync.backube/v1alpha1
-kind: ReplicationSource
-metadata:
   name: unifi-config-backup
   namespace: productivity
 spec:

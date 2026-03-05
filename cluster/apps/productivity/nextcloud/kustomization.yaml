@@ -6,10 +6,6 @@ namespace: productivity
 resources:
   - externalsecret.yaml
   - pvc.yaml
-  - restore-nextcloud-postgres.yaml
-  # Intentionally excluded for now:
-  # - migrate-nextcloud-postgres-to-shared.yaml
-  # - migrate-nextcloud-redis-to-shared.yaml
 
 commonLabels:
   app.kubernetes.io/name: nextcloud
