@@ -44,6 +44,8 @@ spec:
               value: "https://jellyfin.k8s.rcrumana.xyz"
             - name: LIBVA_DRIVER_NAME
               value: radeonsi
+            - name: DOCKER_MODS
+              value: linuxserver/mods:jellyfin-amd  # ← Enables AMD drivers & Vulkan
           ports:
             - name: http
               containerPort: 8096
