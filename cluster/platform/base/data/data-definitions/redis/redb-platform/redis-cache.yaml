@@ -13,6 +13,7 @@ spec:
   memorySize: 1GB
   shardCount: 1
   replication: true
+  databasePort: 15976
   persistence: disabled
   evictionPolicy: allkeys-lru
   type: redis
