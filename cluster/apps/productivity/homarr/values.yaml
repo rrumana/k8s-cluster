@@ -6,6 +6,7 @@ strategyType: RollingUpdate
 
 podAnnotations:
   linkerd.io/inject: enabled
+  config.linkerd.io/skip-outbound-ports: "15976"
 
 env:
   TZ: America/Los_Angeles

@@ -15,6 +15,7 @@ spec:
     metadata:
       annotations:
         linkerd.io/inject: enabled
+        config.linkerd.io/skip-outbound-ports: "6379"
       labels:
         app: immich
         component: server
