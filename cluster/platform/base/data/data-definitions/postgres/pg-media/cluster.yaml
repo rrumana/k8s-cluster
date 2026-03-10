@@ -13,6 +13,10 @@ spec:
   imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18.2
   instances: 3
   primaryUpdateStrategy: unsupervised
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
 
   storage:
     storageClass: ceph-block

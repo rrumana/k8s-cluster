@@ -13,6 +13,10 @@ spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:18.1
   instances: 3
   primaryUpdateStrategy: unsupervised
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
 
   storage:
     storageClass: ceph-block
