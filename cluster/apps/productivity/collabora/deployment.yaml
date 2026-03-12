@@ -20,9 +20,9 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: domain
-              value: "nextcloud\\.k8s\\.rcrumana\\.xyz"
+              value: "nextcloud\\.rcrumana\\.xyz"
             - name: extra_params
-              value: "--o:ssl.enable=false --o:ssl.termination=true --o:server_name=collabora.k8s.rcrumana.xyz"
+              value: "--o:ssl.enable=false --o:ssl.termination=true --o:server_name=collabora.rcrumana.xyz"
           ports:
             - name: http
               containerPort: 9980

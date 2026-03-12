@@ -2,9 +2,9 @@
 # Chart: nextcloud/nextcloud (official community chart)
 
 nextcloud:
-  host: nextcloud.k8s.rcrumana.xyz
+  host: nextcloud.rcrumana.xyz
   trustedDomains:
-    - nextcloud.k8s.rcrumana.xyz
+    - nextcloud.rcrumana.xyz
   existingSecret:
     enabled: true
     secretName: nextcloud-admin
@@ -65,7 +65,7 @@ ingress:
     haproxy-ingress.github.io/proxy-body-size: "0"
     haproxy-ingress.github.io/whitelist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
   tls:
-    - hosts: [nextcloud.k8s.rcrumana.xyz]
+    - hosts: [nextcloud.rcrumana.xyz]
       secretName: nextcloud-k8s-rcrumana-xyz-tls
 
 persistence:
