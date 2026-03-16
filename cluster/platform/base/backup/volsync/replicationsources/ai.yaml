@@ -1,0 +1,285 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: volsync-minio
+  namespace: ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: volsync-minio
+    creationPolicy: Owner
+  data:
+    - secretKey: RESTIC_REPOSITORY
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: RESTIC_PASSWORD
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: AWS_ACCESS_KEY_ID
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: AWS_SECRET_ACCESS_KEY
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: librechat-data-backup-restic
+  namespace: ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: librechat-data-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/librechat-data-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: librechat-data-backup
+  namespace: ai
+spec:
+  sourcePVC: librechat-data
+  trigger:
+    schedule: "5 7 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: librechat-data-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: librechat-mongodb-data-backup-restic
+  namespace: ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: librechat-mongodb-data-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/librechat-mongodb-data-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: librechat-mongodb-data-backup
+  namespace: ai
+spec:
+  sourcePVC: librechat-mongodb-data
+  trigger:
+    schedule: "20 7 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: librechat-mongodb-data-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: librechat-meilisearch-data-backup-restic
+  namespace: ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: librechat-meilisearch-data-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/librechat-meilisearch-data-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: librechat-meilisearch-data-backup
+  namespace: ai
+spec:
+  sourcePVC: librechat-meilisearch-data
+  trigger:
+    schedule: "35 7 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: librechat-meilisearch-data-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: llama-models-cache-backup-restic
+  namespace: ai
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: llama-models-cache-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/llama-models-cache-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/ai/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: llama-models-cache-backup
+  namespace: ai
+spec:
+  sourcePVC: llama-models-cache
+  trigger:
+    schedule: "50 7 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: llama-models-cache-backup-restic
+    cacheCapacity: 32Gi
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3

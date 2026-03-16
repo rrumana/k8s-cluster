@@ -1,0 +1,158 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: volsync-minio
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: volsync-minio
+    creationPolicy: Owner
+  data:
+    - secretKey: RESTIC_REPOSITORY
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: RESTIC_PASSWORD
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: AWS_ACCESS_KEY_ID
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: AWS_SECRET_ACCESS_KEY
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: valkey-queue-node-0-backup-restic
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: valkey-queue-node-0-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/valkey-queue-node-0-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: valkey-queue-node-0-backup
+  namespace: databases
+spec:
+  sourcePVC: valkey-data-valkey-queue-node-0
+  trigger:
+    schedule: "20 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: valkey-queue-node-0-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: valkey-queue-node-1-backup-restic
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: valkey-queue-node-1-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/valkey-queue-node-1-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/platform/volsync-minio
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: valkey-queue-node-1-backup
+  namespace: databases
+spec:
+  sourcePVC: valkey-data-valkey-queue-node-1
+  trigger:
+    schedule: "35 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    volumeSnapshotClassName: ceph-block-snap
+    repository: valkey-queue-node-1-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
