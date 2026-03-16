@@ -274,6 +274,9 @@ spec:
     volumeSnapshotClassName: ceph-filesystem-snap
     repository: llama-models-cache-backup-restic
     cacheCapacity: 32Gi
+    cacheStorageClassName: ceph-block
+    cacheAccessModes:
+      - ReadWriteOnce
     pruneIntervalDays: 14
     moverSecurityContext:
       runAsUser: 0
