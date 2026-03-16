@@ -271,7 +271,7 @@ spec:
     schedule: "50 7 * * *"
   restic:
     copyMethod: Snapshot
-    volumeSnapshotClassName: ceph-block-snap
+    volumeSnapshotClassName: ceph-filesystem-snap
     repository: llama-models-cache-backup-restic
     cacheCapacity: 32Gi
     pruneIntervalDays: 14
