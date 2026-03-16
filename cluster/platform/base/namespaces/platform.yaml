@@ -14,6 +14,7 @@ metadata:
   name: databases
   annotations:
     config.linkerd.io/default-inbound-policy: all-unauthenticated
+    linkerd.io/inject: disabled
 ---
 apiVersion: v1
 kind: Namespace
