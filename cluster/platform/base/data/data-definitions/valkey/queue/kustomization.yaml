@@ -5,7 +5,3 @@ namespace: databases
 
 resources:
   - externalsecret.yaml
-  - primary-service.yaml
-  - updater-configmap.yaml
-  - updater-rbac.yaml
-  - updater-deployment.yaml

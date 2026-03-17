@@ -10,6 +10,8 @@ data:
   DB_USERNAME: "immich"
   DB_DATABASE_NAME: "immich"
   DB_VECTOR_EXTENSION: "vectorchord"
+  REDIS_HOSTNAME: "valkey-queue-primary.databases.svc.cluster.local"
+  REDIS_PORT: "6379"
   NODE_ENV: "production"
   LOG_LEVEL: "log"
   IMMICH_MACHINE_LEARNING_URL: "http://immich-machine-learning:3003"
