@@ -43,6 +43,9 @@ spec:
             - name: network-app
               containerPort: 8443
               protocol: TCP
+            - name: guest-https
+              containerPort: 8843
+              protocol: TCP
             - name: hotspot-sec
               containerPort: 8444
               protocol: TCP
@@ -59,6 +62,9 @@ spec:
               containerPort: 9543
               protocol: TCP
             - name: discovery
+              containerPort: 10001
+              protocol: UDP
+            - name: discovery-v2
               containerPort: 10003
               protocol: UDP
             - name: site-superv

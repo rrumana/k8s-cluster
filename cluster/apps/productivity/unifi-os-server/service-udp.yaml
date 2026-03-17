@@ -14,11 +14,15 @@ spec:
       port: 3478
       targetPort: 3478
       protocol: UDP
+    - name: discovery
+      port: 10001
+      targetPort: 10001
+      protocol: UDP
     - name: syslog
       port: 5514
       targetPort: 5514
       protocol: UDP
-    - name: discovery
+    - name: discovery-v2
       port: 10003
       targetPort: 10003
       protocol: UDP
