@@ -23,7 +23,7 @@ spec:
     size: 50Gi
   walStorage:
     storageClass: ceph-block
-    size: 10Gi
+    size: 30Gi
 
   backup:
     barmanObjectStore:
@@ -50,6 +50,7 @@ spec:
   postgresql:
     parameters:
       max_connections: "200"
+      max_slot_wal_keep_size: "20GB"
       log_min_duration_statement: "500ms"
     synchronous:
       method: any
