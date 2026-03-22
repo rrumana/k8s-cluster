@@ -57,7 +57,7 @@ data:
             widget:
               type: jellyfin
               url: http://jellyfin.media.svc.cluster.local:8096
-              key: {{HOMEPAGE_VAR_JELLYFIN_KEY}}
+              key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
         - Immich:
             href: https://immich.rcrumana.xyz
             siteMonitor: https://immich.rcrumana.xyz
@@ -65,7 +65,7 @@ data:
             widget:
               type: immich
               url: http://immich-server.media.svc.cluster.local:2283
-              key: {{HOMEPAGE_VAR_IMMICH_KEY}}
+              key: "{{HOMEPAGE_VAR_IMMICH_KEY}}"
               version: 2
         - Nextcloud:
             href: https://nextcloud.rcrumana.xyz
@@ -74,8 +74,8 @@ data:
             widget:
               type: nextcloud
               url: http://nextcloud:8080
-              username: {{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}
-              password: {{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}
+              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
         - Vaultwarden:
             href: https://vault.rcrumana.xyz
             siteMonitor: https://vault.rcrumana.xyz
@@ -91,7 +91,7 @@ data:
             widget:
               type: seerr
               url: http://jellyseerr.media.svc.cluster.local
-              key: {{HOMEPAGE_VAR_JELLYSEERR_KEY}}
+              key: "{{HOMEPAGE_VAR_JELLYSEERR_KEY}}"
 
     - Torrenting:
         - Qbit:
@@ -101,8 +101,8 @@ data:
             widget:
               type: qbittorrent
               url: http://qbit.media.svc.cluster.local
-              username: {{HOMEPAGE_VAR_QBIT_USERNAME}}
-              password: {{HOMEPAGE_VAR_QBIT_PASSWORD}}
+              username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
         - Qbit-lts:
             href: https://qbit-lts.rcrumana.xyz
             siteMonitor: https://qbit-lts.rcrumana.xyz
@@ -110,8 +110,8 @@ data:
             widget:
               type: qbittorrent
               url: http://qbit-lts.media.svc.cluster.local
-              username: {{HOMEPAGE_VAR_QBIT_LTS_USERNAME}}
-              password: {{HOMEPAGE_VAR_QBIT_LTS_PASSWORD}}
+              username: "{{HOMEPAGE_VAR_QBIT_LTS_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_QBIT_LTS_PASSWORD}}"
         - Qbit-lts2:
             href: https://qbit-lts2.rcrumana.xyz
             siteMonitor: https://qbit-lts2.rcrumana.xyz
@@ -119,8 +119,8 @@ data:
             widget:
               type: qbittorrent
               url: http://qbit-lts2.media.svc.cluster.local
-              username: {{HOMEPAGE_VAR_QBIT_LTS2_USERNAME}}
-              password: {{HOMEPAGE_VAR_QBIT_LTS2_PASSWORD}}
+              username: "{{HOMEPAGE_VAR_QBIT_LTS2_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_QBIT_LTS2_PASSWORD}}"
         - Sonarr:
             href: https://sonarr.rcrumana.xyz
             siteMonitor: https://sonarr.rcrumana.xyz
@@ -128,7 +128,7 @@ data:
             widget:
               type: sonarr
               url: http://sonarr.media.svc.cluster.local
-              key: {{HOMEPAGE_VAR_SONARR_KEY}}
+              key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
         - Radarr:
             href: https://radarr.rcrumana.xyz
             siteMonitor: https://radarr.rcrumana.xyz
@@ -136,7 +136,7 @@ data:
             widget:
               type: radarr
               url: http://radarr.media.svc.cluster.local
-              key: {{HOMEPAGE_VAR_RADARR_KEY}}
+              key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
         - Lidarr:
             href: https://lidarr.rcrumana.xyz
             siteMonitor: https://lidarr.rcrumana.xyz
@@ -144,7 +144,7 @@ data:
             widget:
               type: lidarr
               url: http://lidarr.media.svc.cluster.local
-              key: {{HOMEPAGE_VAR_LIDARR_KEY}}
+              key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
         - Prowlarr:
             href: https://prowlarr.rcrumana.xyz
             siteMonitor: https://prowlarr.rcrumana.xyz
@@ -152,7 +152,7 @@ data:
             widget:
               type: prowlarr
               url: http://prowlarr.media.svc.cluster.local
-              key: {{HOMEPAGE_VAR_PROWLARR_KEY}}
+              key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
 
     - Kubernetes:
         - Argo CD:
