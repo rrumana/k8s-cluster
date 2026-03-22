@@ -238,16 +238,38 @@ data:
               key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
 
     - Kubernetes:
-        - Balthasar-2 Info:
-            icon: mdi-server
-            description: Node monitoring via Glances
+        - Melchior-1 CPU:
+            icon: mdi-meter-electric-outline
+            description: CPU usage
             widget:
               type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_PASSWORD}}"
+              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
+              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
               version: 4
-              metric: info
+              metric: cpu
+              chart: true
+        - Melchior-1 Memory:
+            icon: mdi-memory
+            description: Memory usage
+            widget:
+              type: glances
+              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
+              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
+              version: 4
+              metric: memory
+              chart: true
+        - Melchior-1 Processes:
+            icon: mdi-chart-box-outline
+            description: Top processes
+            widget:
+              type: glances
+              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
+              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
+              version: 4
+              metric: process
               chart: false
         - Balthasar-2 CPU:
             icon: mdi-meter-electric-outline
@@ -282,17 +304,6 @@ data:
               version: 4
               metric: process
               chart: false
-        - Casper-3 Info:
-            icon: mdi-server
-            description: Node monitoring via Glances
-            widget:
-              type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_CASPER_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_CASPER_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_CASPER_PASSWORD}}"
-              version: 4
-              metric: info
-              chart: false
         - Casper-3 CPU:
             icon: mdi-meter-electric-outline
             description: CPU usage
@@ -323,50 +334,6 @@ data:
               url: "{{HOMEPAGE_VAR_GLANCES_CASPER_URL}}"
               username: "{{HOMEPAGE_VAR_GLANCES_CASPER_USERNAME}}"
               password: "{{HOMEPAGE_VAR_GLANCES_CASPER_PASSWORD}}"
-              version: 4
-              metric: process
-              chart: false
-        - Melchior-1 Info:
-            icon: mdi-server
-            description: Node monitoring via Glances
-            widget:
-              type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
-              version: 4
-              metric: info
-              chart: false
-        - Melchior-1 CPU:
-            icon: mdi-meter-electric-outline
-            description: CPU usage
-            widget:
-              type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
-              version: 4
-              metric: cpu
-              chart: true
-        - Melchior-1 Memory:
-            icon: mdi-memory
-            description: Memory usage
-            widget:
-              type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
-              version: 4
-              metric: memory
-              chart: true
-        - Melchior-1 Processes:
-            icon: mdi-chart-box-outline
-            description: Top processes
-            widget:
-              type: glances
-              url: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_URL}}"
-              username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
               version: 4
               metric: process
               chart: false
