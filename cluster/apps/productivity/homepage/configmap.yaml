@@ -16,9 +16,6 @@ data:
         columns: 6
       Torrenting:
         style: row
-        columns: 3
-      Indexers:
-        style: row
         columns: 4
       Networking:
         style: row
@@ -146,6 +143,28 @@ data:
               key: "{{HOMEPAGE_VAR_JELLYSEERR_KEY}}"
 
     - Torrenting:
+        - Calendar:
+            icon: mdi-calendar-month-outline
+            description: Upcoming media
+            widget:
+              type: calendar
+              view: monthly
+              maxEvents: 100
+              showTime: true
+              timezone: America/Los_Angeles
+              integrations:
+                - type: sonarr
+                  service_group: Indexers
+                  service_name: Sonarr
+                  baseUrl: https://sonarr.rcrumana.xyz
+                - type: radarr
+                  service_group: Indexers
+                  service_name: Radarr
+                  baseUrl: https://radarr.rcrumana.xyz
+                - type: lidarr
+                  service_group: Indexers
+                  service_name: Lidarr
+                  baseUrl: https://lidarr.rcrumana.xyz
         - Qbit:
             icon: si-qbittorrent-#2f67ba
             href: https://qbit.rcrumana.xyz
@@ -176,30 +195,6 @@ data:
               url: http://qbit-lts2.media.svc.cluster.local
               username: "{{HOMEPAGE_VAR_QBIT_LTS2_USERNAME}}"
               password: "{{HOMEPAGE_VAR_QBIT_LTS2_PASSWORD}}"
-
-    - Indexers:
-        - Calendar:
-            icon: mdi-calendar-month-outline
-            description: Upcoming media
-            widget:
-              type: calendar
-              view: monthly
-              maxEvents: 100
-              showTime: true
-              timezone: America/Los_Angeles
-              integrations:
-                - type: sonarr
-                  service_group: Indexers
-                  service_name: Sonarr
-                  baseUrl: https://sonarr.rcrumana.xyz
-                - type: radarr
-                  service_group: Indexers
-                  service_name: Radarr
-                  baseUrl: https://radarr.rcrumana.xyz
-                - type: lidarr
-                  service_group: Indexers
-                  service_name: Lidarr
-                  baseUrl: https://lidarr.rcrumana.xyz
         - Sonarr:
             icon: sonarr.png
             href: https://sonarr.rcrumana.xyz
