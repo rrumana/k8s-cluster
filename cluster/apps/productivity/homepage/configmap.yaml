@@ -8,6 +8,7 @@ data:
   proxmox.yaml: ""
   settings.yaml: |
     title: Dashboard
+    statusStyle: dot
   custom.css: ""
   custom.js: ""
   bookmarks.yaml: |
@@ -20,19 +21,115 @@ data:
             - abbr: GIT
               href: https://github.com/rrumana/portfolio
   services.yaml: |
-    - Cluster:
+    - Storage:
+        - TrueNAS:
+            href: https://nas.rcrumana.xyz
+            siteMonitor: https://nas.rcrumana.xyz
+            description: NAS and storage management
+        - Ceph:
+            href: https://ceph.rcrumana.xyz
+            siteMonitor: https://ceph.rcrumana.xyz
+            description: Cluster storage dashboard
+        - Minio:
+            href: https://minio.rcrumana.xyz
+            siteMonitor: https://minio.rcrumana.xyz
+            description: Object storage console
+
+    - Networking:
+        - Opnsense:
+            href: https://router.rcrumana.xyz
+            siteMonitor: https://router.rcrumana.xyz
+            description: Router and firewall
+        - Headscale:
+            href: https://headscale.rcrumana.xyz/web
+            siteMonitor: https://headscale.rcrumana.xyz/web
+            description: Tailscale control plane
+        - Unifi-OS:
+            href: https://unifi.rcrumana.xyz
+            siteMonitor: https://unifi.rcrumana.xyz
+            description: Network controller
+
+    - Services:
+        - Jellyfin:
+            href: https://jellyfin.rcrumana.xyz
+            siteMonitor: https://jellyfin.rcrumana.xyz
+            description: Media streaming
+        - Immich:
+            href: https://immich.rcrumana.xyz
+            siteMonitor: https://immich.rcrumana.xyz
+            description: Photos and memories
+        - Nextcloud:
+            href: https://nextcloud.rcrumana.xyz
+            siteMonitor: https://nextcloud.rcrumana.xyz
+            description: Files and collaboration
+        - Vaultwarden:
+            href: https://vault.rcrumana.xyz
+            siteMonitor: https://vault.rcrumana.xyz
+            description: Password vault
+        - AI:
+            href: https://chat.rcrumana.xyz
+            siteMonitor: https://chat.rcrumana.xyz
+            description: LibreChat instance
+        - Jellyseerr:
+            href: https://jellyseerr.rcrumana.xyz
+            siteMonitor: https://jellyseerr.rcrumana.xyz
+            description: Request management
+
+    - Torrenting:
+        - Qbit:
+            href: https://qbit.rcrumana.xyz
+            siteMonitor: https://qbit.rcrumana.xyz
+            description: Main torrent client
+        - Qbit-lts:
+            href: https://qbit-lts.rcrumana.xyz
+            siteMonitor: https://qbit-lts.rcrumana.xyz
+            description: Long-term seed client
+        - Qbit-lts2:
+            href: https://qbit-lts2.rcrumana.xyz
+            siteMonitor: https://qbit-lts2.rcrumana.xyz
+            description: Secondary long-term seed client
+        - Sonarr:
+            href: https://sonarr.rcrumana.xyz
+            siteMonitor: https://sonarr.rcrumana.xyz
+            description: TV automation
+        - Radarr:
+            href: https://radarr.rcrumana.xyz
+            siteMonitor: https://radarr.rcrumana.xyz
+            description: Movie automation
+        - Lidarr:
+            href: https://lidarr.rcrumana.xyz
+            siteMonitor: https://lidarr.rcrumana.xyz
+            description: Music automation
+        - Prowlarr:
+            href: https://prowlarr.rcrumana.xyz
+            siteMonitor: https://prowlarr.rcrumana.xyz
+            description: Indexer management
+
+    - Kubernetes:
         - Argo CD:
             href: https://argocd.rcrumana.xyz
+            siteMonitor: https://argocd.rcrumana.xyz
             description: GitOps control plane
-        - Homarr:
-            href: https://homarr.rcrumana.xyz
-            description: Existing dashboard
         - Uptime Kuma:
             href: https://uptime.rcrumana.xyz
+            siteMonitor: https://uptime.rcrumana.xyz
             description: Status and alerting
-        - Ceph Dashboard:
-            href: https://ceph.rcrumana.xyz
-            description: Storage operations
+
+    - Hosting:
+        - Portfolio:
+            href: https://rcrumana.xyz
+            siteMonitor: https://rcrumana.xyz
+            description: Primary site
+        - Portfolio Staging:
+            href: https://staging.rcrumana.xyz
+            siteMonitor: https://staging.rcrumana.xyz
+            description: Staging site
+
+    - Misc:
+        - Hypermind:
+            href: https://hypermind.rcrumana.xyz
+            siteMonitor: https://hypermind.rcrumana.xyz
+            description: Shared room and map
   widgets.yaml: |
     - kubernetes:
         cluster:
@@ -40,7 +137,7 @@ data:
           cpu: true
           memory: true
           showLabel: true
-          label: cluster
+          label: Cluster
         nodes:
           show: true
           cpu: true
