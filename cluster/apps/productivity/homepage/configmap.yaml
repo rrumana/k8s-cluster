@@ -222,15 +222,6 @@ data:
               type: lidarr
               url: http://lidarr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
-        - Prowlarr:
-            icon: prowlarr.png
-            href: https://prowlarr.rcrumana.xyz
-            siteMonitor: https://prowlarr.rcrumana.xyz
-            description: Indexer management
-            widget:
-              type: prowlarr
-              url: http://prowlarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
 
     - Kubernetes:
         - Melchior-1 CPU:
