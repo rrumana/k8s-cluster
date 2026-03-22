@@ -54,10 +54,19 @@ data:
             href: https://jellyfin.rcrumana.xyz
             siteMonitor: https://jellyfin.rcrumana.xyz
             description: Media streaming
+            widget:
+              type: jellyfin
+              url: http://jellyfin.media.svc.cluster.local:8096
+              key: {{HOMEPAGE_VAR_JELLYFIN_KEY}}
         - Immich:
             href: https://immich.rcrumana.xyz
             siteMonitor: https://immich.rcrumana.xyz
             description: Photos and memories
+            widget:
+              type: immich
+              url: http://immich-server.media.svc.cluster.local:2283
+              key: {{HOMEPAGE_VAR_IMMICH_KEY}}
+              version: 2
         - Nextcloud:
             href: https://nextcloud.rcrumana.xyz
             siteMonitor: https://nextcloud.rcrumana.xyz
@@ -79,6 +88,10 @@ data:
             href: https://jellyseerr.rcrumana.xyz
             siteMonitor: https://jellyseerr.rcrumana.xyz
             description: Request management
+            widget:
+              type: seerr
+              url: http://jellyseerr.media.svc.cluster.local
+              key: {{HOMEPAGE_VAR_JELLYSEERR_KEY}}
 
     - Torrenting:
         - Qbit:
@@ -112,18 +125,34 @@ data:
             href: https://sonarr.rcrumana.xyz
             siteMonitor: https://sonarr.rcrumana.xyz
             description: TV automation
+            widget:
+              type: sonarr
+              url: http://sonarr.media.svc.cluster.local
+              key: {{HOMEPAGE_VAR_SONARR_KEY}}
         - Radarr:
             href: https://radarr.rcrumana.xyz
             siteMonitor: https://radarr.rcrumana.xyz
             description: Movie automation
+            widget:
+              type: radarr
+              url: http://radarr.media.svc.cluster.local
+              key: {{HOMEPAGE_VAR_RADARR_KEY}}
         - Lidarr:
             href: https://lidarr.rcrumana.xyz
             siteMonitor: https://lidarr.rcrumana.xyz
             description: Music automation
+            widget:
+              type: lidarr
+              url: http://lidarr.media.svc.cluster.local
+              key: {{HOMEPAGE_VAR_LIDARR_KEY}}
         - Prowlarr:
             href: https://prowlarr.rcrumana.xyz
             siteMonitor: https://prowlarr.rcrumana.xyz
             description: Indexer management
+            widget:
+              type: prowlarr
+              url: http://prowlarr.media.svc.cluster.local
+              key: {{HOMEPAGE_VAR_PROWLARR_KEY}}
 
     - Kubernetes:
         - Argo CD:
