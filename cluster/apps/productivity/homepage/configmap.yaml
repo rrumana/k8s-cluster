@@ -122,21 +122,11 @@ data:
                 href: https://router.rcrumana.xyz
                 siteMonitor: https://router.rcrumana.xyz
                 description: Router and firewall
-                widget:
-                  type: opnsense
-                  url: https://192.168.1.1:4443
-                  username: "{{HOMEPAGE_VAR_OPNSENSE_USERNAME}}"
-                  password: "{{HOMEPAGE_VAR_OPNSENSE_PASSWORD}}"
             - Headscale:
                 icon: si-tailscale-#242424
                 href: https://headscale.rcrumana.xyz/web
                 siteMonitor: https://headscale.rcrumana.xyz/web
                 description: Tailscale control plane
-                widget:
-                  type: headscale
-                  url: https://headscale.rcrumana.xyz
-                  nodeId: "{{HOMEPAGE_VAR_HEADSCALE_NODE_ID}}"
-                  key: "{{HOMEPAGE_VAR_HEADSCALE_KEY}}"
             - Unifi-OS:
                 icon: si-ubiquiti-#0559c9
                 href: https://unifi.rcrumana.xyz
@@ -148,10 +138,6 @@ data:
                 href: https://nas.rcrumana.xyz
                 siteMonitor: https://nas.rcrumana.xyz
                 description: NAS and storage management
-                widget:
-                  type: truenas
-                  url: https://nas.rcrumana.xyz
-                  key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
             - Ceph:
                 icon: si-ceph-#ef5c55
                 href: https://ceph.rcrumana.xyz
@@ -267,50 +253,30 @@ data:
             href: https://sonarr.rcrumana.xyz
             siteMonitor: https://sonarr.rcrumana.xyz
             description: TV automation
-            widget:
-              type: sonarr
-              url: http://sonarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
         - Radarr:
             id: torrent-radarr
             icon: radarr.png
             href: https://radarr.rcrumana.xyz
             siteMonitor: https://radarr.rcrumana.xyz
             description: Movie automation
-            widget:
-              type: radarr
-              url: http://radarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
         - Lidarr:
             id: torrent-lidarr
             icon: lidarr.png
             href: https://lidarr.rcrumana.xyz
             siteMonitor: https://lidarr.rcrumana.xyz
             description: Music automation
-            widget:
-              type: lidarr
-              url: http://lidarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
         - Prowlarr:
             id: torrent-prowlarr
             icon: prowlarr.png
             href: https://prowlarr.rcrumana.xyz
             siteMonitor: https://prowlarr.rcrumana.xyz
             description: Indexer management
-            widget:
-              type: prowlarr
-              url: http://prowlarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
         - Jellyseerr:
             id: torrent-jellyseerr
             icon: si-jellyseerr-#ed4e7a
             href: https://jellyseerr.rcrumana.xyz
             siteMonitor: https://jellyseerr.rcrumana.xyz
             description: Request management
-            widget:
-              type: seerr
-              url: http://jellyseerr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_JELLYSEERR_KEY}}"
 
     - Kubernetes:
         - Melchior-1 CPU:
