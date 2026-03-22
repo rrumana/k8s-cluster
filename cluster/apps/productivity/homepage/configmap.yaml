@@ -32,7 +32,72 @@ data:
       Kubernetes:
         style: row
         columns: 5
-  custom.css: ""
+  custom.css: |
+    @media (min-width: 1200px) {
+      .services-list.flex.flex-col:has(#torrent-calendar) {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        align-items: stretch;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service {
+        grid-column: auto !important;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service > div {
+        height: 100%;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-calendar) {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-calendar) > div {
+        min-height: 100%;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-qbit) {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-qbit-lts) {
+        grid-column: 3;
+        grid-row: 1;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-qbit-lts2) {
+        grid-column: 4;
+        grid-row: 1;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-sonarr) {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-radarr) {
+        grid-column: 3;
+        grid-row: 2;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-lidarr) {
+        grid-column: 4;
+        grid-row: 2;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-jellyseerr) {
+        grid-column: 2;
+        grid-row: 3;
+      }
+
+      .services-list.flex.flex-col:has(#torrent-calendar) .service:has(#torrent-prowlarr) {
+        grid-column: 3;
+        grid-row: 3;
+      }
+    }
   custom.js: ""
   bookmarks.yaml: |
     - Cluster:
@@ -134,10 +199,12 @@ data:
             description: LibreChat instance
     - Torrenting:
         - Calendar:
+            id: torrent-calendar
             icon: mdi-calendar-month-outline
             description: Upcoming media
             widget:
               type: calendar
+              firstDayInWeek: sunday
               view: monthly
               maxEvents: 100
               showTime: true
@@ -156,6 +223,7 @@ data:
                   service_name: Lidarr
                   baseUrl: https://lidarr.rcrumana.xyz
         - Qbit:
+            id: torrent-qbit
             icon: si-qbittorrent-#2f67ba
             href: https://qbit.rcrumana.xyz
             siteMonitor: https://qbit.rcrumana.xyz
@@ -166,6 +234,7 @@ data:
               username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
               password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
         - Qbit-lts:
+            id: torrent-qbit-lts
             icon: si-qbittorrent-#5a7bbd
             href: https://qbit-lts.rcrumana.xyz
             siteMonitor: https://qbit-lts.rcrumana.xyz
@@ -176,6 +245,7 @@ data:
               username: "{{HOMEPAGE_VAR_QBIT_LTS_USERNAME}}"
               password: "{{HOMEPAGE_VAR_QBIT_LTS_PASSWORD}}"
         - Qbit-lts2:
+            id: torrent-qbit-lts2
             icon: si-qbittorrent-#7d91c8
             href: https://qbit-lts2.rcrumana.xyz
             siteMonitor: https://qbit-lts2.rcrumana.xyz
@@ -186,6 +256,7 @@ data:
               username: "{{HOMEPAGE_VAR_QBIT_LTS2_USERNAME}}"
               password: "{{HOMEPAGE_VAR_QBIT_LTS2_PASSWORD}}"
         - Sonarr:
+            id: torrent-sonarr
             icon: sonarr.png
             href: https://sonarr.rcrumana.xyz
             siteMonitor: https://sonarr.rcrumana.xyz
@@ -195,6 +266,7 @@ data:
               url: http://sonarr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
         - Radarr:
+            id: torrent-radarr
             icon: radarr.png
             href: https://radarr.rcrumana.xyz
             siteMonitor: https://radarr.rcrumana.xyz
@@ -204,6 +276,7 @@ data:
               url: http://radarr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
         - Lidarr:
+            id: torrent-lidarr
             icon: lidarr.png
             href: https://lidarr.rcrumana.xyz
             siteMonitor: https://lidarr.rcrumana.xyz
@@ -213,6 +286,7 @@ data:
               url: http://lidarr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
         - Prowlarr:
+            id: torrent-prowlarr
             icon: prowlarr.png
             href: https://prowlarr.rcrumana.xyz
             siteMonitor: https://prowlarr.rcrumana.xyz
@@ -222,6 +296,7 @@ data:
               url: http://prowlarr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_PROWLARR_KEY}}"
         - Jellyseerr:
+            id: torrent-jellyseerr
             icon: si-jellyseerr-#ed4e7a
             href: https://jellyseerr.rcrumana.xyz
             siteMonitor: https://jellyseerr.rcrumana.xyz
