@@ -303,7 +303,7 @@ data:
               password: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_PASSWORD}}"
               version: 4
               metric: process
-              chart: false
+              chart: true
         - Casper-3 CPU:
             icon: mdi-meter-electric-outline
             description: CPU usage
@@ -336,7 +336,7 @@ data:
               password: "{{HOMEPAGE_VAR_GLANCES_CASPER_PASSWORD}}"
               version: 4
               metric: process
-              chart: false
+              chart: true
 
     - Hosting:
         - Portfolio:
