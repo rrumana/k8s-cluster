@@ -17,12 +17,16 @@ data:
       Torrenting:
         style: row
         columns: 4
-      Networking:
+      Infrastructure:
         style: row
-        columns: 3
-      Storage:
-        style: row
-        columns: 3
+        columns: 2
+        header: false
+        Networking:
+          style: row
+          columns: 3
+        Storage:
+          style: row
+          columns: 3
       Kubernetes:
         style: row
         columns: 5
@@ -36,14 +40,6 @@ data:
     @media (min-width: 1200px) {
       div:has(> [id^="headlessui-disclosure-panel-"] > ul.services-list > #torrent-calendar) {
         grid-column: span 2 / span 2 !important;
-      }
-
-      div:has(> [id^="headlessui-disclosure-panel-"] > ul.services-list > li[data-name="Opnsense"]) {
-        grid-column: span 1 / span 1 !important;
-      }
-
-      div:has(> [id^="headlessui-disclosure-panel-"] > ul.services-list > li[data-name="TrueNAS"]) {
-        grid-column: span 1 / span 1 !important;
       }
 
       [id^="headlessui-disclosure-panel-"]:has(> ul.services-list > #torrent-calendar) {
@@ -119,53 +115,53 @@ data:
             - abbr: GIT
               href: https://github.com/rrumana/portfolio
   services.yaml: |
-    - Storage:
-        - TrueNAS:
-            icon: si-truenas-#0095d5
-            href: https://nas.rcrumana.xyz
-            siteMonitor: https://nas.rcrumana.xyz
-            description: NAS and storage management
-            widget:
-              type: truenas
-              url: https://nas.rcrumana.xyz
-              key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
-        - Ceph:
-            icon: si-ceph-#ef5c55
-            href: https://ceph.rcrumana.xyz
-            siteMonitor: https://ceph.rcrumana.xyz
-            description: Cluster storage dashboard
-        - Minio:
-            icon: si-minio-#c72e49
-            href: https://minio.rcrumana.xyz
-            siteMonitor: https://minio.rcrumana.xyz
-            description: Object storage console
-
-    - Networking:
-        - Opnsense:
-            icon: si-opnsense-#d94f00
-            href: https://router.rcrumana.xyz
-            siteMonitor: https://router.rcrumana.xyz
-            description: Router and firewall
-            widget:
-              type: opnsense
-              url: https://192.168.1.1:4443
-              username: "{{HOMEPAGE_VAR_OPNSENSE_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_OPNSENSE_PASSWORD}}"
-        - Headscale:
-            icon: si-tailscale-#242424
-            href: https://headscale.rcrumana.xyz/web
-            siteMonitor: https://headscale.rcrumana.xyz/web
-            description: Tailscale control plane
-            widget:
-              type: headscale
-              url: https://headscale.rcrumana.xyz
-              nodeId: "{{HOMEPAGE_VAR_HEADSCALE_NODE_ID}}"
-              key: "{{HOMEPAGE_VAR_HEADSCALE_KEY}}"
-        - Unifi-OS:
-            icon: si-ubiquiti-#0559c9
-            href: https://unifi.rcrumana.xyz
-            siteMonitor: https://unifi.rcrumana.xyz
-            description: Network controller
+    - Infrastructure:
+        - Networking:
+            - Opnsense:
+                icon: si-opnsense-#d94f00
+                href: https://router.rcrumana.xyz
+                siteMonitor: https://router.rcrumana.xyz
+                description: Router and firewall
+                widget:
+                  type: opnsense
+                  url: https://192.168.1.1:4443
+                  username: "{{HOMEPAGE_VAR_OPNSENSE_USERNAME}}"
+                  password: "{{HOMEPAGE_VAR_OPNSENSE_PASSWORD}}"
+            - Headscale:
+                icon: si-tailscale-#242424
+                href: https://headscale.rcrumana.xyz/web
+                siteMonitor: https://headscale.rcrumana.xyz/web
+                description: Tailscale control plane
+                widget:
+                  type: headscale
+                  url: https://headscale.rcrumana.xyz
+                  nodeId: "{{HOMEPAGE_VAR_HEADSCALE_NODE_ID}}"
+                  key: "{{HOMEPAGE_VAR_HEADSCALE_KEY}}"
+            - Unifi-OS:
+                icon: si-ubiquiti-#0559c9
+                href: https://unifi.rcrumana.xyz
+                siteMonitor: https://unifi.rcrumana.xyz
+                description: Network controller
+        - Storage:
+            - TrueNAS:
+                icon: si-truenas-#0095d5
+                href: https://nas.rcrumana.xyz
+                siteMonitor: https://nas.rcrumana.xyz
+                description: NAS and storage management
+                widget:
+                  type: truenas
+                  url: https://nas.rcrumana.xyz
+                  key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
+            - Ceph:
+                icon: si-ceph-#ef5c55
+                href: https://ceph.rcrumana.xyz
+                siteMonitor: https://ceph.rcrumana.xyz
+                description: Cluster storage dashboard
+            - Minio:
+                icon: si-minio-#c72e49
+                href: https://minio.rcrumana.xyz
+                siteMonitor: https://minio.rcrumana.xyz
+                description: Object storage console
 
     - Services:
         - Jellyfin:
