@@ -37,7 +37,15 @@ data:
         columns: 4
   custom.css: ""
   custom.js: ""
-  bookmarks.yaml: ""
+  bookmarks.yaml: |
+    - Cluster:
+        - GitOps Repo:
+            - abbr: GIT
+              href: https://github.com/rrumana/k8s-homelab-2
+    - Portfolio:
+        - Portfolio Repo:
+            - abbr: GIT
+              href: https://github.com/rrumana/portfolio
   services.yaml: |
     - Storage:
         - TrueNAS:
@@ -175,8 +183,8 @@ data:
             description: Upcoming media
             widget:
               type: calendar
-              view: agenda
-              maxEvents: 20
+              view: monthly
+              maxEvents: 100
               showTime: true
               timezone: America/Los_Angeles
               integrations:
@@ -272,7 +280,7 @@ data:
               username: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_USERNAME}}"
               password: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_PASSWORD}}"
               version: 4
-              metric: network
+              metric: "{{HOMEPAGE_VAR_GLANCES_MELCHIOR_NETWORK_METRIC}}"
               chart: true
         - Balthasar-2 CPU:
             icon: mdi-meter-electric-outline
@@ -316,7 +324,7 @@ data:
               username: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_USERNAME}}"
               password: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_PASSWORD}}"
               version: 4
-              metric: network
+              metric: "{{HOMEPAGE_VAR_GLANCES_BALTHASAR_NETWORK_METRIC}}"
               chart: true
         - Casper-3 CPU:
             icon: mdi-meter-electric-outline
@@ -360,7 +368,7 @@ data:
               username: "{{HOMEPAGE_VAR_GLANCES_CASPER_USERNAME}}"
               password: "{{HOMEPAGE_VAR_GLANCES_CASPER_PASSWORD}}"
               version: 4
-              metric: network
+              metric: "{{HOMEPAGE_VAR_GLANCES_CASPER_NETWORK_METRIC}}"
               chart: true
 
     - Hosting:
