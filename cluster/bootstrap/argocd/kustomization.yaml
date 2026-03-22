@@ -12,6 +12,10 @@ patches:
     target:
       kind: ConfigMap
       name: argocd-cm
+  - path: patch-argocd-cm-homepage-account.yaml
+    target:
+      kind: ConfigMap
+      name: argocd-cm
   - path: patch-argocd-cm-resource-exclusions.yaml
     target:
       kind: ConfigMap
@@ -20,3 +24,7 @@ patches:
     target:
       kind: ConfigMap
       name: argocd-cmd-params-cm
+  - path: patch-argocd-rbac-cm-homepage.yaml
+    target:
+      kind: ConfigMap
+      name: argocd-rbac-cm

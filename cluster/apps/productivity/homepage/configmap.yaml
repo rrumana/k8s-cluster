@@ -94,11 +94,6 @@ data:
             href: https://unifi.rcrumana.xyz
             siteMonitor: https://unifi.rcrumana.xyz
             description: Network controller
-            widget:
-              type: unifi
-              url: https://unifi.rcrumana.xyz
-              username: "{{HOMEPAGE_VAR_UNIFI_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_UNIFI_PASSWORD}}"
 
     - Services:
         - Jellyfin:
@@ -252,11 +247,6 @@ data:
               type: argocd
               url: https://argocd.rcrumana.xyz
               key: "{{HOMEPAGE_VAR_ARGOCD_KEY}}"
-        - Uptime Kuma:
-            icon: si-uptimekuma-#5cdd8b
-            href: https://uptime.rcrumana.xyz
-            siteMonitor: https://uptime.rcrumana.xyz
-            description: Status and alerting
         - Balthasar-2:
             icon: mdi-server
             description: Node monitoring via Glances
@@ -304,6 +294,11 @@ data:
             description: Staging site
 
     - Misc:
+        - Uptime Kuma:
+            icon: si-uptimekuma-#5cdd8b
+            href: https://uptime.rcrumana.xyz
+            siteMonitor: https://uptime.rcrumana.xyz
+            description: Status and alerting
         - Hypermind:
             icon: mdi-brain
             href: https://hypermind.rcrumana.xyz
