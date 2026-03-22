@@ -27,6 +27,9 @@ envSecrets:
     existingSecret: homarr-helm-db-encryption
     key: db-encryption-key
 
+rbac:
+  enabled: true
+
 ingress:
   enabled: false
   ingressClassName: haproxy-restricted
