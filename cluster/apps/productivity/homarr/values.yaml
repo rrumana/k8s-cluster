@@ -1,7 +1,7 @@
 # apps/productivity/homarr/values.yaml
 # Chart: homarr-labs/homarr
 
-replicaCount: 3
+replicaCount: 1
 strategyType: RollingUpdate
 
 podAnnotations:
