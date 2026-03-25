@@ -21,7 +21,7 @@ spec:
       serviceAccountName: elasticsearch
       containers:
         - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+          image: docker.elastic.co/elasticsearch/elasticsearch:9.3.2
           imagePullPolicy: IfNotPresent
           env:
             - name: discovery.type
