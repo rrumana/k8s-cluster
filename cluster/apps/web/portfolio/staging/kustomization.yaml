@@ -5,7 +5,6 @@ namespace: web
 
 resources:
   - serviceaccount.yaml
-  - externalsecret.yaml
   - deployment.yaml
   - service.yaml
   - vpa.yaml
