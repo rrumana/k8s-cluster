@@ -9,7 +9,6 @@ expose:
     controller: default
     className: haproxy
     annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
       haproxy-ingress.github.io/backend-protocol: "http"
       haproxy-ingress.github.io/ssl-redirect: "true"
       haproxy-ingress.github.io/timeout-client: "3600s"
@@ -47,14 +46,6 @@ persistence:
         storageClass: ceph-block
         accessMode: ReadWriteOnce
         size: 5Gi
-    database:
-      storageClass: ceph-block
-      accessMode: ReadWriteOnce
-      size: 20Gi
-    redis:
-      storageClass: ceph-block
-      accessMode: ReadWriteOnce
-      size: 5Gi
     trivy:
       storageClass: ceph-block
       accessMode: ReadWriteOnce
@@ -112,24 +103,26 @@ registry:
       memory: 4Gi
 
 database:
-  internal:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: "1"
-        memory: 1Gi
+  type: external
+  external:
+    host: pg-platform-rw.databases.svc.cluster.local
+    port: 5432
+    username: harbor
+    coreDatabase: harbor
+    existingSecret: harbor-database-secrets
+    sslmode: disable
 
 redis:
-  internal:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: "1"
-        memory: 1Gi
+  type: external
+  external:
+    addr: valkey-cache-primary.databases.svc.cluster.local:6379
+    existingSecret: harbor-redis-secrets
+    coreDatabaseIndex: 0
+    jobserviceDatabaseIndex: 1
+    registryDatabaseIndex: 2
+    trivyAdapterIndex: 5
+    harborDatabaseIndex: 0
+    cacheLayerDatabaseIndex: 0
 
 exporter:
   replicas: 1

@@ -25,6 +25,53 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: harbor
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: harbor-core
+      namespace: harbor
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: harbor-jobservice
+      namespace: harbor
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: harbor-registry
+      namespace: harbor
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Secret
+      name: harbor-registry-htpasswd
+      namespace: harbor
+      jsonPointers:
+        - /data
+    - group: apps
+      kind: Deployment
+      name: harbor-core
+      namespace: harbor
+      jqPathExpressions:
+        - '.spec.template.metadata.annotations."checksum/secret"'
+        - '.spec.template.metadata.annotations."checksum/secret-jobservice"'
+    - group: apps
+      kind: Deployment
+      name: harbor-jobservice
+      namespace: harbor
+      jqPathExpressions:
+        - '.spec.template.metadata.annotations."checksum/secret"'
+        - '.spec.template.metadata.annotations."checksum/secret-core"'
+    - group: apps
+      kind: Deployment
+      name: harbor-registry
+      namespace: harbor
+      jqPathExpressions:
+        - '.spec.template.metadata.annotations."checksum/secret"'
+        - '.spec.template.metadata.annotations."checksum/secret-core"'
+        - '.spec.template.metadata.annotations."checksum/secret-jobservice"'
   syncPolicy:
     automated:
       prune: true
