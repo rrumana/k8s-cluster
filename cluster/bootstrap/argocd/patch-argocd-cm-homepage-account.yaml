@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-cm
-data:
-  accounts.homepage: apiKey, login
-  accounts.homepage.enabled: "true"

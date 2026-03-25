@@ -1,0 +1,145 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-rcrumana-xyz-tls
+  ingress:
+    controller: default
+    className: haproxy
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      haproxy-ingress.github.io/backend-protocol: "http"
+      haproxy-ingress.github.io/ssl-redirect: "true"
+      haproxy-ingress.github.io/timeout-client: "3600s"
+      haproxy-ingress.github.io/timeout-server: "3600s"
+      haproxy-ingress.github.io/proxy-body-size: "0"
+    hosts:
+      core: harbor.rcrumana.xyz
+
+externalURL: https://harbor.rcrumana.xyz
+
+updateStrategy:
+  type: Recreate
+
+existingSecretAdminPassword: harbor-core-secrets
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+existingSecretSecretKey: harbor-core-secrets
+
+harborAdminPassword: ""
+secretKey: ""
+
+persistence:
+  enabled: true
+  resourcePolicy: keep
+  persistentVolumeClaim:
+    registry:
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 500Gi
+    chartmuseum:
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 5Gi
+    jobservice:
+      jobLog:
+        storageClass: ceph-block
+        accessMode: ReadWriteOnce
+        size: 5Gi
+    database:
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 20Gi
+    redis:
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 5Gi
+    trivy:
+      storageClass: ceph-block
+      accessMode: ReadWriteOnce
+      size: 20Gi
+    imageChartStorage:
+      type: filesystem
+
+chartmuseum:
+  enabled: false
+
+notary:
+  enabled: false
+
+trivy:
+  enabled: true
+
+portal:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+core:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+jobservice:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+registry:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+database:
+  internal:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+redis:
+  internal:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+exporter:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+metrics:
+  enabled: true

@@ -44,6 +44,13 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: harbor
+  annotations:
+    linkerd.io/inject: disabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: scheduling
 ---
 apiVersion: v1

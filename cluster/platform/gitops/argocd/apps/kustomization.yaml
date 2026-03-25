@@ -30,7 +30,6 @@ resources:
   - arr-lts2-app.yaml
   - collabora-app.yaml
   - elasticsearch-app.yaml
-  - homepage-app.yaml
   - homarr-app.yaml
   - hypermind-app.yaml
   - jellyfin-app.yaml
@@ -40,6 +39,7 @@ resources:
   - nextcloud-app.yaml
   - plex-app.yaml
   - headscale-app.yaml
+  - harbor-app.yaml
   - truenas-app.yaml
   - unifi-os-server-app.yaml
   - uptime-kuma-app.yaml

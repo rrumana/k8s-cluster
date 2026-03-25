@@ -6,7 +6,6 @@ resources:
   - ceph-dashboard.yaml
   - collabora.yaml
   - headscale.yaml
-  - homepage.yaml
   - homarr.yaml
   - hypermind.yaml
   - librechat.yaml
