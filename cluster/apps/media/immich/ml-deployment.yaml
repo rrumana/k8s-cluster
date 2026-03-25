@@ -22,7 +22,7 @@ spec:
       serviceAccountName: immich-machine-learning
       containers:
         - name: immich-machine-learning
-          image: ghcr.io/immich-app/immich-machine-learning:v2.5.6-rocm
+          image: ghcr.io/immich-app/immich-machine-learning:v2.6.2-rocm
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
