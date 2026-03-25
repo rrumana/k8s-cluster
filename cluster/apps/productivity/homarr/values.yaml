@@ -10,7 +10,7 @@ podAnnotations:
 
 env:
   TZ: America/Los_Angeles
-  LOG_LEVEL: debug
+  LOG_LEVEL: info
   REDIS_IS_EXTERNAL: "true"
   REDIS_HOST: valkey-cache-primary.databases.svc.cluster.local
   REDIS_PORT: "6379"
