@@ -9,7 +9,7 @@ spec:
   project: default
   sources:
     - repoURL: oci://registry-1.docker.io/bitnamicharts/valkey
-      targetRevision: "5.4.3"
+      targetRevision: "5.4.9"
       path: .
       helm:
         releaseName: valkey-queue

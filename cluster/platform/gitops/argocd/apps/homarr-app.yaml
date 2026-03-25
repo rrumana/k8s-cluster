@@ -11,7 +11,7 @@ spec:
 
   sources:
     - repoURL: oci://ghcr.io/homarr-labs/charts/homarr
-      targetRevision: "8.14.0"
+      targetRevision: "8.14.1"
       path: .
       helm:
         releaseName: homarr-helm
