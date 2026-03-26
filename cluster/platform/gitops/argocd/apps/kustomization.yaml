@@ -39,6 +39,7 @@ resources:
   - nextcloud-app.yaml
   - plex-app.yaml
   - headscale-app.yaml
+  - foldingathome-app.yaml
   - harbor-app.yaml
   - renovate-app.yaml
   - truenas-app.yaml

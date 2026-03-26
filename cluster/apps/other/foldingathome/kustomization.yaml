@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: other
+
+resources:
+  - serviceaccount.yaml
+  - externalsecret.yaml
+  - service.yaml
+  - statefulset.yaml
+  - vpa.yaml
+
+commonLabels:
+  app.kubernetes.io/name: foldingathome
+  app.kubernetes.io/managed-by: argocd
