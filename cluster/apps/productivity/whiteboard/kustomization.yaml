@@ -5,6 +5,7 @@ namespace: productivity
 
 resources:
   - serviceaccount.yaml
+  - externalsecret.yaml
   - deployment.yaml
   - service.yaml
   - vpa.yaml

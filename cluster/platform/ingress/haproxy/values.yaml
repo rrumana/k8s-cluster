@@ -1,6 +1,8 @@
 # cluster/platform/ingress/haproxy/values.yaml
 controller:
   configMap: haproxy-ingress-config
+  extraArgs:
+    publish-service: ingress-haproxy/haproxy-ingress
 
   service:
     type: LoadBalancer
@@ -47,4 +49,3 @@ serviceMonitor:
   enabled: true
   namespace: ingress-haproxy
   interval: 30s
-

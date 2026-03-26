@@ -15,7 +15,7 @@ spec:
       serviceAccountName: whiteboard
       containers:
         - name: wbo
-          image:  harbor.rcrumana.xyz/pilot/lovasoa-wbo:latest
+          image: harbor.rcrumana.xyz/mirror/lovasoa-wbo:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT

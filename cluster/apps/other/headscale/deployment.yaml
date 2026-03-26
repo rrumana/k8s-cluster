@@ -22,7 +22,7 @@ spec:
       serviceAccountName: headscale
       containers:
         - name: headscale
-          image: headscale/headscale:0.27.1
+          image: headscale/headscale:v0.28.0
           imagePullPolicy: IfNotPresent
           command: ["headscale"]
           args: ["serve", "--config", "/etc/headscale/config.yaml"]

@@ -1,4 +1,4 @@
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: volsync-minio
@@ -31,7 +31,7 @@ spec:
         key: apps/productivity/volsync-minio
         property: AWS_SECRET_ACCESS_KEY
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: elasticsearch-data-backup-restic
@@ -94,7 +94,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: nextcloud-appdata-backup-restic
@@ -157,7 +157,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: uptime-kuma-data-backup-restic
@@ -220,7 +220,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: vaultwarden-data-backup-restic

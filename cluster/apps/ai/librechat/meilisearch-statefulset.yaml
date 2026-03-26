@@ -23,7 +23,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: meilisearch
-          image: getmeili/meilisearch:v1.13
+          image: getmeili/meilisearch:v1.40
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

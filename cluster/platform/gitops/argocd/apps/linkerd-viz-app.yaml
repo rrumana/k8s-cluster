@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://helm.linkerd.io/edge
       chart: linkerd-viz
-      targetRevision: "2025.10.7"
+      targetRevision: "2026.3.3"
       helm:
         releaseName: linkerd-viz
         valueFiles:

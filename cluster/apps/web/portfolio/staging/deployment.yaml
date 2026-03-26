@@ -19,8 +19,6 @@ spec:
         app: portfolio-staging
     spec:
       serviceAccountName: portfolio-staging
-      imagePullSecrets:
-        - name: ghcr-creds
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -30,7 +28,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: portfolio
-          image: ghcr.io/rrumana/portfolio:staging
+          image: harbor.rcrumana.xyz/apps-private/portfolio:staging
           imagePullPolicy: Always
           env:
             - name: RUST_LOG
