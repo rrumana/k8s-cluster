@@ -1,4 +1,4 @@
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: volsync-minio
@@ -31,7 +31,7 @@ spec:
         key: apps/media/volsync-minio
         property: AWS_SECRET_ACCESS_KEY
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-lts-gluetun-backup-restic
@@ -94,7 +94,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-lts-qbit-config-backup-restic
@@ -157,7 +157,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-lts2-gluetun-backup-restic
@@ -220,7 +220,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-lts2-qbit-config-backup-restic
@@ -283,7 +283,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-gluetun-backup-restic
@@ -346,7 +346,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-jellyseerr-config-backup-restic
@@ -409,7 +409,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-lidarr-config-backup-restic
@@ -472,7 +472,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-prowlarr-config-backup-restic
@@ -535,7 +535,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-qbit-config-backup-restic
@@ -598,7 +598,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-radarr-config-backup-restic
@@ -661,7 +661,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: arr-stack-sonarr-config-backup-restic
@@ -724,7 +724,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: immich-ml-cache-backup-restic
@@ -787,7 +787,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: immich-photos-backup-restic
@@ -851,7 +851,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: jellyfin-config-backup-restic
@@ -914,7 +914,7 @@ spec:
       weekly: 4
       monthly: 3
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: plex-config-backup-restic
