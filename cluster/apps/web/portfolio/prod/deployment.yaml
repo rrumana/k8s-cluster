@@ -19,8 +19,6 @@ spec:
         app: portfolio
     spec:
       serviceAccountName: portfolio
-      imagePullSecrets:
-        - name: ghcr-creds
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -30,7 +28,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: portfolio
-          image: ghcr.io/rrumana/portfolio:latest
+          image: harbor.rcrumana.xyz/apps-private/portfolio:latest
           imagePullPolicy: Always
           env:
             - name: RUST_LOG
