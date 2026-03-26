@@ -58,7 +58,7 @@ spec:
 
       initContainers:
         - name: sysctl-init
-          image: busybox:1.36
+          image: busybox:1.37
           securityContext:
             privileged: true
           command: ["sh","-c",<<-'EOS'
@@ -68,7 +68,7 @@ spec:
             sysctl -w net.ipv4.conf.tun0.rp_filter=0 || true
             EOS]
         - name: fix-perms
-          image: busybox:1.36
+          image: busybox:1.37
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -121,7 +121,7 @@ spec:
             limits:   { cpu: "1", memory: "512Gi" }
 
         - name: pf-sync
-          image: curlimages/curl:8.7.1
+          image: curlimages/curl:8.18.0
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh","-c","/scripts/pf-sync.sh"]
           env:

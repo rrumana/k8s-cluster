@@ -24,7 +24,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: rook-ceph-tools
-          image: rook/ceph:v1.18.8
+          image: rook/ceph:v1.19.3
           command:
             - /bin/bash
             - -c

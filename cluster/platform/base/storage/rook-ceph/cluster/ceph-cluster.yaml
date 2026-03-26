@@ -7,7 +7,7 @@ spec:
   dataDirHostPath: /var/lib/rook
 
   cephVersion:
-    image: quay.io/ceph/ceph:v18.2.2
+    image: quay.io/ceph/ceph:v18.2.8
 
   # Keep all Ceph traffic on the dedicated storage network so PVC reads/writes
   # do not compete with general LAN traffic.
