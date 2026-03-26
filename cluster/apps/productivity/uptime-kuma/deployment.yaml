@@ -19,7 +19,7 @@ spec:
       serviceAccountName: uptime-kuma
       initContainers:
         - name: init-permissions
-          image: busybox:1.37
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.37
           securityContext:
             runAsUser: 0
             runAsGroup: 0

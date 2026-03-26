@@ -21,7 +21,7 @@ spec:
       serviceAccountName: librechat
       containers:
         - name: librechat
-          image: ghcr.io/danny-avila/librechat:latest
+          image: harbor.rcrumana.xyz/proxy-ghcr/danny-avila/librechat:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3080

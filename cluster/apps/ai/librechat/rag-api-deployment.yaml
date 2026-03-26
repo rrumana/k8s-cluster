@@ -21,7 +21,7 @@ spec:
       serviceAccountName: librechat-rag-api
       containers:
         - name: rag-api
-          image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+          image: harbor.rcrumana.xyz/proxy-ghcr/danny-avila/librechat-rag-api-dev-lite:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
