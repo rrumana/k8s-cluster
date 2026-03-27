@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: other
+
+resources:
+  - desktop-service.yaml
+  - desktop-endpoints.yaml
+  - melchior-service.yaml
+  - melchior-endpoints.yaml
+  - balthasar-service.yaml
+  - balthasar-endpoints.yaml
+  - casper-service.yaml
+  - casper-endpoints.yaml
+
+labels:
+  - includeSelectors: false
+    includeTemplates: false
+    pairs:
+      app.kubernetes.io/name: host-dashboards
+      app.kubernetes.io/managed-by: argocd

@@ -22,9 +22,6 @@ spec:
       enableServiceLinks: false
       securityContext:
         fsGroup: 1000
-        supplementalGroups:
-          - 985
-          - 989
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -46,8 +43,6 @@ spec:
               value: "1000"
             - name: TZ
               value: America/Los_Angeles
-            - name: HSA_OVERRIDE_GFX_VERSION
-              value: "11.5.1"
             - name: ACCOUNT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -67,19 +62,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            - name: dri
-              mountPath: /dev/dri
-            - name: kfd
-              mountPath: /dev/kfd
-      volumes:
-        - name: dri
-          hostPath:
-            path: /dev/dri
-            type: Directory
-        - name: kfd
-          hostPath:
-            path: /dev/kfd
-            type: CharDevice
   volumeClaimTemplates:
     - metadata:
         name: config

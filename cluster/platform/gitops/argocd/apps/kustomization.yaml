@@ -41,6 +41,7 @@ resources:
   - headscale-app.yaml
   - foldingathome-app.yaml
   - harbor-app.yaml
+  - host-dashboards-app.yaml
   - renovate-app.yaml
   - truenas-app.yaml
   - unifi-os-server-app.yaml

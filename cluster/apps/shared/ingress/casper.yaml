@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: casper-proxy
+  namespace: other
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    haproxy-ingress.github.io/backend-protocol: "http"
+    haproxy-ingress.github.io/timeout-client: "600s"
+    haproxy-ingress.github.io/timeout-server: "600s"
+    haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+spec:
+  ingressClassName: haproxy-restricted
+  tls:
+    - hosts:
+        - casper.rcrumana.xyz
+      secretName: casper-rcrumana-xyz-tls
+  rules:
+    - host: casper.rcrumana.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: casper-http
+                port:
+                  number: 7681

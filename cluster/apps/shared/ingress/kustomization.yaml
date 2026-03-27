@@ -3,12 +3,16 @@ kind: Kustomization
 
 resources:
   - argocd.yaml
+  - balthasar.yaml
+  - casper.yaml
   - ceph-dashboard.yaml
   - collabora.yaml
+  - desktop.yaml
   - headscale.yaml
   - homarr.yaml
   - hypermind.yaml
   - librechat.yaml
+  - melchior.yaml
   - nextcloud.yaml
   - jellyfin.yaml
   - jellyseerr.yaml
