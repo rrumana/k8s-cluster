@@ -65,7 +65,6 @@ spec:
             limits:
               cpu: "12"
               memory: 8Gi
-              amd.com/gpu: "1"
           volumeMounts:
             - name: config
               mountPath: /config
