@@ -4,12 +4,8 @@ kind: Kustomization
 namespace: productivity
 
 resources:
-  - serviceaccount.yaml
-  - pvc.yaml
-  - deployment.yaml
-  - service.yaml
-  - vpa.yaml
+  - externalsecret.yaml
 
 commonLabels:
-  app.kubernetes.io/name: uptime-kuma
+  app.kubernetes.io/part-of: productivity-shared
   app.kubernetes.io/managed-by: argocd

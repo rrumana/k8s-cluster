@@ -21,6 +21,10 @@ resources:
   - linkerd-control-plane-app.yaml
   - linkerd-viz-app.yaml
   - shared-ingress-app.yaml
+  - ai-shared-app.yaml
+  - productivity-shared-app.yaml
+  - other-shared-app.yaml
+  - web-shared-app.yaml
   - portfolio-app.yaml
   - portfolio-staging-app.yaml
   - opnsense-app.yaml

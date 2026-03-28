@@ -4,11 +4,8 @@ kind: Kustomization
 namespace: web
 
 resources:
-  - serviceaccount.yaml
-  - deployment.yaml
-  - service.yaml
-  - vpa.yaml
+  - externalsecret.yaml
 
 commonLabels:
-  app.kubernetes.io/name: portfolio
+  app.kubernetes.io/part-of: web-shared
   app.kubernetes.io/managed-by: argocd
