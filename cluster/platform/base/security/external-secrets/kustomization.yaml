@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - clustersecretstore-vault.yaml
+  - harbor-pull-creds.yaml

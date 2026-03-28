@@ -8,18 +8,20 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://helm.releases.hashicorp.com
+    repoURL: harbor.rcrumana.xyz/thirdparty-charts
     chart: vault
     targetRevision: "0.32.0"
     helm:
       values: |
         global:
           enabled: true
+          imagePullSecrets:
+            - name: harbor-pull-creds
           tlsDisable: true
 
         server:
           image:
-            repository: hashicorp/vault
+            repository: harbor.rcrumana.xyz/mirror/hashicorp/vault
             tag: "1.16.2"
           ha:
             enabled: true
