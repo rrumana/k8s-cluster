@@ -4,8 +4,8 @@ controller:
   image:
     registry: harbor.rcrumana.xyz
     repository: mirror/jcmoraisjr/haproxy-ingress
-  imageCredentials:
-    existingImagePullSecret: harbor-pull-creds
+  imagePullSecrets:
+    - name: harbor-pull-creds
   extraArgs:
     publish-service: ingress-haproxy/haproxy-ingress
 
