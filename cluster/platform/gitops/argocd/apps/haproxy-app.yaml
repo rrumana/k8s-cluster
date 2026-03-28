@@ -16,7 +16,7 @@ spec:
   # Multiple sources allow us to combine Helm and raw manifests
   sources:
     # Source 1: HAProxy Helm Chart
-    - repoURL: https://haproxy-ingress.github.io/charts
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: haproxy-ingress
       targetRevision: "0.16.0"
       helm:

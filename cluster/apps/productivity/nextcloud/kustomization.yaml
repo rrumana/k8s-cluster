@@ -7,6 +7,7 @@ resources:
   - linkerd-policy.yaml
   - externalsecret.yaml
   - pvc.yaml
+  - serviceaccount.yaml
   - vpa.yaml
 
 commonLabels:
