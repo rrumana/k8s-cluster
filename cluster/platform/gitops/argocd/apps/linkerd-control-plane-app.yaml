@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: oci://harbor.rcrumana.xyz/thirdparty-charts/linkerd-control-plane
+    - repoURL: harbor.rcrumana.xyz
       targetRevision: "2026.3.3"
-      path: .
+      path: thirdparty-charts/linkerd-control-plane
       helm:
         releaseName: linkerd-control-plane
         valueFiles:

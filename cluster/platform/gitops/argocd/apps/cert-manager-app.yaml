@@ -9,9 +9,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: oci://harbor.rcrumana.xyz/thirdparty-charts/cert-manager
+    repoURL: harbor.rcrumana.xyz
     targetRevision: "v1.20.0"
-    path: .
+    path: thirdparty-charts/cert-manager
     helm:
       values: |
         installCRDs: true

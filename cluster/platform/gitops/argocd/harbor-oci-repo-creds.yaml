@@ -20,7 +20,7 @@ spec:
           argocd.argoproj.io/secret-type: repo-creds
       data:
         type: helm
-        url: harbor.rcrumana.xyz/thirdparty-charts
+        url: harbor.rcrumana.xyz
         enableOCI: "true"
         username: "{{ .username }}"
         password: "{{ .password }}"

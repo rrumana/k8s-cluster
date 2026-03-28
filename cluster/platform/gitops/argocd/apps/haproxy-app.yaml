@@ -16,9 +16,9 @@ spec:
   # Multiple sources allow us to combine Helm and raw manifests
   sources:
     # Source 1: HAProxy Helm Chart
-    - repoURL: oci://harbor.rcrumana.xyz/thirdparty-charts/haproxy-ingress
+    - repoURL: harbor.rcrumana.xyz
       targetRevision: "0.16.0"
-      path: .
+      path: thirdparty-charts/haproxy-ingress
       helm:
         releaseName: haproxy-ingress
         valueFiles:
