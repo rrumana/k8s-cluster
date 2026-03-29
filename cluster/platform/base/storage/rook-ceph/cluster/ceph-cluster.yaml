@@ -43,6 +43,10 @@ spec:
 
   monitoring:
     enabled: true
+    # Ceph v20.2.0 has a prometheus mgr startup regression that can crash the
+    # module on Rook-managed clusters. Disable Ceph-exported metrics until a
+    # fixed Ceph image is available, then remove this override.
+    metricsDisabled: true
 
   # Conservative recovery/backfill settings for 2.5Gb links.
   cephConfig:

@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://helm.goharbor.io
-      targetRevision: "1.18.3"
-      chart: harbor
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/platform/registry/harbor/vendor/harbor
       helm:
         releaseName: harbor
         valueFiles:

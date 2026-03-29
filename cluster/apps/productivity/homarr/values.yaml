@@ -4,6 +4,11 @@
 replicaCount: 1
 strategyType: RollingUpdate
 
+image:
+  repository: harbor.rcrumana.xyz/mirror/homarr-labs/homarr
+  pullSecrets:
+    - name: harbor-pull-creds
+
 podAnnotations:
   linkerd.io/inject: enabled
   config.linkerd.io/skip-outbound-ports: "6379"

@@ -10,9 +10,9 @@ spec:
   project: default
 
   sources:
-    - repoURL: oci://ghcr.io/homarr-labs/charts/homarr
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      chart: homarr
       targetRevision: "8.14.1"
-      path: .
       helm:
         releaseName: homarr-helm
         valueFiles:
