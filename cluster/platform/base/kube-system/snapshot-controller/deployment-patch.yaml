@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snapshot-controller
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      containers:
+        - name: snapshot-controller
+          image: harbor.rcrumana.xyz/mirror/sig-storage/snapshot-controller:v8.4.0

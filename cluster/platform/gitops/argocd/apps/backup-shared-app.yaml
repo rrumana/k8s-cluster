@@ -1,23 +1,19 @@
-# platform/gitops/argocd/apps/snapshot-controller-app.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: snapshot-controller
+  name: backup-shared
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   project: default
-
   source:
     repoURL: https://github.com/rrumana/k8s-homelab-2.git
     targetRevision: main
-    path: cluster/platform/base/kube-system/snapshot-controller
-
+    path: cluster/platform/base/backup/shared
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
-
+    namespace: backup
   syncPolicy:
     automated:
       prune: true

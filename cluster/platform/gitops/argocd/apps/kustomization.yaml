@@ -3,6 +3,9 @@ kind: Kustomization
 
 resources:
   - namespaces-app.yaml
+  - kube-system-shared-app.yaml
+  - scheduling-shared-app.yaml
+  - backup-shared-app.yaml
   - cert-manager-app.yaml
   - cert-manager-extras-app.yaml
   - vault-app.yaml

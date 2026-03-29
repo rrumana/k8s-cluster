@@ -10,7 +10,7 @@ spec:
   project: default
 
   sources:
-    - repoURL: https://kubernetes-sigs.github.io/metrics-server/
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       targetRevision: "3.13.0"
       chart: metrics-server
       helm:

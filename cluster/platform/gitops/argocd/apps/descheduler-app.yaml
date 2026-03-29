@@ -12,7 +12,7 @@ spec:
   project: default
 
   sources:
-    - repoURL: https://kubernetes-sigs.github.io/descheduler/
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       targetRevision: "0.35.1"
       chart: descheduler
       helm:
@@ -34,4 +34,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-

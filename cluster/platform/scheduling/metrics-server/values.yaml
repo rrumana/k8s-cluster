@@ -2,6 +2,13 @@
 
 replicas: 1
 
+image:
+  repository: harbor.rcrumana.xyz/mirror/metrics-server/metrics-server
+  tag: v0.8.0
+
+imagePullSecrets:
+  - name: harbor-pull-creds
+
 # Homelab nodes often use kubelet certs without complete SANs.
 # This keeps metrics available for VPA recommendation ingestion.
 args:

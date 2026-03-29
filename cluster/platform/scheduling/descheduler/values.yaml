@@ -1,5 +1,11 @@
 kind: CronJob
 
+image:
+  repository: harbor.rcrumana.xyz/mirror/descheduler/descheduler
+
+imagePullSecrets:
+  - name: harbor-pull-creds
+
 schedule: "0 * * * *"
 successfulJobsHistoryLimit: 1
 failedJobsHistoryLimit: 3
