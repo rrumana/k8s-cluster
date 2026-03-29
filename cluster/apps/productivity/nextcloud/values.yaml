@@ -50,7 +50,8 @@ dnsConfig:
       value: "1"
 
 image:
-  repository: harbor.rcrumana.xyz/mirror/library/nextcloud
+  registry: harbor.rcrumana.xyz
+  repository: mirror/library/nextcloud
   tag: "33.0.0-apache"
   pullSecrets:
     - harbor-pull-creds
