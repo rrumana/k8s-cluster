@@ -15,6 +15,8 @@ spec:
       labels:
         app: rook-ceph-tools
     spec:
+      imagePullSecrets:
+        - name: harbor-pull-creds
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
@@ -24,7 +26,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: rook-ceph-tools
-          image: rook/ceph:v1.19.3
+          image: harbor.rcrumana.xyz/mirror/rook/ceph:v1.19.3
           command:
             - /bin/bash
             - -c

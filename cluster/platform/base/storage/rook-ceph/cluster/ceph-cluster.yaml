@@ -7,7 +7,7 @@ spec:
   dataDirHostPath: /var/lib/rook
 
   cephVersion:
-    image: quay.io/ceph/ceph:v20.2.0
+    image: harbor.rcrumana.xyz/mirror/ceph/ceph:v20.2.0
 
   # Keep all Ceph traffic on the dedicated storage network so PVC reads/writes
   # do not compete with general LAN traffic.

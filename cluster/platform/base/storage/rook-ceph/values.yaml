@@ -8,8 +8,34 @@
 crds:
   enabled: true
 
+image:
+  repository: harbor.rcrumana.xyz/mirror/rook/ceph
+  tag: v1.19.3
+
+imagePullSecrets:
+  - name: harbor-pull-creds
+
 # Keep CSI enabled so we can validate provisioning as soon as a CephCluster exists.
 csi:
+  cephcsi:
+    repository: harbor.rcrumana.xyz/mirror/cephcsi/cephcsi
+    tag: v3.16.1
+  provisioner:
+    repository: harbor.rcrumana.xyz/mirror/sig-storage/csi-provisioner
+    tag: v6.0.0
+  attacher:
+    repository: harbor.rcrumana.xyz/mirror/sig-storage/csi-attacher
+    tag: v4.10.0
+  registrar:
+    repository: harbor.rcrumana.xyz/mirror/sig-storage/csi-node-driver-registrar
+    tag: v2.15.0
+  resizer:
+    repository: harbor.rcrumana.xyz/mirror/sig-storage/csi-resizer
+    tag: v2.0.0
+  snapshotter:
+    repository: harbor.rcrumana.xyz/mirror/sig-storage/csi-snapshotter
+    tag: v8.4.0
+
   # Do not deploy the separate ceph-csi-operator (it installs very large CRDs that
   # can exceed Kubernetes annotation size limits when applied by some GitOps tools).
   # Rook can run CSI without it.
