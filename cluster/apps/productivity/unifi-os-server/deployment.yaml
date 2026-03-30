@@ -18,6 +18,58 @@ spec:
     spec:
       serviceAccountName: unifi-os-server
       terminationGracePeriodSeconds: 120
+      initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/mirror/bitnami/os-shell:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              set -euo pipefail
+              for dir in persistent var-log data srv var-lib-unifi var-lib-mongodb rabbitmq-ssl; do
+                mkdir -p "/storage/${dir}"
+              done
+
+              copy_if_empty() {
+                src="$1"
+                dst="$2"
+                if [ -d "$src" ] && [ -z "$(ls -A "$dst" 2>/dev/null)" ]; then
+                  cp -a "${src}/." "$dst/"
+                fi
+              }
+
+              copy_if_empty /old/persistent /storage/persistent
+              copy_if_empty /old/var-log /storage/var-log
+              copy_if_empty /old/data /storage/data
+              copy_if_empty /old/srv /storage/srv
+              copy_if_empty /old/var-lib-unifi /storage/var-lib-unifi
+              copy_if_empty /old/var-lib-mongodb /storage/var-lib-mongodb
+              copy_if_empty /old/rabbitmq-ssl /storage/rabbitmq-ssl
+          volumeMounts:
+            - name: storage
+              mountPath: /storage
+            - name: persistent
+              mountPath: /old/persistent
+              readOnly: true
+            - name: var-log
+              mountPath: /old/var-log
+              readOnly: true
+            - name: data
+              mountPath: /old/data
+              readOnly: true
+            - name: srv
+              mountPath: /old/srv
+              readOnly: true
+            - name: var-lib-unifi
+              mountPath: /old/var-lib-unifi
+              readOnly: true
+            - name: var-lib-mongodb
+              mountPath: /old/var-lib-mongodb
+              readOnly: true
+            - name: rabbitmq-ssl
+              mountPath: /old/rabbitmq-ssl
+              readOnly: true
       containers:
         - name: unifi-os-server
           image: harbor.rcrumana.xyz/mirror/lemker/unifi-os-server:latest
@@ -91,24 +143,34 @@ spec:
               cpu: "2"
               memory: 4Gi
           volumeMounts:
-            - name: persistent
+            - name: storage
               mountPath: /persistent
-            - name: var-log
+              subPath: persistent
+            - name: storage
               mountPath: /var/log
-            - name: data
+              subPath: var-log
+            - name: storage
               mountPath: /data
-            - name: srv
+              subPath: data
+            - name: storage
               mountPath: /srv
-            - name: var-lib-unifi
+              subPath: srv
+            - name: storage
               mountPath: /var/lib/unifi
-            - name: var-lib-mongodb
+              subPath: var-lib-unifi
+            - name: storage
               mountPath: /var/lib/mongodb
-            - name: rabbitmq-ssl
+              subPath: var-lib-mongodb
+            - name: storage
               mountPath: /etc/rabbitmq/ssl
+              subPath: rabbitmq-ssl
             # UniFi OS runs under systemd and needs writable cgroup access.
             - name: cgroup
               mountPath: /sys/fs/cgroup
       volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: unifi-os-server-storage
         - name: persistent
           persistentVolumeClaim:
             claimName: unifi-os-server-persistent

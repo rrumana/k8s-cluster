@@ -1,6 +1,19 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: unifi-os-server-storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  storageClassName: ceph-block
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: unifi-os-server-persistent
   annotations:
     argocd.argoproj.io/sync-wave: "-20"
