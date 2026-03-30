@@ -26,6 +26,7 @@ resources:
   - linkerd-viz-app.yaml
   - shared-ingress-app.yaml
   - ai-shared-app.yaml
+  - media-shared-app.yaml
   - productivity-shared-app.yaml
   - other-shared-app.yaml
   - web-shared-app.yaml
