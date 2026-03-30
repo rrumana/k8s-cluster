@@ -22,6 +22,9 @@ spec:
         - name: migrate-storage
           image: harbor.rcrumana.xyz/mirror/bitnami/os-shell:latest
           imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           command:
             - /bin/bash
             - -ec
