@@ -75,7 +75,7 @@ spec:
               readOnly: true
       containers:
         - name: unifi-os-server
-          image: harbor.rcrumana.xyz/mirror/lemker/unifi-os-server:latest
+          image: harbor.rcrumana.xyz/mirror/lemker/unifi-os-server:v1.0.0
           imagePullPolicy: IfNotPresent
           env:
             - name: UOS_SYSTEM_IP

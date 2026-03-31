@@ -16,7 +16,7 @@ spec:
       serviceAccountName: collabora
       containers:
         - name: collabora
-          image: harbor.rcrumana.xyz/proxy-dockerhub/collabora/code:latest
+          image: harbor.rcrumana.xyz/proxy-dockerhub/collabora/code:25.04.9.2.1
           imagePullPolicy: IfNotPresent
           env:
             - name: domain
