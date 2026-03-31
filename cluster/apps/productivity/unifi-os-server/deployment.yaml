@@ -146,27 +146,20 @@ spec:
               cpu: "2"
               memory: 4Gi
           volumeMounts:
-            - name: storage
+            - name: persistent
               mountPath: /persistent
-              subPath: persistent
-            - name: storage
+            - name: var-log
               mountPath: /var/log
-              subPath: var-log
-            - name: storage
+            - name: data
               mountPath: /data
-              subPath: data
-            - name: storage
+            - name: srv
               mountPath: /srv
-              subPath: srv
-            - name: storage
+            - name: var-lib-unifi
               mountPath: /var/lib/unifi
-              subPath: var-lib-unifi
-            - name: storage
+            - name: var-lib-mongodb
               mountPath: /var/lib/mongodb
-              subPath: var-lib-mongodb
-            - name: storage
+            - name: rabbitmq-ssl
               mountPath: /etc/rabbitmq/ssl
-              subPath: rabbitmq-ssl
             # UniFi OS runs under systemd and needs writable cgroup access.
             - name: cgroup
               mountPath: /sys/fs/cgroup
