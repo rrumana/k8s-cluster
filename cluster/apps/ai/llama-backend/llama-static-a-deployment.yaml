@@ -45,7 +45,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       initContainers:
         - name: fetch-gguf
-          image: python:3.14-slim
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/python:3.14-slim
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
@@ -108,7 +108,7 @@ spec:
               mountPath: /models
       containers:
         - name: llama-server
-          image: ghcr.io/mostlygeek/llama-swap:vulkan
+          image: harbor.rcrumana.xyz/proxy-ghcr/mostlygeek/llama-swap:vulkan
           imagePullPolicy: IfNotPresent
           command:
             - /app/llama-server

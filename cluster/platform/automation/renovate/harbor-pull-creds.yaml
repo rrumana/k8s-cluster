@@ -1,0 +1,21 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: harbor-pull-creds
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: harbor-pull-creds
+    creationPolicy: Owner
+    template:
+      type: kubernetes.io/dockerconfigjson
+  data:
+    - secretKey: .dockerconfigjson
+      remoteRef:
+        key: apps/automation/harbor-pull-creds
+        property: .dockerconfigjson

@@ -12,7 +12,7 @@ spec:
   project: default
   
   sources:
-    - repoURL: https://metallb.github.io/metallb
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       targetRevision: "0.15.3"
       chart: metallb
       helm:
@@ -22,6 +22,9 @@ spec:
     - repoURL: https://github.com/rrumana/k8s-homelab-2.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/platform/base/networking/metallb/shared
   
   destination:
     server: https://kubernetes.default.svc

@@ -3,6 +3,8 @@ kind: ServiceAccount
 metadata:
   name: vpa-recommender
   namespace: scheduling
+imagePullSecrets:
+  - name: harbor-pull-creds
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

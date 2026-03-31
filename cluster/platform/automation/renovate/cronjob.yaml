@@ -16,9 +16,11 @@ spec:
             linkerd.io/inject: disabled
         spec:
           restartPolicy: Never
+          imagePullSecrets:
+            - name: harbor-pull-creds
           containers:
             - name: renovate
-              image: ghcr.io/renovatebot/renovate:43.91.1
+              image: harbor.rcrumana.xyz/proxy-ghcr/renovatebot/renovate:43.91.1
               imagePullPolicy: IfNotPresent
               env:
                 - name: LOG_LEVEL

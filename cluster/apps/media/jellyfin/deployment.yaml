@@ -30,7 +30,7 @@ spec:
           - 985
       containers:
         - name: jellyfin
-          image: lscr.io/linuxserver/jellyfin:latest
+          image: harbor.rcrumana.xyz/mirror/linuxserver/jellyfin:10.11.3ubu2404-ls9
           securityContext:
             privileged: true
           env:

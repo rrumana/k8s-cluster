@@ -1,4 +1,10 @@
+imagePullSecrets:
+  - name: harbor-pull-creds
+
 controller:
+  image:
+    repository: harbor.rcrumana.xyz/mirror/metallb/controller
+    tag: v0.15.3
   resources:
     requests:
       cpu: 50m
@@ -14,6 +20,9 @@ controller:
       enabled: true
 
 speaker:
+  image:
+    repository: harbor.rcrumana.xyz/mirror/metallb/speaker
+    tag: v0.15.3
   resources:
     requests:
       cpu: 50m
@@ -29,6 +38,11 @@ speaker:
       enabled: true
   
   tolerateMaster: true
+
+frr:
+  image:
+    repository: harbor.rcrumana.xyz/mirror/frrouting/frr
+    tag: 10.4.1
 
 # CRDs are included in the chart
 crds:

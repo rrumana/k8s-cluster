@@ -18,7 +18,7 @@ spec:
       serviceAccountName: vpa-recommender
       containers:
         - name: recommender
-          image: registry.k8s.io/autoscaling/vpa-recommender:1.6.0
+          image: harbor.rcrumana.xyz/mirror/autoscaling/vpa-recommender:1.6.0
           imagePullPolicy: IfNotPresent
           args:
             - --v=4

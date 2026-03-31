@@ -21,7 +21,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: litellm
-          image: ghcr.io/berriai/litellm:main-stable
+          image: harbor.rcrumana.xyz/proxy-ghcr/berriai/litellm:main-stable
           imagePullPolicy: IfNotPresent
           command:
             - litellm

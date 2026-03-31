@@ -6,4 +6,5 @@ namespace: automation
 resources:
   - configmap.yaml
   - externalsecret.yaml
+  - harbor-pull-creds.yaml
   - cronjob.yaml

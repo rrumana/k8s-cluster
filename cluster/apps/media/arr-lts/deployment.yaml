@@ -41,7 +41,7 @@ spec:
 
       initContainers:
         - name: sysctl-init
-          image: busybox:1.37
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.37
           securityContext:
             privileged: true
           command: ["sh","-c",<<-'EOS'
@@ -51,7 +51,7 @@ spec:
             sysctl -w net.ipv4.conf.tun0.rp_filter=0 || true
             EOS]
         - name: fix-perms
-          image: busybox:1.37
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.37
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -80,7 +80,7 @@ spec:
 
       containers:
         - name: gluetun
-          image: qmcgaw/gluetun:latest
+          image: harbor.rcrumana.xyz/proxy-dockerhub/qmcgaw/gluetun:v3.41.1
           securityContext:
             privileged: true
             capabilities: { add: ["NET_ADMIN"] }
@@ -101,7 +101,7 @@ spec:
             limits:   { cpu: "1", memory: "512Mi" }
 
         - name: pf-sync
-          image: curlimages/curl:8.18.0
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.18.0
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh","-c","/scripts/pf-sync.sh"]
           env:
@@ -117,14 +117,14 @@ spec:
             limits:   { cpu: "25m", memory: "64Mi" }
 
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.1.4
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
             - { name: TZ,   value: "America/Los_Angeles" }
             - { name: WEBUI_PORT, value: "8021" }
             - { name: TORRENTING_PORT, value: "6882" }
-            - { name: DOCKER_MODS, value: "ghcr.io/vuetorrent/vuetorrent-lsio-mod:latest" }
+            - { name: DOCKER_MODS, value: "ghcr.io/vuetorrent/vuetorrent-lsio-mod:2.31.0" }
           ports:
             - { name: webui, containerPort: 8021, protocol: TCP }
           volumeMounts:
