@@ -44,15 +44,15 @@ Cluster storage math:
         |                    |                  |
         v                    v                  v
    Platform apps         Data platform      Workload apps
- (networking, mesh,      (Postgres, Redis,  (AI, media,
+ (networking, mesh,      (Postgres, Valkey, (AI, media,
   ingress, certs,        backups, Ceph)      productivity, web)
-  security)
+  security, registry)
 
 Ingress path:
 Internet/LAN -> Cloudflare DNS -> MetalLB VIP (HAProxy) -> Ingress -> Services
 
 Data path:
-Apps -> Ceph PVCs / CNPG / Redis -> Snapshots + VolSync -> MinIO (external bridge)
+Apps -> Ceph PVCs / CNPG / Valkey -> Snapshots + VolSync -> MinIO (external bridge)
 ```
 
 ## Platform Foundation
@@ -67,8 +67,10 @@ Apps -> Ceph PVCs / CNPG / Redis -> Snapshots + VolSync -> MinIO (external bridg
 | Storage | Rook/Ceph | `ceph-block` default StorageClass, `ceph-filesystem` for RWX workloads |
 | Snapshots | CSI Snapshot Controller | Default snapshot class `ceph-block-snap` |
 | Backups | VolSync + CNPG native backups | Snapshot + restic to MinIO for PVCs; CNPG to S3-compatible MinIO |
+| Registry / charts | Harbor | Private registry, proxy cache, and OCI chart mirror at `harbor.rcrumana.xyz` |
+| Dependency updates | Renovate | Twice-monthly update discovery against GitHub + Harbor |
 | Shared SQL | CloudNativePG | 5 x HA Postgres clusters (`pg-ai`, `pg-media`, `pg-platform`, `pg-productivity`, `pg-other`) |
-| Shared Redis | Redis Enterprise | 3-node `rec-platform` with `redis-cache` and `redis-queue` databases |
+| Shared cache / queue | Valkey | `valkey-cache` is replicated and ephemeral; `valkey-queue` is replicated, AOF-backed, and backed up with VolSync |
 | Egress shaping | `egress-qos` DaemonSet | Shapes pods labeled `traffic-tier=bulk-seed` (media torrent workloads) |
 
 ## Storage And Data Durability
@@ -83,11 +85,12 @@ Apps -> Ceph PVCs / CNPG / Redis -> Snapshots + VolSync -> MinIO (external bridg
 
 ### Backups
 
-- VolSync replication sources exist across `media`, `productivity`, and `other` namespaces
+- VolSync replication sources exist across `ai`, `media`, `productivity`, `other`, and selected `databases` PVCs
 - Copy method: CSI snapshots (`ceph-block-snap`) plus restic push to MinIO
 - Typical retention: `daily 7 / weekly 4 / monthly 3`
 - CNPG clusters back up to `s3://cluster-backups/cnpg/*` via `minio-api.other.svc.cluster.local:9000`
 - CNPG retention policy: `30d`
+- Emergency recovery also has a human-readable dump runbook and script that writes to `/NAS/dump`
 
 ### External Service Bridges
 
@@ -96,6 +99,7 @@ The cluster also defines service bridges to systems outside Kubernetes:
 - MinIO (`192.168.1.10:9000/9002`)
 - OPNsense (`192.168.1.1:4443`)
 - TrueNAS (`192.168.1.10:443`)
+- Desktop / host dashboards (`192.168.1.11:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, `192.168.1.15:7681`)
 
 ## Workloads By Domain
 
@@ -119,7 +123,7 @@ For the full app catalog and ingress maps, read `docs/apps.md`.
 
 - Nextcloud + Collabora
 - Homarr
-- UniFi Network Application
+- UniFi OS Server
 - Uptime Kuma
 - Vaultwarden
 - Whiteboard
@@ -128,6 +132,9 @@ For the full app catalog and ingress maps, read `docs/apps.md`.
 ### `other`
 
 - Headscale + Headscale UI
+- Folding@Home
+- Hypermind
+- Desktop + node dashboard bridges
 - MinIO, OPNsense, and TrueNAS ingress/service bridges
 
 ### `web`
@@ -154,7 +161,7 @@ Many restricted ingresses use source allowlisting, for example:
 | `media/plex` | `192.168.1.232` |
 | `media/jellyfin` | `192.168.1.233` |
 | `media/immich-server` | `192.168.1.234` |
-| `productivity/unifi-tcp` + `productivity/unifi-udp` | `192.168.1.235` |
+| `productivity/unifi-os-server-tcp` + `productivity/unifi-os-server-udp` | `192.168.1.235` |
 
 ## Contributing
 
@@ -166,3 +173,4 @@ On a more serious note this setup is very personal and unique to my circumstance
 
 - `docs/vault-operations.md`
 - `docs/apps.md`
+- `docs/emergency-dump-runbook.md`

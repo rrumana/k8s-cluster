@@ -120,39 +120,58 @@ If any pod says Vault is not initialized, re-run step 3 for that pod, then step 
 
 ## Common Operations
 
+Replace the example paths and object names below with the secret you are
+actually rotating. The examples use objects that exist in the current repo.
+
 ### Read a Vault value (example)
 
 ```bash
 ROOT_TOKEN=$(jq -r '.root_token' ~/vault-init.json)
-kubectl -n security exec vault-0 -- sh -ec "vault login '$ROOT_TOKEN' >/dev/null && vault kv get -field=MONGO_PASS kv/apps/productivity/unifi-db-credentials"
+SECRET_PATH="kv/apps/productivity/nextcloud-admin"
+PROPERTY="nextcloud-password"
+
+kubectl -n security exec vault-0 -- sh -ec "vault login '$ROOT_TOKEN' >/dev/null && vault kv get -field='$PROPERTY' '$SECRET_PATH'"
 unset ROOT_TOKEN
+unset SECRET_PATH PROPERTY
 ```
 
 ### Write/update a Vault value (example)
 
 ```bash
 ROOT_TOKEN=$(jq -r '.root_token' ~/vault-init.json)
+SECRET_PATH="kv/apps/productivity/nextcloud-admin"
+PROPERTY="nextcloud-password"
 NEW_PASS=$(openssl rand -base64 32 | tr -d '\n')
 
 kubectl -n security exec vault-0 -- sh -ec "vault login '$ROOT_TOKEN' >/dev/null && \
-  vault kv put kv/apps/productivity/unifi-db-credentials MONGO_PASS='$NEW_PASS'"
+  vault kv patch '$SECRET_PATH' '$PROPERTY'='$NEW_PASS'"
 
-unset ROOT_TOKEN NEW_PASS
+unset ROOT_TOKEN SECRET_PATH PROPERTY NEW_PASS
 ```
 
 ### Force ESO refresh for one secret
 
 ```bash
-kubectl -n productivity delete secret unifi-db-credentials
-kubectl -n productivity get secret unifi-db-credentials -w
+NAMESPACE="web"
+SECRET_NAME="harbor-pull-creds"
+
+kubectl -n "$NAMESPACE" delete secret "$SECRET_NAME"
+kubectl -n "$NAMESPACE" get secret "$SECRET_NAME" -w
 # Ctrl+C after it reappears
+
+unset NAMESPACE SECRET_NAME
 ```
 
 ### Inspect ExternalSecret status
 
 ```bash
-kubectl -n productivity get externalsecret unifi-db-credentials \
+NAMESPACE="web"
+SECRET_NAME="harbor-pull-creds"
+
+kubectl -n "$NAMESPACE" get externalsecret "$SECRET_NAME" \
   -o jsonpath='{range .status.conditions[*]}{.type}={.status} {.reason} {.message}{"\n"}{end}'
+
+unset NAMESPACE SECRET_NAME
 ```
 
 ## Emergency Operations
