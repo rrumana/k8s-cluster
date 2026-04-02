@@ -1,0 +1,34 @@
+# shellcheck shell=bash
+#
+# Copy this file to /etc/emergency-cluster-dump.conf and edit it locally.
+# Do not commit real credentials to this repo.
+
+# Use the invoking user's local kubectl config, or set KUBECTL_MODE=ssh to run
+# kubectl on a cluster node over SSH.
+KUBECTL_MODE=local
+# KUBECTL_SSH_TARGET="<cluster node ssh>"
+# KUBECTL_SSH_ARGS=(-o BatchMode=yes)
+
+NAS_ROOT="/NAS"
+DUMP_DIR="/NAS/dump"
+
+BITWARDEN_SERVER_URL="https://vault.rcrumana.xyz"
+VAULTWARDEN_ACCOUNTS_FILE="/etc/emergency-cluster-dump/vaultwarden-accounts.tsv"
+
+KNOWN_CLIENT_DEVICES=(
+  "All Cluster nodes"
+  "..."
+)
+
+SECRET_NAMESPACE_ALLOWLIST=(
+  security
+  productivity
+  media
+  other
+  ai
+  web
+  databases
+)
+
+SECRET_NAME_SKIP_REGEX='^(default-token-.*|harbor-pull-creds|sh\.helm\.release\.v1\..*)$'
+SECRET_TYPE_SKIP_REGEX='^(kubernetes\.io/service-account-token|kubernetes\.io/dockerconfigjson)$'

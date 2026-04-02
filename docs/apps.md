@@ -63,7 +63,7 @@ These are short descriptions for readers who are new to the platform.
 | Immich | Self-hosted photo/video backup and management platform with machine-learning services. |
 | Nextcloud | Private cloud suite for files, collaboration, and app extensions. |
 | Collabora | Online document editor service integrated with Nextcloud for office files. |
-| Homarr | Self-hosted dashboard/homepage that aggregates links and service widgets. |
+| Homarr | Self-hosted dashboard that aggregates links and service widgets. |
 | UniFi Controller | Network controller managing UniFi devices, telemetry, and configuration workflows. |
 | Uptime Kuma | Status page and endpoint monitoring service for uptime checks and alerts. |
 | Vaultwarden | Lightweight Bitwarden-compatible password manager server. |
@@ -292,6 +292,13 @@ These are short descriptions for readers who are new to the platform.
 - Homarr UI service is exposed via ingress `homarr.rcrumana.xyz`.
 - Storage for MySQL/Redis is Ceph-backed.
 
+### Homepage
+
+- Homepage is deployed from plain Kubernetes manifests for fully declarative dashboard configuration.
+- Runs as a 3-replica stateless deployment with a `minAvailable: 1` PodDisruptionBudget.
+- Uses in-cluster RBAC to surface Kubernetes widgets and resource views.
+- Restricted ingress exposes the proof-of-concept dashboard at `dash.rcrumana.xyz`.
+
 ### UniFi Controller
 
 - `unifi-network-application` plus in-namespace MongoDB (`unifi-db`).
@@ -391,7 +398,7 @@ These are short descriptions for readers who are new to the platform.
 - `databases`: CNPG clusters + Redis Enterprise platform.
 - `ai`: LibreChat and local LLM backend services.
 - `media`: ARR stacks, Immich, Jellyfin, Plex.
-- `productivity`: Nextcloud, Collabora, Homarr, UniFi, Uptime Kuma, Vaultwarden, Whiteboard, Elasticsearch.
+- `productivity`: Nextcloud, Collabora, Homarr, Homepage, UniFi, Uptime Kuma, Vaultwarden, Whiteboard, Elasticsearch.
 - `other`: Headscale, Hypermind, MinIO bridge, OPNsense/TrueNAS bridges.
 - `web`: Portfolio prod/staging.
 
