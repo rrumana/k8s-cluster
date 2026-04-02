@@ -1,4 +1,4 @@
-# k8s-homelab-2
+# k8s-cluster
 
 A live, bare-metal Kubernetes homelab run with GitOps and real workloads for family and friends.
 
