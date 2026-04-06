@@ -24,6 +24,9 @@ spec:
         - name: immich-machine-learning
           image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v2.6.2-rocm
           imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003
+              name: http
           envFrom:
             - configMapRef:
                 name: immich-config
