@@ -16,6 +16,34 @@ need_cmd() {
   }
 }
 
+generate_opensearch_password_hash() {
+  local password="$1"
+
+  if command -v htpasswd >/dev/null 2>&1; then
+    htpasswd -bnBC 12 "" "$password" | tr -d ':\n'
+    return
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    docker run --rm \
+      --entrypoint /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh \
+      docker.io/opensearchproject/opensearch:3.4.0 \
+      -p "$password" | tail -n1
+    return
+  fi
+
+  if command -v podman >/dev/null 2>&1; then
+    podman run --rm \
+      --entrypoint /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh \
+      docker.io/opensearchproject/opensearch:3.4.0 \
+      -p "$password" | tail -n1
+    return
+  fi
+
+  echo "missing required command to generate OpenSearch password hash: install htpasswd or use docker/podman" >&2
+  exit 1
+}
+
 mirror_image() {
   local src="$1"
   local dst="$2"
@@ -74,14 +102,15 @@ HARBOR_ADMIN_PASSWORD=$(
     "vault login '$ROOT_TOKEN' >/dev/null && vault kv get -field=HARBOR_ADMIN_PASSWORD kv/apps/harbor/core"
 )
 OPENSEARCH_ADMIN_PASSWORD=$(openssl rand -hex 32)
+OPENSEARCH_ADMIN_PASSWORD_HASH=$(generate_opensearch_password_hash "$OPENSEARCH_ADMIN_PASSWORD")
 
 echo "Seeding kv/apps/search/opensearch-admin in Vault"
 kubectl -n security exec vault-0 -- sh -ec \
   "vault login '$ROOT_TOKEN' >/dev/null && \
    if vault kv get kv/apps/search/opensearch-admin >/dev/null 2>&1; then \
-     vault kv patch kv/apps/search/opensearch-admin username=admin password='$OPENSEARCH_ADMIN_PASSWORD'; \
+     vault kv patch kv/apps/search/opensearch-admin username=admin password='$OPENSEARCH_ADMIN_PASSWORD' passwordHash='$OPENSEARCH_ADMIN_PASSWORD_HASH'; \
    else \
-     vault kv put kv/apps/search/opensearch-admin username=admin password='$OPENSEARCH_ADMIN_PASSWORD'; \
+     vault kv put kv/apps/search/opensearch-admin username=admin password='$OPENSEARCH_ADMIN_PASSWORD' passwordHash='$OPENSEARCH_ADMIN_PASSWORD_HASH'; \
    fi"
 
 echo "Logging into Harbor OCI and image registries at ${HARBOR_HOST}"
@@ -98,7 +127,7 @@ elif command -v skopeo >/dev/null 2>&1; then
 fi
 
 WORKDIR=$(mktemp -d)
-trap 'rm -rf "$WORKDIR"; unset ROOT_TOKEN HARBOR_ADMIN_PASSWORD OPENSEARCH_ADMIN_PASSWORD' EXIT
+trap 'rm -rf "$WORKDIR"; unset ROOT_TOKEN HARBOR_ADMIN_PASSWORD OPENSEARCH_ADMIN_PASSWORD OPENSEARCH_ADMIN_PASSWORD_HASH' EXIT
 
 echo "Pulling upstream charts"
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null

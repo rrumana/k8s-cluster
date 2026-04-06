@@ -98,7 +98,7 @@ spec:
             config_version: 2
 
           '{{ .username }}':
-            hash: '{{ htpasswd .username .password | trimPrefix (printf "%s:" .username) }}'
+            hash: '{{ .passwordHash }}'
             reserved: true
             backend_roles:
               - "admin"
@@ -142,7 +142,7 @@ spec:
       remoteRef:
         key: apps/search/opensearch-admin
         property: username
-    - secretKey: password
+    - secretKey: passwordHash
       remoteRef:
         key: apps/search/opensearch-admin
-        property: password
+        property: passwordHash
