@@ -6,6 +6,7 @@ namespace: search
 resources:
   - harbor-pull-creds.yaml
   - opensearch-admin-credentials.yaml
+  - opensearch-security-config.yaml
   - data-prepper-pipeline-secret.yaml
   - opensearch-serviceaccount.yaml
   - data-prepper-serviceaccount.yaml

@@ -1,0 +1,148 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: opensearch-security-config
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: opensearch-security-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        action_groups.yml: |
+          _meta:
+            type: "actiongroups"
+            config_version: 2
+        allowlist.yml: |
+          ---
+          _meta:
+            type: "allowlist"
+            config_version: 2
+
+          config:
+            enabled: false
+            requests:
+              /_cluster/settings:
+                - GET
+              /_cat/nodes:
+                - GET
+        audit.yml: |
+          _meta:
+            type: "audit"
+            config_version: 2
+
+          config:
+            enabled: true
+            audit:
+              enable_rest: true
+              disabled_rest_categories:
+                - AUTHENTICATED
+                - GRANTED_PRIVILEGES
+              enable_transport: true
+              disabled_transport_categories:
+                - AUTHENTICATED
+                - GRANTED_PRIVILEGES
+              ignore_users:
+                - kibanaserver
+              ignore_requests: []
+              resolve_bulk_requests: false
+              log_request_body: true
+              resolve_indices: true
+              exclude_sensitive_headers: true
+            compliance:
+              enabled: true
+              internal_config: true
+              external_config: false
+              read_metadata_only: true
+              read_watched_fields: {}
+              read_ignore_users:
+                - kibanaserver
+              write_metadata_only: true
+              write_log_diffs: false
+              write_watched_indices: []
+              write_ignore_users:
+                - kibanaserver
+        config.yml: |
+          ---
+          _meta:
+            type: "config"
+            config_version: 2
+
+          config:
+            dynamic:
+              http:
+                anonymous_auth_enabled: false
+              authc:
+                basic_internal_auth_domain:
+                  description: "Authenticate via HTTP Basic against internal users database"
+                  http_enabled: true
+                  transport_enabled: true
+                  order: 0
+                  http_authenticator:
+                    type: basic
+                    challenge: true
+                  authentication_backend:
+                    type: intern
+              authz: {}
+        internal_users.yml: |
+          ---
+          _meta:
+            type: "internalusers"
+            config_version: 2
+
+          '{{ .username }}':
+            hash: '{{ htpasswd .username .password | trimPrefix (printf "%s:" .username) }}'
+            reserved: true
+            backend_roles:
+              - "admin"
+            description: "Cluster admin user"
+        nodes_dn.yml: |
+          _meta:
+            type: "nodesdn"
+            config_version: 2
+        roles.yml: |
+          _meta:
+            type: "roles"
+            config_version: 2
+        roles_mapping.yml: |
+          ---
+          _meta:
+            type: "rolesmapping"
+            config_version: 2
+
+          all_access:
+            reserved: false
+            backend_roles:
+              - "admin"
+            description: "Maps backend role admin to the built-in all_access role"
+
+          security_rest_api_access:
+            reserved: false
+            backend_roles:
+              - "admin"
+            description: "Maps backend role admin to the built-in security REST API role"
+        tenants.yml: |
+          ---
+          _meta:
+            type: "tenants"
+            config_version: 2
+
+          admin_tenant:
+            reserved: false
+            description: "Admin tenant"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: apps/search/opensearch-admin
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: apps/search/opensearch-admin
+        property: password

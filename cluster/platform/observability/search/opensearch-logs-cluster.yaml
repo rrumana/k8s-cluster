@@ -28,6 +28,8 @@ spec:
     config:
       adminCredentialsSecret:
         name: opensearch-admin-credentials
+      securityConfigSecret:
+        name: opensearch-security-config
   nodePools:
     - component: logs
       replicas: 3
@@ -40,12 +42,6 @@ spec:
         limits:
           cpu: "4"
           memory: 8Gi
-      env:
-        - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: opensearch-admin-credentials
-              key: password
       roles:
         - cluster_manager
         - data
