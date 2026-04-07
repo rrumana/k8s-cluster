@@ -35,6 +35,22 @@ spec:
       replicas: 3
       diskSize: "200Gi"
       jvm: "-Xms2g -Xmx2g"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  opster.io/opensearch-cluster: opensearch-logs
+                  opster.io/opensearch-nodepool: logs
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              opster.io/opensearch-cluster: opensearch-logs
+              opster.io/opensearch-nodepool: logs
       resources:
         requests:
           cpu: "1"
