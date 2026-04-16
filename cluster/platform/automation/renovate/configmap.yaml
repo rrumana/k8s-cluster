@@ -9,7 +9,7 @@ data:
     module.exports = {
       platform: 'github',
       endpoint: 'https://api.github.com/',
-      repositories: ['rrumana/k8s-homelab-2'],
+      repositories: ['rrumana/k8s-cluster'],
       onboarding: false,
       requireConfig: 'required',
       dependencyDashboard: true,
