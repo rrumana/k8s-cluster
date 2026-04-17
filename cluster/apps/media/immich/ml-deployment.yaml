@@ -22,7 +22,7 @@ spec:
       serviceAccountName: immich-machine-learning
       containers:
         - name: immich-machine-learning
-          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v2.6.2-rocm
+          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v2.7.5-rocm
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
