@@ -21,4 +21,14 @@ data:
           password: process.env.HARBOR_PASSWORD,
         },
       ],
+      packageRules: [
+        // Harbor proxy-cache lists tags by fetching the full upstream GHCR tag set
+        // before paginating, which times out on repos with very large tag histories.
+        {
+          matchDatasources: ['docker'],
+          matchPackageNames: ['harbor.rcrumana.xyz/proxy-ghcr/**'],
+          overridePackageName: "{{replace 'harbor.rcrumana.xyz/proxy-ghcr/' 'ghcr.io/' packageName}}",
+          registryUrls: ['https://ghcr.io'],
+        },
+      ],
     };
