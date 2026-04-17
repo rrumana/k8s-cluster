@@ -22,7 +22,7 @@ spec:
       serviceAccountName: headscale-ui
       containers:
         - name: headscale-ui
-          image: harbor.rcrumana.xyz/proxy-ghcr/gurucomputing/headscale-ui:2025.08.23
+          image: harbor.rcrumana.xyz/proxy-ghcr/gurucomputing/headscale-ui:2026.03.17
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
