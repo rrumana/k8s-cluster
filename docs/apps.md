@@ -229,7 +229,7 @@ snapshot.
 - `llama-swap`
 - Each worker requests one `amd.com/gpu` device.
 - All model workers share a `500Gi` RWX CephFS PVC named `llama-models-cache`.
-- Current fixed models are `Qwen3.5-35B-A3B` and `Qwen3-Next-80B-A3B-Instruct`.
+- Current fixed models are `Qwen3.6-35B-A3B` and `Qwen3-Next-80B-A3B-Instruct`.
 - The swap pool currently seeds `Qwen3-Next-80B-A3B-Thinking`, `GLM-4.7-Flash`, `gpt-oss-20b`, `gemma-3-12b-it`, and `Qwen3-Coder-Next`.
 
 ## `media` namespace

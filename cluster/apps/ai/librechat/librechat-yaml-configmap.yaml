@@ -14,7 +14,7 @@ data:
           directEndpoint: true
           models:
             default:
-              - "Qwen3.5-35B-A3B"
+              - "Qwen3.6-35B-A3B"
               - "Qwen3-Next-80B-A3B-Instruct"
               - "GLM-4.7-Flash"
               - "gpt-oss-20b"
@@ -23,5 +23,5 @@ data:
               - "Qwen3-Next-80B-A3B-Thinking"
             fetch: false
           titleConvo: true
-          titleModel: "Qwen3.5-35B-A3B"
+          titleModel: "Qwen3.6-35B-A3B"
           modelDisplayLabel: "llama.cpp"

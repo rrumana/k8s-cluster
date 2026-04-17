@@ -3,10 +3,10 @@ kind: ConfigMap
 metadata:
   name: llama-static-a-config
 data:
-  MODEL_NAME: "Qwen3.5-35B-A3B"
-  MODEL_REPO: "unsloth/Qwen3.5-35B-A3B-GGUF"
-  MODEL_QUANT: "Q4_K_M"
-  MODEL_FILENAME: ""
+  MODEL_NAME: "Qwen3.6-35B-A3B"
+  MODEL_REPO: "unsloth/Qwen3.6-35B-A3B-GGUF"
+  MODEL_QUANT: ""
+  MODEL_FILENAME: "Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf"
   MODEL_PATH: "/models/static-a/model.gguf"
   PORT: "8000"
   N_CTX: "1048576"
