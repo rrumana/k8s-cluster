@@ -80,7 +80,7 @@ spec:
 
       containers:
         - name: gluetun
-          image: harbor.rcrumana.xyz/proxy-dockerhub/qmcgaw/gluetun:v3.41.1
+          image: harbor.rcrumana.xyz/mirror/qmcgaw/gluetun:v3.41.1
           securityContext:
             privileged: true
             capabilities: { add: ["NET_ADMIN"] }
