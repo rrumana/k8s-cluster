@@ -123,7 +123,7 @@ spec:
             limits:   { cpu: "1", memory: "512Gi" }
 
         - name: pf-sync
-          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.18.0
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.20.0
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh","-c","/scripts/pf-sync.sh"]
           env:
