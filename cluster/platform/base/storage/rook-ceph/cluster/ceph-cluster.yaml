@@ -74,4 +74,4 @@ spec:
       - name: casper-3
         devices:
           - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S7KHNJ0Y612649F
-          - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W944501L
+          - name: /dev/disk/by-id/nvme-Fanxiang_S880_2TB_FXS880254440074
