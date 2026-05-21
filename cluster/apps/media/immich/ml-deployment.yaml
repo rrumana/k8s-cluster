@@ -22,7 +22,7 @@ spec:
       serviceAccountName: immich-machine-learning
       containers:
         - name: immich-machine-learning
-          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v2.7.5-rocm
+          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v2.7.5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
@@ -33,10 +33,6 @@ spec:
             - secretRef:
                 name: immich-secret
           env:
-            - name: HSA_OVERRIDE_GFX_VERSION
-              value: "11.0.0"
-            - name: HSA_USE_SVM
-              value: "0"
             - name: MACHINE_LEARNING_WORKER_TIMEOUT
               value: "300"
             - name: MACHINE_LEARNING_CACHE_FOLDER
@@ -50,12 +46,6 @@ spec:
           volumeMounts:
             - name: model-cache
               mountPath: /cache
-            - name: dri
-              mountPath: /dev/dri
-            - name: kfd
-              mountPath: /dev/kfd
-          securityContext:
-            privileged: true
           resources:
             requests:
               memory: "512Mi"
@@ -67,11 +57,3 @@ spec:
         - name: model-cache
           persistentVolumeClaim:
             claimName: immich-ml-cache
-        - name: dri
-          hostPath:
-            path: /dev/dri
-            type: Directory
-        - name: kfd
-          hostPath:
-            path: /dev/kfd
-            type: CharDevice
