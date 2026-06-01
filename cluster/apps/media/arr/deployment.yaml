@@ -120,7 +120,7 @@ spec:
             - { name: pf-state, mountPath: /pf/state }
           resources:
             requests: { cpu: "200m", memory: "256Mi" }
-            limits:   { cpu: "1", memory: "512Gi" }
+            limits:   { cpu: "1", memory: "512Mi" }
 
         - name: pf-sync
           image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.18.0

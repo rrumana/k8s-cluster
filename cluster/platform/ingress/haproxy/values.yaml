@@ -12,7 +12,7 @@ controller:
   service:
     type: LoadBalancer
     annotations:
-      metallb.universe.tf/address-pool: default-pool
+      metallb.io/address-pool: default-pool
     loadBalancerIP: 192.168.1.230
     externalTrafficPolicy: Local
 
@@ -35,17 +35,17 @@ controller:
 
   resources:
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 250m
+      memory: 256Mi
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: "2"
+      memory: 1Gi
 
   replicaCount: 3
 
   logs:
     enabled: true
-    level: debug
+    level: info
     image:
       registry: harbor.rcrumana.xyz
       repository: mirror/crisu1710/kube-syslog-sidecar

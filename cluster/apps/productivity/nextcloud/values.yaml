@@ -11,23 +11,48 @@ nextcloud:
     usernameKey: nextcloud-username
     passwordKey: nextcloud-password
 
-  phpClientHttpsFix:
-    enabled: true
-    protocol: https
-
   phpConfigs:
     zz-uploads.ini: |-
       upload_max_filesize=10G
       post_max_size=10G
       memory_limit=1024M
       max_execution_time=3600
+      sys_temp_dir=/tmp
+      upload_tmp_dir=/tmp
 
-    99-overrides.config.php: |-
+    zz-opcache.ini: |-
+      opcache.enable=1
+      opcache.enable_cli=1
+      opcache.memory_consumption=256
+      opcache.interned_strings_buffer=32
+      opcache.max_accelerated_files=20000
+      opcache.save_comments=1
+      opcache.revalidate_freq=60
+      opcache.jit=0
+      apc.enable_cli=1
+
+  configs:
+    zz-performance.config.php: |-
       <?php
-      $CONFIG = [
+      $CONFIG = array (
         'overwriteprotocol' => 'https',
+        'overwrite.cli.url' => 'https://nextcloud.rcrumana.xyz',
         'trusted_proxies' => ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16'],
-      ];
+        'memcache.local' => '\OC\Memcache\APCu',
+        'memcache.distributed' => '\OC\Memcache\Redis',
+        'memcache.locking' => '\OC\Memcache\Redis',
+        'filelocking.enabled' => true,
+        'redis' => array (
+          'host' => getenv('REDIS_HOST') ?: 'valkey-cache-primary.databases.svc.cluster.local',
+          'port' => (int) (getenv('REDIS_HOST_PORT') ?: 6379),
+          'password' => getenv('REDIS_HOST_PASSWORD') ?: '',
+        ),
+        'tempdirectory' => '/tmp/nextcloud-temp',
+      );
+
+phpClientHttpsFix:
+  enabled: true
+  protocol: https
 
 replicaCount: 1
 strategy:
@@ -114,6 +139,14 @@ resources:
 cronjob:
   enabled: true
   schedule: "*/5 * * * *"
+  sidecar:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
 
 postgresql:
   enabled: false

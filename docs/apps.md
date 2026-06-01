@@ -250,7 +250,10 @@ snapshot.
 ### Jellyfin
 
 - Runs as a dedicated deployment with a Ceph-backed config PVC.
-- Uses host media paths and `/dev/dri` for hardware acceleration.
+- Uses host media paths and has `/dev/dri` mounted, but intentionally does not
+  request Kubernetes GPU resources today. Radeon 890M / GFX1150 acceleration
+  has caused node-level GPU hangs that require a reboot, so Jellyfin is kept
+  operationally CPU-first until safer GPU hardware is available.
 - Exposed by both ingress (`jellyfin.rcrumana.xyz`) and direct MetalLB IP `192.168.1.233`.
 
 ### Plex
@@ -263,10 +266,14 @@ snapshot.
 
 - Split into `immich-server` and `immich-machine-learning` deployments.
 - `immich-server` uses shared `pg-media` and `valkey-queue`.
-- `immich-machine-learning` uses the ROCm image, mounts `/dev/dri` and `/dev/kfd`, and runs privileged without requesting `amd.com/gpu`.
+- `immich-server` has `/dev/dri` mounted, but no Immich component requests
+  `amd.com/gpu`.
+- `immich-machine-learning` runs CPU-only today. ROCm/GFX1150 acceleration is
+  intentionally avoided because it has caused stuck GPU processes that survive
+  container termination and require node reboots.
 - Persistent storage is:
 - `immich-photos` at `1Ti`
-- `immich-ml-cache` at `4Gi`
+- `immich-ml-cache` at `64Gi`
 - Immich is exposed by both ingress (`immich.rcrumana.xyz`) and direct MetalLB IP `192.168.1.234`.
 
 ## `productivity` namespace

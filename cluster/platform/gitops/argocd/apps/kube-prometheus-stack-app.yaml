@@ -7,6 +7,18 @@ metadata:
     argocd.argoproj.io/sync-wave: "-5"
 spec:
   project: default
+  ignoreDifferences:
+    - kind: Secret
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring
+      jsonPointers:
+        - /data
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring
+      jqPathExpressions:
+        - .spec.template.metadata.annotations."checksum/secret"
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: kube-prometheus-stack
