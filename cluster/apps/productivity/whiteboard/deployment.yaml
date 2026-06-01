@@ -15,7 +15,7 @@ spec:
       serviceAccountName: whiteboard
       containers:
         - name: wbo
-          image: harbor.rcrumana.xyz/proxy-dockerhub/lovasoa/wbo:v1.22.1
+          image: harbor.rcrumana.xyz/proxy-dockerhub/lovasoa/wbo:v2.8.5
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
