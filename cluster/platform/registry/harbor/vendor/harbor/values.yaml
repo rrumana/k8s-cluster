@@ -1066,7 +1066,7 @@ redis:
 exporter:
   image:
     repository: goharbor/harbor-exporter
-    tag: v2.15.0
+    tag: v2.15.1
   serviceAccountName: ""
   # mount the service account token
   automountServiceAccountToken: false
