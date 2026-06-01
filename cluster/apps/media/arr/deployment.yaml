@@ -58,7 +58,7 @@ spec:
 
       initContainers:
         - name: sysctl-init
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.37
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
           securityContext:
             privileged: true
           command: ["sh","-c",<<-'EOS'
@@ -68,7 +68,7 @@ spec:
             sysctl -w net.ipv4.conf.tun0.rp_filter=0 || true
             EOS]
         - name: fix-perms
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.37
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -120,10 +120,10 @@ spec:
             - { name: pf-state, mountPath: /pf/state }
           resources:
             requests: { cpu: "200m", memory: "256Mi" }
-            limits:   { cpu: "1", memory: "512Gi" }
+            limits:   { cpu: "1", memory: "512Mi" }
 
         - name: pf-sync
-          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.18.0
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.20.0
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh","-c","/scripts/pf-sync.sh"]
           env:
