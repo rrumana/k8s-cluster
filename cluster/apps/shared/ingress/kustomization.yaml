@@ -35,3 +35,4 @@ resources:
   - opnsense.yaml
   - minio.yaml
   - truenas.yaml
+  - truenas-2.yaml

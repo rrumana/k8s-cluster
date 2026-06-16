@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-2-https
+  annotations:
+    haproxy-ingress.github.io/secure-backends: "true"
+    haproxy-ingress.github.io/backend-protocol: "h1-ssl"
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+  type: ClusterIP

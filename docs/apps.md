@@ -363,7 +363,8 @@ snapshot.
 - `minio` and `minio-api` front the external MinIO instance on `192.168.1.10`.
 - `opnsense-https` fronts the router UI/API at `192.168.1.1:4443`.
 - `truenas-https` fronts the NAS UI at `192.168.1.10:443`.
-- All three are exposed through restricted ingress.
+- `truenas-2-https` fronts the new NAS UI at `192.168.1.16:443`.
+- All four are exposed through restricted ingress.
 
 ## `web` namespace
 
@@ -440,6 +441,7 @@ snapshot.
 | `minio-api.rcrumana.xyz` | `/` | `other` | `minio-api-proxy` | `haproxy-restricted` | `minio-api:9000` |
 | `minio.rcrumana.xyz` | `/` | `other` | `minio-proxy` | `haproxy-restricted` | `minio:9002` |
 | `nas.rcrumana.xyz` | `/` | `other` | `truenas-proxy` | `haproxy-restricted` | `truenas-https:443` |
+| `nas-2.rcrumana.xyz` | `/` | `other` | `truenas-2-proxy` | `haproxy-restricted` | `truenas-2-https:443` |
 | `nextcloud.rcrumana.xyz` | `/` | `productivity` | `nextcloud` | `haproxy-restricted` | `nextcloud:8080` |
 | `plex.rcrumana.xyz` | `/` | `media` | `plex` | `haproxy-restricted` | `plex:32400` |
 | `prowlarr.rcrumana.xyz` | `/` | `media` | `prowlarr` | `haproxy-restricted` | `prowlarr:80` |
@@ -475,6 +477,7 @@ snapshot.
 | `other` | `minio-api` | `192.168.1.10:9000` | MinIO S3 API endpoint for VolSync and CNPG backups. |
 | `other` | `opnsense-https` | `192.168.1.1:4443` | Reverse-proxied access path to OPNsense. |
 | `other` | `truenas-https` | `192.168.1.10:443` | Reverse-proxied access path to TrueNAS. |
+| `other` | `truenas-2-https` | `192.168.1.16:443` | Reverse-proxied access path to the new TrueNAS. |
 | `other` | `desktop-http` | `192.168.1.11:7681` | Desktop dashboard bridge. |
 | `other` | `melchior-http` | `192.168.1.13:7681` | `melchior-1` dashboard bridge. |
 | `other` | `balthasar-http` | `192.168.1.14:7681` | `balthasar-2` dashboard bridge. |

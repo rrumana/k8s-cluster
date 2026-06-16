@@ -59,6 +59,7 @@ resources:
   - host-dashboards-app.yaml
   - renovate-app.yaml
   - truenas-app.yaml
+  - truenas-2-app.yaml
   - unifi-os-server-app.yaml
   - uptime-kuma-app.yaml
   - vaultwarden-app.yaml

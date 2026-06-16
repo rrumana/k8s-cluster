@@ -284,3 +284,8 @@ If the follower still reports `Vault is not initialized` after this sequence,
 repeat the peer list check from `vault-0` before issuing another `raft join`.
 Do not loop `raft join` / `unseal` blindly; each attempt can create a new
 bootstrap challenge on the leader.
+
+
+Re-Roll gluetun certs:
+
+ROOT_TOKEN=$(jq -r '.root_token' ~/vault-init.json); kubectl -n security exec vault-0 -- sh -ec "vault login '$ROOT_TOKEN' >/dev/null && vault kv patch kv/apps/media gluetun-env VPN_ENDPOINT_IP='<new_endpoint_ip>' VPN_ENDPOINT_PORT='<new_endpoint_port>' WIREGUARD_ADDRESSES='<new_wireguard_addresses>' WIREGUARD_PRIVATE_KEY='<new_wireguard_private_key>' WIREGUARD_PUBLIC_KEY='<new_wireguard_public_key>'"; unset ROOT_TOKEN

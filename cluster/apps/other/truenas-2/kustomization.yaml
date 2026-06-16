@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: other
+
+resources:
+  - service.yaml
+  - endpoints.yaml
+
+commonLabels:
+  app.kubernetes.io/name: truenas-2
+  app.kubernetes.io/managed-by: argocd
