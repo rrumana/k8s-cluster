@@ -16,8 +16,11 @@ data:
     layout:
       Cluster:
         style: row
-        columns: 4
-      Data:
+        columns: 3
+      Networking:
+        style: row
+        columns: 3
+      Storage:
         style: row
         columns: 4
       Productivity:
@@ -26,12 +29,9 @@ data:
       Media:
         style: row
         columns: 4
-      Network and Storage:
-        style: row
-        columns: 4
       AI and Web:
         style: row
-        columns: 4
+        columns: 3
       Hosts:
         style: row
         columns: 4
@@ -49,12 +49,6 @@ data:
             description: Metrics and log dashboards
             namespace: monitoring
             app: grafana
-        - Ceph:
-            icon: ceph.png
-            href: https://ceph.rcrumana.xyz
-            description: Rook Ceph storage dashboard
-            namespace: rook-ceph
-            app: ceph-mgr
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
@@ -62,35 +56,45 @@ data:
             namespace: productivity
             app: uptime-kuma
 
-    - Data:
-        - Productivity Postgres:
-            icon: postgres.png
-            description: Shared CNPG cluster for productivity apps
-            namespace: databases
-            podSelector: cnpg.io/cluster=pg-productivity
-        - Valkey Cache:
-            icon: redis.png
-            description: Shared ephemeral cache endpoint
-            namespace: databases
-            podSelector: app.kubernetes.io/instance=valkey-cache
-        - Valkey Queue:
-            icon: redis.png
-            description: Shared AOF-backed queue endpoint
-            namespace: databases
-            podSelector: app.kubernetes.io/instance=valkey-queue
-        - OpenSearch Logs:
-            icon: opensearch.png
-            description: Cluster log storage and search
-            namespace: search
-            podSelector: opster.io/opensearch-cluster=opensearch-logs
+    - Networking:
+        - OPNsense:
+            icon: opnsense.png
+            href: https://router.rcrumana.xyz
+            description: Router and firewall
+        - UniFi:
+            icon: unifi.png
+            href: https://unifi.rcrumana.xyz
+            description: Network controller
+            namespace: productivity
+            app: unifi-os-server
+        - Headscale:
+            icon: headscale.png
+            href: https://headscale.rcrumana.xyz/web
+            description: Tailnet admin UI
+            namespace: other
+            app: headscale
+
+    - Storage:
+        - Ceph:
+            icon: ceph.png
+            href: https://ceph.rcrumana.xyz
+            description: Rook Ceph storage dashboard
+            namespace: rook-ceph
+            app: ceph-mgr
+        - TrueNAS:
+            icon: truenas.png
+            href: https://nas.rcrumana.xyz
+            description: Primary NAS
+        - TrueNAS 2:
+            icon: truenas.png
+            href: https://nas-2.rcrumana.xyz
+            description: Secondary NAS
+        - MinIO:
+            icon: minio.png
+            href: https://minio.rcrumana.xyz
+            description: Object storage console
 
     - Productivity:
-        - Homepage:
-            icon: homepage.png
-            href: https://dash.rcrumana.xyz
-            description: Kubernetes-aware dashboard
-            namespace: productivity
-            app: homepage
         - Nextcloud:
             icon: nextcloud.png
             href: https://nextcloud.rcrumana.xyz
@@ -115,12 +119,6 @@ data:
             description: Office document backend
             namespace: productivity
             app: collabora
-        - Homarr:
-            icon: homarr.png
-            href: https://homarr.rcrumana.xyz
-            description: Existing dashboard
-            namespace: productivity
-            app: homarr
 
     - Media:
         - Plex:
@@ -190,34 +188,6 @@ data:
             namespace: media
             app: arr-lts2
 
-    - Network and Storage:
-        - OPNsense:
-            icon: opnsense.png
-            href: https://router.rcrumana.xyz
-            description: Router and firewall
-        - UniFi:
-            icon: unifi.png
-            href: https://unifi.rcrumana.xyz
-            description: Network controller
-            namespace: productivity
-            app: unifi-os-server
-        - TrueNAS:
-            icon: truenas.png
-            href: https://nas.rcrumana.xyz
-            description: Primary NAS
-        - TrueNAS 2:
-            icon: truenas.png
-            href: https://nas-2.rcrumana.xyz
-            description: Secondary NAS
-        - MinIO:
-            icon: minio.png
-            href: https://minio.rcrumana.xyz
-            description: Object storage console
-        - MinIO API:
-            icon: minio.png
-            href: https://minio-api.rcrumana.xyz
-            description: Object storage API endpoint
-
     - AI and Web:
         - LibreChat:
             icon: librechat.png
@@ -225,11 +195,6 @@ data:
             description: AI chat frontend
             namespace: ai
             app: librechat
-        - LLM Gateway:
-            icon: openai.png
-            description: Internal LiteLLM gateway
-            namespace: ai
-            app: llama-backend
         - Portfolio:
             icon: mdi-web
             href: https://rcrumana.xyz
@@ -244,12 +209,6 @@ data:
             app: portfolio-staging
 
     - Hosts:
-        - Headscale:
-            icon: headscale.png
-            href: https://headscale.rcrumana.xyz/web
-            description: Tailnet admin UI
-            namespace: other
-            app: headscale
         - Desktop:
             icon: mdi-monitor-dashboard
             href: https://desktop.rcrumana.xyz
@@ -268,12 +227,6 @@ data:
             description: Host terminal dashboard
   bookmarks.yaml: |
     - Operations:
-        - Kubernetes:
-            - abbr: K8s
-              href: https://kubernetes.io/docs/home/
-        - Homepage Docs:
-            - abbr: HP
-              href: https://gethomepage.dev/
         - Cluster Repo:
             - abbr: Git
               href: https://github.com/rrumana/k8s-homelab-2
@@ -300,12 +253,6 @@ data:
           cpu: true
           memory: true
           showLabel: true
-    - resources:
-        backend: resources
-        expanded: true
-        cpu: true
-        memory: true
-        network: default
     - search:
         provider: duckduckgo
         target: _blank
