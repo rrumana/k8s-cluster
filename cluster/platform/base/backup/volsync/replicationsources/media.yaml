@@ -969,6 +969,7 @@ spec:
     volumeSnapshotClassName: ceph-block-snap
     repository: plex-config-backup-restic
     cacheCapacity: 16Gi
+    unlock: "2026-06-17-plex-stale-lock"
     pruneIntervalDays: 14
     moverSecurityContext:
       runAsUser: 0
