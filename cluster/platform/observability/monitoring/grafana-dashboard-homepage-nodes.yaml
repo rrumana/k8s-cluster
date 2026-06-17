@@ -48,7 +48,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 0,
             "y": 0
@@ -68,7 +68,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"})",
+              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.13:9100\"}",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -97,7 +97,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 6,
             "y": 0
@@ -117,7 +117,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.13:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.13:9100\"})",
+              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.13:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.13:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.13:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -147,7 +147,7 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 12,
             "x": 12,
             "y": 0
           },
@@ -206,9 +206,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 0
+            "w": 12,
+            "x": 12,
+            "y": 8
           },
           "id": 4,
           "options": {
@@ -261,7 +261,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 1
+      "version": 2
     }
   homepage-node-balthasar.json: |
     {
@@ -305,7 +305,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 0,
             "y": 0
@@ -325,7 +325,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"})",
+              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.14:9100\"}",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -354,7 +354,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 6,
             "y": 0
@@ -374,7 +374,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.14:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.14:9100\"})",
+              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.14:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.14:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.14:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -404,7 +404,7 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 12,
             "x": 12,
             "y": 0
           },
@@ -463,9 +463,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 0
+            "w": 12,
+            "x": 12,
+            "y": 8
           },
           "id": 4,
           "options": {
@@ -518,7 +518,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 1
+      "version": 2
     }
   homepage-node-casper.json: |
     {
@@ -562,7 +562,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 0,
             "y": 0
@@ -582,7 +582,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"})",
+              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.15:9100\"}",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -611,7 +611,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 16,
             "w": 6,
             "x": 6,
             "y": 0
@@ -631,7 +631,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.15:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.15:9100\"})",
+              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.15:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.15:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.15:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -661,7 +661,7 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
+            "w": 12,
             "x": 12,
             "y": 0
           },
@@ -720,9 +720,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 0
+            "w": 12,
+            "x": 12,
+            "y": 8
           },
           "id": 4,
           "options": {
@@ -775,5 +775,5 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 1
+      "version": 2
     }
