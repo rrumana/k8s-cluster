@@ -9,6 +9,7 @@ resources:
   - collabora.yaml
   - desktop.yaml
   - grafana.yaml
+  - homepage.yaml
   - headscale.yaml
   - homarr.yaml
   - hypermind.yaml

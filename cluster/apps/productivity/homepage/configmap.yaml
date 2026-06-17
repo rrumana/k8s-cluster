@@ -1,0 +1,313 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+data:
+  kubernetes.yaml: |
+    mode: cluster
+    ingress: true
+    gateway: true
+  settings.yaml: |
+    title: Rcrumana Cluster
+    language: en
+    target: _blank
+    statusStyle: dot
+    layout:
+      Cluster:
+        style: row
+        columns: 4
+      Data:
+        style: row
+        columns: 4
+      Productivity:
+        style: row
+        columns: 4
+      Media:
+        style: row
+        columns: 4
+      Network and Storage:
+        style: row
+        columns: 4
+      AI and Web:
+        style: row
+        columns: 4
+      Hosts:
+        style: row
+        columns: 4
+  services.yaml: |
+    - Cluster:
+        - Argo CD:
+            icon: argo-cd.png
+            href: https://argocd.rcrumana.xyz
+            description: GitOps control plane
+            namespace: argocd
+            app: argocd-server
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.rcrumana.xyz
+            description: Metrics and log dashboards
+            namespace: monitoring
+            app: grafana
+        - Ceph:
+            icon: ceph.png
+            href: https://ceph.rcrumana.xyz
+            description: Rook Ceph storage dashboard
+            namespace: rook-ceph
+            app: ceph-mgr
+        - Uptime Kuma:
+            icon: uptime-kuma.png
+            href: https://uptime.rcrumana.xyz
+            description: External and service uptime checks
+            namespace: productivity
+            app: uptime-kuma
+
+    - Data:
+        - Productivity Postgres:
+            icon: postgres.png
+            description: Shared CNPG cluster for productivity apps
+            namespace: databases
+            podSelector: cnpg.io/cluster=pg-productivity
+        - Valkey Cache:
+            icon: redis.png
+            description: Shared ephemeral cache endpoint
+            namespace: databases
+            podSelector: app.kubernetes.io/instance=valkey-cache
+        - Valkey Queue:
+            icon: redis.png
+            description: Shared AOF-backed queue endpoint
+            namespace: databases
+            podSelector: app.kubernetes.io/instance=valkey-queue
+        - OpenSearch Logs:
+            icon: opensearch.png
+            description: Cluster log storage and search
+            namespace: search
+            podSelector: opster.io/opensearch-cluster=opensearch-logs
+
+    - Productivity:
+        - Homepage:
+            icon: homepage.png
+            href: https://dash.rcrumana.xyz
+            description: Kubernetes-aware dashboard
+            namespace: productivity
+            app: homepage
+        - Nextcloud:
+            icon: nextcloud.png
+            href: https://nextcloud.rcrumana.xyz
+            description: Files and collaboration
+            namespace: productivity
+            app: nextcloud
+        - Vaultwarden:
+            icon: vaultwarden.png
+            href: https://vault.rcrumana.xyz
+            description: Password vault
+            namespace: productivity
+            app: vaultwarden
+        - Whiteboard:
+            icon: excalidraw.png
+            href: https://whiteboard.rcrumana.xyz
+            description: Shared whiteboard
+            namespace: productivity
+            app: whiteboard
+        - Collabora:
+            icon: collabora-online.png
+            href: https://collabora.rcrumana.xyz
+            description: Office document backend
+            namespace: productivity
+            app: collabora
+        - Homarr:
+            icon: homarr.png
+            href: https://homarr.rcrumana.xyz
+            description: Existing dashboard
+            namespace: productivity
+            app: homarr
+
+    - Media:
+        - Plex:
+            icon: plex.png
+            href: https://plex.rcrumana.xyz
+            description: Media server
+            namespace: media
+            app: plex
+        - Jellyfin:
+            icon: jellyfin.png
+            href: https://jellyfin.rcrumana.xyz
+            description: Media server
+            namespace: media
+            app: jellyfin
+        - Immich:
+            icon: immich.png
+            href: https://immich.rcrumana.xyz
+            description: Photo library
+            namespace: media
+            app: immich
+        - Jellyseerr:
+            icon: jellyseerr.png
+            href: https://jellyseerr.rcrumana.xyz
+            description: Media requests
+            namespace: media
+            podSelector: app=arr-stack
+        - Sonarr:
+            icon: sonarr.png
+            href: https://sonarr.rcrumana.xyz
+            description: Series automation
+            namespace: media
+            podSelector: app=arr-stack
+        - Radarr:
+            icon: radarr.png
+            href: https://radarr.rcrumana.xyz
+            description: Movie automation
+            namespace: media
+            podSelector: app=arr-stack
+        - Lidarr:
+            icon: lidarr.png
+            href: https://lidarr.rcrumana.xyz
+            description: Music automation
+            namespace: media
+            podSelector: app=arr-stack
+        - Prowlarr:
+            icon: prowlarr.png
+            href: https://prowlarr.rcrumana.xyz
+            description: Indexer management
+            namespace: media
+            podSelector: app=arr-stack
+        - qBittorrent:
+            icon: qbittorrent.png
+            href: https://qbit.rcrumana.xyz
+            description: Primary torrent client
+            namespace: media
+            podSelector: app=arr-stack
+        - qBittorrent LTS:
+            icon: qbittorrent.png
+            href: https://qbit-lts.rcrumana.xyz
+            description: LTS torrent client
+            namespace: media
+            app: arr-lts
+        - qBittorrent LTS 2:
+            icon: qbittorrent.png
+            href: https://qbit-lts2.rcrumana.xyz
+            description: Secondary LTS torrent client
+            namespace: media
+            app: arr-lts2
+
+    - Network and Storage:
+        - OPNsense:
+            icon: opnsense.png
+            href: https://router.rcrumana.xyz
+            description: Router and firewall
+        - UniFi:
+            icon: unifi.png
+            href: https://unifi.rcrumana.xyz
+            description: Network controller
+            namespace: productivity
+            app: unifi-os-server
+        - TrueNAS:
+            icon: truenas.png
+            href: https://nas.rcrumana.xyz
+            description: Primary NAS
+        - TrueNAS 2:
+            icon: truenas.png
+            href: https://nas-2.rcrumana.xyz
+            description: Secondary NAS
+        - MinIO:
+            icon: minio.png
+            href: https://minio.rcrumana.xyz
+            description: Object storage console
+        - MinIO API:
+            icon: minio.png
+            href: https://minio-api.rcrumana.xyz
+            description: Object storage API endpoint
+
+    - AI and Web:
+        - LibreChat:
+            icon: librechat.png
+            href: https://chat.rcrumana.xyz
+            description: AI chat frontend
+            namespace: ai
+            app: librechat
+        - LLM Gateway:
+            icon: openai.png
+            description: Internal LiteLLM gateway
+            namespace: ai
+            app: llama-backend
+        - Portfolio:
+            icon: mdi-web
+            href: https://rcrumana.xyz
+            description: Public portfolio
+            namespace: web
+            app: portfolio
+        - Portfolio Staging:
+            icon: mdi-web
+            href: https://staging.rcrumana.xyz
+            description: Staging portfolio
+            namespace: web
+            app: portfolio-staging
+
+    - Hosts:
+        - Headscale:
+            icon: headscale.png
+            href: https://headscale.rcrumana.xyz/web
+            description: Tailnet admin UI
+            namespace: other
+            app: headscale
+        - Desktop:
+            icon: mdi-monitor-dashboard
+            href: https://desktop.rcrumana.xyz
+            description: Host terminal dashboard
+        - Melchior:
+            icon: mdi-server
+            href: https://melchior.rcrumana.xyz
+            description: Host terminal dashboard
+        - Balthasar:
+            icon: mdi-server
+            href: https://balthasar.rcrumana.xyz
+            description: Host terminal dashboard
+        - Casper:
+            icon: mdi-server
+            href: https://casper.rcrumana.xyz
+            description: Host terminal dashboard
+  bookmarks.yaml: |
+    - Operations:
+        - Kubernetes:
+            - abbr: K8s
+              href: https://kubernetes.io/docs/home/
+        - Homepage Docs:
+            - abbr: HP
+              href: https://gethomepage.dev/
+        - Cluster Repo:
+            - abbr: Git
+              href: https://github.com/rrumana/k8s-homelab-2
+    - Dashboards:
+        - Grafana:
+            - abbr: Gr
+              href: https://grafana.rcrumana.xyz
+        - Argo CD:
+            - abbr: Argo
+              href: https://argocd.rcrumana.xyz
+        - Uptime Kuma:
+            - abbr: UK
+              href: https://uptime.rcrumana.xyz
+  widgets.yaml: |
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: cluster
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+    - resources:
+        backend: resources
+        expanded: true
+        cpu: true
+        memory: true
+        network: default
+    - search:
+        provider: duckduckgo
+        target: _blank
+  docker.yaml: ""
+  custom.css: ""
+  custom.js: ""

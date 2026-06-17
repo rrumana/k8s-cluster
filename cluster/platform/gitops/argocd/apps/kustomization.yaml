@@ -45,6 +45,7 @@ resources:
   - arr-lts2-app.yaml
   - collabora-app.yaml
   - elasticsearch-app.yaml
+  - homepage-app.yaml
   - homarr-app.yaml
   - hypermind-app.yaml
   - jellyfin-app.yaml
