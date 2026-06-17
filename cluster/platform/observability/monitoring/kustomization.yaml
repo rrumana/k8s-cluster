@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
+  - grafana-dashboard-homepage-nodes.yaml
   - grafana-dashboard-linkerd.yaml
   - grafana-dashboard-logging-stack.yaml
 

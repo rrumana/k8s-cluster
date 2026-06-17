@@ -19,7 +19,7 @@ data:
         columns: 3
       Graphs:
         style: row
-        columns: 2
+        columns: 1
       Cluster:
         style: row
         columns: 3
@@ -316,40 +316,28 @@ data:
                       maximumFractionDigits: 2
 
     - Graphs:
-        - Balthasar CPU:
+        - Melchior:
             widget:
               type: iframe
-              name: balthasar-cpu
-              src: https://grafana.rcrumana.xyz/d-solo/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&from=now-1h&to=now&timezone=browser&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.14:9100&panelId=2&theme=dark&refresh=10s
-              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              name: melchior-node-dashboard
+              src: https://grafana.rcrumana.xyz/d/homepage-node-melchior/homepage-node-melchior?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
-        - Balthasar Memory:
+        - Balthasar:
             widget:
               type: iframe
-              name: balthasar-memory
-              src: https://grafana.rcrumana.xyz/d-solo/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&from=now-1h&to=now&timezone=browser&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.14:9100&panelId=5&theme=dark&refresh=10s
-              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              name: balthasar-node-dashboard
+              src: https://grafana.rcrumana.xyz/d/homepage-node-balthasar/homepage-node-balthasar?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
-        - Mesh Requests:
+        - Casper:
             widget:
               type: iframe
-              name: mesh-requests
-              src: https://grafana.rcrumana.xyz/d-solo/linkerd-overview/linkerd-overview?orgId=1&from=now-1h&to=now&timezone=browser&panelId=1&theme=dark&refresh=10s
-              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
-              referrerPolicy: same-origin
-        - Logging Readiness:
-            widget:
-              type: iframe
-              name: logging-readiness
-              src: https://grafana.rcrumana.xyz/d-solo/logging-stack-health/logging-stack-health?orgId=1&from=now-1h&to=now&timezone=browser&panelId=4&theme=dark&refresh=10s
-              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              name: casper-node-dashboard
+              src: https://grafana.rcrumana.xyz/d/homepage-node-casper/homepage-node-casper?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
 
-    - Hosts:
-        - Desktop:
-            icon: mdi-monitor-dashboard
-            href: https://desktop.rcrumana.xyz
-            description: Host terminal dashboard
   bookmarks.yaml: |
     - Operations:
         - Cluster Repo:
