@@ -66,6 +66,8 @@ grafana:
     server:
       domain: grafana.rcrumana.xyz
       root_url: https://grafana.rcrumana.xyz
+    security:
+      allow_embedding: true
     auth.anonymous:
       enabled: false
   sidecar:

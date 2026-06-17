@@ -17,6 +17,9 @@ data:
       Nodes:
         style: row
         columns: 3
+      Graphs:
+        style: row
+        columns: 2
       Cluster:
         style: row
         columns: 3
@@ -81,17 +84,17 @@ data:
         - Ceph:
             icon: ceph.png
             href: https://ceph.rcrumana.xyz
-            description: Rook Ceph storage dashboard
+            description: Ceph storage dashboard
             namespace: rook-ceph
             app: ceph-mgr
-        - TrueNAS:
-            icon: truenas.png
-            href: https://nas.rcrumana.xyz
-            description: Primary NAS
-        - TrueNAS 2:
+        - Media NAS:
             icon: truenas.png
             href: https://nas-2.rcrumana.xyz
-            description: Secondary NAS
+            description: Primary NAS
+        - Backups NAS:
+            icon: truenas.png
+            href: https://nas.rcrumana.xyz
+            description: NAS for backups
         - MinIO:
             icon: minio.png
             href: https://minio.rcrumana.xyz
@@ -311,6 +314,36 @@ data:
                     type: number
                     options:
                       maximumFractionDigits: 2
+
+    - Graphs:
+        - Balthasar CPU:
+            widget:
+              type: iframe
+              name: balthasar-cpu
+              src: https://grafana.rcrumana.xyz/d-solo/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&from=now-1h&to=now&timezone=browser&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.14:9100&panelId=2&theme=dark&refresh=10s
+              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              referrerPolicy: same-origin
+        - Balthasar Memory:
+            widget:
+              type: iframe
+              name: balthasar-memory
+              src: https://grafana.rcrumana.xyz/d-solo/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&from=now-1h&to=now&timezone=browser&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.14:9100&panelId=5&theme=dark&refresh=10s
+              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              referrerPolicy: same-origin
+        - Mesh Requests:
+            widget:
+              type: iframe
+              name: mesh-requests
+              src: https://grafana.rcrumana.xyz/d-solo/linkerd-overview/linkerd-overview?orgId=1&from=now-1h&to=now&timezone=browser&panelId=1&theme=dark&refresh=10s
+              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              referrerPolicy: same-origin
+        - Logging Readiness:
+            widget:
+              type: iframe
+              name: logging-readiness
+              src: https://grafana.rcrumana.xyz/d-solo/logging-stack-health/logging-stack-health?orgId=1&from=now-1h&to=now&timezone=browser&panelId=4&theme=dark&refresh=10s
+              classes: h-72 sm:h-72 md:h-72 lg:h-80 xl:h-80 2xl:h-96
+              referrerPolicy: same-origin
 
     - Hosts:
         - Desktop:

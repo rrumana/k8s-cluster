@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-exporter-active-cpu"
+        homepage.rcrumana.xyz/config-revision: "2026-06-17-grafana-iframes"
         linkerd.io/inject: enabled
       labels:
         app: homepage
