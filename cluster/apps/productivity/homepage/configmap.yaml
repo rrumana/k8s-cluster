@@ -7,6 +7,7 @@ data:
     mode: cluster
     ingress: true
     gateway: true
+  proxmox.yaml: ""
   settings.yaml: |
     title: Rcrumana Cluster
     language: en
