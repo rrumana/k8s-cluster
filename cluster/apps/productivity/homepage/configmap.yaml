@@ -14,6 +14,9 @@ data:
     target: _blank
     statusStyle: dot
     layout:
+      Nodes:
+        style: row
+        columns: 3
       Cluster:
         style: row
         columns: 3
@@ -208,22 +211,108 @@ data:
             namespace: web
             app: portfolio-staging
 
+    - Nodes:
+        - Melchior:
+            icon: mdi-server
+            href: https://melchior.rcrumana.xyz
+            description: 192.168.1.13
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              metrics:
+                - label: CPU
+                  query: 100 * (1 - avg(rate(node_cpu_seconds_total{instance="192.168.1.13:9100",mode="idle"}[5m])))
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: RAM
+                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.13:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.13:9100"})
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: Used
+                  query: node_memory_MemTotal_bytes{instance="192.168.1.13:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.13:9100"}
+                  format:
+                    type: bytes
+                    options:
+                      maximumFractionDigits: 1
+                - label: Load
+                  query: node_load1{instance="192.168.1.13:9100"}
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 2
+        - Balthasar:
+            icon: mdi-server
+            href: https://balthasar.rcrumana.xyz
+            description: 192.168.1.14
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              metrics:
+                - label: CPU
+                  query: 100 * (1 - avg(rate(node_cpu_seconds_total{instance="192.168.1.14:9100",mode="idle"}[5m])))
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: RAM
+                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.14:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.14:9100"})
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: Used
+                  query: node_memory_MemTotal_bytes{instance="192.168.1.14:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.14:9100"}
+                  format:
+                    type: bytes
+                    options:
+                      maximumFractionDigits: 1
+                - label: Load
+                  query: node_load1{instance="192.168.1.14:9100"}
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 2
+        - Casper:
+            icon: mdi-server
+            href: https://casper.rcrumana.xyz
+            description: 192.168.1.15
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              metrics:
+                - label: CPU
+                  query: 100 * (1 - avg(rate(node_cpu_seconds_total{instance="192.168.1.15:9100",mode="idle"}[5m])))
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: RAM
+                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.15:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.15:9100"})
+                  format:
+                    type: percent
+                    options:
+                      maximumFractionDigits: 1
+                - label: Used
+                  query: node_memory_MemTotal_bytes{instance="192.168.1.15:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.15:9100"}
+                  format:
+                    type: bytes
+                    options:
+                      maximumFractionDigits: 1
+                - label: Load
+                  query: node_load1{instance="192.168.1.15:9100"}
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 2
+
     - Hosts:
         - Desktop:
             icon: mdi-monitor-dashboard
             href: https://desktop.rcrumana.xyz
-            description: Host terminal dashboard
-        - Melchior:
-            icon: mdi-server
-            href: https://melchior.rcrumana.xyz
-            description: Host terminal dashboard
-        - Balthasar:
-            icon: mdi-server
-            href: https://balthasar.rcrumana.xyz
-            description: Host terminal dashboard
-        - Casper:
-            icon: mdi-server
-            href: https://casper.rcrumana.xyz
             description: Host terminal dashboard
   bookmarks.yaml: |
     - Operations:
@@ -241,18 +330,6 @@ data:
             - abbr: UK
               href: https://uptime.rcrumana.xyz
   widgets.yaml: |
-    - kubernetes:
-        cluster:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
-          label: cluster
-        nodes:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
     - search:
         provider: duckduckgo
         target: _blank
