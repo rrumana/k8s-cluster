@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-exporter-stats"
+        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-exporter-active-cpu"
         linkerd.io/inject: enabled
       labels:
         app: homepage
