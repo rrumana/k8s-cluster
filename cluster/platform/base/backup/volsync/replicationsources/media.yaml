@@ -841,6 +841,7 @@ spec:
     volumeSnapshotClassName: ceph-block-snap
     repository: immich-photos-backup-restic
     cacheCapacity: 64Gi
+    unlock: "2026-06-17-immich-photos-stale-lock"
     pruneIntervalDays: 14
     moverSecurityContext:
       runAsUser: 0
