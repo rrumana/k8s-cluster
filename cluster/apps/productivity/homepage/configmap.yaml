@@ -320,21 +320,21 @@ data:
             widget:
               type: iframe
               name: melchior-node-dashboard
-              src: https://grafana.rcrumana.xyz/d/homepage-node-melchior/homepage-node-melchior?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              src: https://grafana.rcrumana.xyz/d/homepage-node-melchior/homepage-node-melchior?orgId=1&timezone=browser&theme=dark&kiosk
               classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
         - Balthasar:
             widget:
               type: iframe
               name: balthasar-node-dashboard
-              src: https://grafana.rcrumana.xyz/d/homepage-node-balthasar/homepage-node-balthasar?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              src: https://grafana.rcrumana.xyz/d/homepage-node-balthasar/homepage-node-balthasar?orgId=1&timezone=browser&theme=dark&kiosk
               classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
         - Casper:
             widget:
               type: iframe
               name: casper-node-dashboard
-              src: https://grafana.rcrumana.xyz/d/homepage-node-casper/homepage-node-casper?orgId=1&from=now-15m&to=now&timezone=browser&theme=dark&refresh=1s&kiosk
+              src: https://grafana.rcrumana.xyz/d/homepage-node-casper/homepage-node-casper?orgId=1&timezone=browser&theme=dark&kiosk
               classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
 

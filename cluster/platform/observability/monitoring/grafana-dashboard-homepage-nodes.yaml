@@ -68,7 +68,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.13:9100\"}",
+              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"})",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -117,7 +117,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.13:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.13:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.13:9100\"}",
+              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.13:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.13:9100\"})",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -244,7 +244,7 @@ data:
           "type": "timeseries"
         }
       ],
-      "refresh": "1s",
+      "refresh": "auto",
       "schemaVersion": 39,
       "style": "dark",
       "tags": [
@@ -255,13 +255,28 @@ data:
         "list": []
       },
       "time": {
-        "from": "now-15m",
+        "from": "now-5m",
         "to": "now"
       },
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 2
+      "version": 3,
+      "timepicker": {
+        "refresh_intervals": [
+          "1s",
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      }
     }
   homepage-node-balthasar.json: |
     {
@@ -325,7 +340,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.14:9100\"}",
+              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"})",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -374,7 +389,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.14:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.14:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.14:9100\"}",
+              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.14:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.14:9100\"})",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -501,7 +516,7 @@ data:
           "type": "timeseries"
         }
       ],
-      "refresh": "1s",
+      "refresh": "auto",
       "schemaVersion": 39,
       "style": "dark",
       "tags": [
@@ -512,13 +527,28 @@ data:
         "list": []
       },
       "time": {
-        "from": "now-15m",
+        "from": "now-5m",
         "to": "now"
       },
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 2
+      "version": 3,
+      "timepicker": {
+        "refresh_intervals": [
+          "1s",
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      }
     }
   homepage-node-casper.json: |
     {
@@ -582,7 +612,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * sum(rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"})) * on() group_left(nodename) node_uname_info{instance=\"192.168.1.15:9100\"}",
+              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"})",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -631,7 +661,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "(100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.15:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.15:9100\"})) * on(instance) group_left(nodename) node_uname_info{instance=\"192.168.1.15:9100\"}",
+              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.15:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.15:9100\"})",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -758,7 +788,7 @@ data:
           "type": "timeseries"
         }
       ],
-      "refresh": "1s",
+      "refresh": "auto",
       "schemaVersion": 39,
       "style": "dark",
       "tags": [
@@ -769,11 +799,26 @@ data:
         "list": []
       },
       "time": {
-        "from": "now-15m",
+        "from": "now-5m",
         "to": "now"
       },
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 2
+      "version": 3,
+      "timepicker": {
+        "refresh_intervals": [
+          "1s",
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m",
+          "15m",
+          "30m",
+          "1h",
+          "2h",
+          "1d"
+        ]
+      }
     }

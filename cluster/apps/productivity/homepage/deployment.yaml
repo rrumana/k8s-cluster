@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-dashboards"
+        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-dashboard-defaults"
         linkerd.io/inject: enabled
       labels:
         app: homepage
