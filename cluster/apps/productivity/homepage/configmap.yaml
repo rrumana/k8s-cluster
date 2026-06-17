@@ -219,7 +219,7 @@ data:
             widget:
               type: prometheusmetric
               url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 10000
+              refreshInterval: 1000
               metrics:
                 - label: CPU
                   query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.13:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.13:9100",mode="idle"})
@@ -252,7 +252,7 @@ data:
             widget:
               type: prometheusmetric
               url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 10000
+              refreshInterval: 1000
               metrics:
                 - label: CPU
                   query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.14:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.14:9100",mode="idle"})
@@ -285,7 +285,7 @@ data:
             widget:
               type: prometheusmetric
               url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 10000
+              refreshInterval: 1000
               metrics:
                 - label: CPU
                   query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.15:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.15:9100",mode="idle"})
