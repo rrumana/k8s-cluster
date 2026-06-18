@@ -5,11 +5,6 @@ metadata:
   namespace: productivity
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    gethomepage.dev/description: Kubernetes-aware service dashboard
-    gethomepage.dev/enabled: "true"
-    gethomepage.dev/group: Cluster
-    gethomepage.dev/icon: homepage.png
-    gethomepage.dev/name: Homepage
     haproxy-ingress.github.io/affinity: "cookie"
     haproxy-ingress.github.io/backend-protocol: "http"
     haproxy-ingress.github.io/session-cookie-domain: "dash.rcrumana.xyz"

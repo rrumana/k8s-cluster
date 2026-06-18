@@ -6,6 +6,7 @@ namespace: productivity
 resources:
   - serviceaccount.yaml
   - rbac.yaml
+  - externalsecret.yaml
   - configmap.yaml
   - deployment.yaml
   - service.yaml

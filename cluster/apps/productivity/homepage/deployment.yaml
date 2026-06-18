@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-17-node-dashboard-defaults"
+        homepage.rcrumana.xyz/config-revision: "2026-06-18-service-widget-stubs"
         linkerd.io/inject: enabled
       labels:
         app: homepage
@@ -54,6 +54,13 @@ spec:
         - name: homepage
           image: harbor.rcrumana.xyz/proxy-ghcr/gethomepage/homepage:v1.13.2
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: homepage-env
+                optional: true
+            - secretRef:
+                name: homepage-qbit-env
+                optional: true
           env:
             - name: TZ
               value: America/Los_Angeles
