@@ -14,205 +14,138 @@ data:
     target: _blank
     statusStyle: dot
     layout:
-      Cluster:
-        style: row
-        columns: 3
-      Networking:
-        style: row
-        columns: 3
-      Storage:
-        style: row
-        columns: 4
-      Productivity:
-        style: row
-        columns: 4
       Media:
         style: row
-        columns: 4
+        columns: 2
+        Calendar:
+          style: column
+          columns: 1
+        Media Automation:
+          style: column
+          columns: 1
+      Services:
+        style: row
+        columns: 5
+      Storage and Networking:
+        style: row
+        columns: 2
+        Storage:
+          style: row
+          columns: 2
+        Networking:
+          style: row
+          columns: 2
+          Firewall:
+            style: row
+            columns: 1
+          Network Services:
+            style: row
+            columns: 1
       Torrenting:
         style: row
         columns: 3
-      AI and Web:
+      Cluster:
         style: row
-        columns: 3
+        columns: 5
       Graphs:
         style: row
         columns: 1
-      Hosts:
+      Portfolio:
         style: row
-        columns: 4
+        columns: 2
   services.yaml: |
-    - Cluster:
-        - Argo CD:
-            icon: argo-cd.png
-            href: https://argocd.rcrumana.xyz
-            description: GitOps control plane
-            namespace: argocd
-            app: argocd-server
-            widget:
-              type: argocd
-              url: http://argocd-server.argocd.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
-              fields: ["apps", "synced", "outOfSync", "healthy"]
-              hideErrors: true
-        - Grafana:
-            icon: grafana.png
-            href: https://grafana.rcrumana.xyz
-            description: Metrics and log dashboards
-            namespace: monitoring
-            app: grafana
-            widget:
-              type: grafana
-              version: 2
-              alerts: alertmanager
-              url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local
-              username: "{{HOMEPAGE_VAR_GRAFANA_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
-              fields: ["dashboards", "datasources", "totalalerts", "alertstriggered"]
-              hideErrors: true
-        - Uptime Kuma:
-            icon: uptime-kuma.png
-            href: https://uptime.rcrumana.xyz
-            description: External and service uptime checks
-            namespace: productivity
-            app: uptime-kuma
-            widget:
-              type: uptimekuma
-              url: http://uptime-kuma.productivity.svc.cluster.local
-              slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
-              fields: ["up", "down", "uptime", "incident"]
-              hideErrors: true
-
-    - Networking:
-        - OPNsense:
-            icon: opnsense.png
-            href: https://router.rcrumana.xyz
-            description: Router and firewall
-            widget:
-              type: opnsense
-              url: https://router.rcrumana.xyz
-              username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
-              password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
-              wan: "{{HOMEPAGE_VAR_OPNSENSE_WAN}}"
-              fields: ["cpu", "memory", "wanUpload", "wanDownload"]
-              hideErrors: true
-        - UniFi:
-            icon: unifi.png
-            href: https://unifi.rcrumana.xyz
-            description: Network controller
-            namespace: productivity
-            app: unifi-os-server
-            widget:
-              type: unifi
-              url: https://unifi.rcrumana.xyz
-              site: "{{HOMEPAGE_VAR_UNIFI_SITE}}"
-              key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
-              fields: ["wan", "lan_users", "wlan_users", "wlan_devices"]
-              hideErrors: true
-        - Headscale:
-            icon: headscale.png
-            href: https://headscale.rcrumana.xyz/web
-            description: Tailnet admin UI
-            namespace: other
-            app: headscale
-
-    - Storage:
-        - Ceph:
-            icon: ceph.png
-            href: https://ceph.rcrumana.xyz
-            description: Ceph storage dashboard
-            namespace: rook-ceph
-            app: ceph-mgr
-        - Media NAS:
-            icon: truenas.png
-            href: https://nas-2.rcrumana.xyz
-            description: Primary NAS
-            widget:
-              type: truenas
-              url: https://nas-2.rcrumana.xyz
-              version: 2
-              key: "{{HOMEPAGE_VAR_TRUENAS_MEDIA_API_KEY}}"
-              enablePools: true
-              nasType: scale
-              fields: ["load", "uptime", "alerts"]
-              hideErrors: true
-        - Backups NAS:
-            icon: truenas.png
-            href: https://nas.rcrumana.xyz
-            description: NAS for backups
-            widget:
-              type: truenas
-              url: https://nas.rcrumana.xyz
-              version: 2
-              key: "{{HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY}}"
-              enablePools: true
-              nasType: scale
-              fields: ["load", "uptime", "alerts"]
-              hideErrors: true
-        - MinIO:
-            icon: minio.png
-            href: https://minio.rcrumana.xyz
-            description: Object storage console
-
-    - Productivity:
-        - Nextcloud:
-            icon: nextcloud.png
-            href: https://nextcloud.rcrumana.xyz
-            description: Files and collaboration
-            namespace: productivity
-            app: nextcloud
-            widget:
-              type: nextcloud
-              url: http://nextcloud.productivity.svc.cluster.local:8080
-              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
-              fields: ["freespace", "activeusers", "numfiles", "numshares"]
-              hideErrors: true
-        - Vaultwarden:
-            icon: vaultwarden.png
-            href: https://vault.rcrumana.xyz
-            description: Password vault
-            namespace: productivity
-            app: vaultwarden
-        - Calendar:
-            icon: mdi-calendar-month
-            description: Upcoming media and personal events
-            widget:
-              type: calendar
-              view: monthly
-              maxEvents: 12
-              showTime: true
-              timezone: America/Los_Angeles
-              integrations:
-                - type: sonarr
-                  service_group: Media
-                  service_name: Sonarr
-                  color: teal
-                  baseUrl: https://sonarr.rcrumana.xyz
-                - type: radarr
-                  service_group: Media
-                  service_name: Radarr
-                  color: amber
-                  baseUrl: https://radarr.rcrumana.xyz
-                - type: lidarr
-                  service_group: Media
-                  service_name: Lidarr
-                  color: purple
-                  baseUrl: https://lidarr.rcrumana.xyz
-
     - Media:
-        - Plex:
-            icon: plex.png
-            href: https://plex.rcrumana.xyz
-            description: Media server
-            namespace: media
-            app: plex
-            widget:
-              type: plex
-              url: http://plex.media.svc.cluster.local:32400
-              key: "{{HOMEPAGE_VAR_PLEX_TOKEN}}"
-              fields: ["streams", "movies", "tv", "albums"]
-              hideErrors: true
+        - Calendar:
+            - Calendar:
+                icon: mdi-calendar-month
+                description: Upcoming media and personal events
+                widget:
+                  type: calendar
+                  view: monthly
+                  maxEvents: 12
+                  showTime: true
+                  timezone: America/Los_Angeles
+                  integrations:
+                    - type: sonarr
+                      service_group: Media Automation
+                      service_name: Sonarr
+                      color: teal
+                      baseUrl: https://sonarr.rcrumana.xyz
+                    - type: radarr
+                      service_group: Media Automation
+                      service_name: Radarr
+                      color: amber
+                      baseUrl: https://radarr.rcrumana.xyz
+                    - type: lidarr
+                      service_group: Media Automation
+                      service_name: Lidarr
+                      color: purple
+                      baseUrl: https://lidarr.rcrumana.xyz
+        - Media Automation:
+            - Jellyseerr:
+                icon: jellyseerr.png
+                href: https://jellyseerr.rcrumana.xyz
+                description: Media requests
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: seerr
+                  url: http://jellyseerr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
+                  fields: ["pending", "approved", "completed"]
+                  hideErrors: true
+            - Sonarr:
+                icon: sonarr.png
+                href: https://sonarr.rcrumana.xyz
+                description: Series automation
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: sonarr
+                  url: http://sonarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
+                  enableQueue: true
+                  fields: ["wanted", "queued", "series"]
+                  hideErrors: true
+            - Radarr:
+                icon: radarr.png
+                href: https://radarr.rcrumana.xyz
+                description: Movie automation
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: radarr
+                  url: http://radarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+                  enableQueue: true
+                  fields: ["wanted", "queued", "movies"]
+                  hideErrors: true
+            - Lidarr:
+                icon: lidarr.png
+                href: https://lidarr.rcrumana.xyz
+                description: Music automation
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: lidarr
+                  url: http://lidarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
+                  fields: ["wanted", "queued", "artists"]
+                  hideErrors: true
+            - Prowlarr:
+                icon: prowlarr.png
+                href: https://prowlarr.rcrumana.xyz
+                description: Indexer management
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: prowlarr
+                  url: http://prowlarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
+                  fields: ["numberOfGrabs", "numberOfQueries", "numberOfFailGrabs"]
+                  hideErrors: true
+
+    - Services:
         - Jellyfin:
             icon: jellyfin.png
             href: https://jellyfin.rcrumana.xyz
@@ -225,7 +158,6 @@ data:
               key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
               version: 2
               enableBlocks: true
-              enableNowPlaying: true
               enableUser: true
               enableMediaControl: true
               fields: ["movies", "series", "episodes", "songs"]
@@ -243,68 +175,87 @@ data:
               version: 2
               fields: ["users", "photos", "videos", "storage"]
               hideErrors: true
-        - Jellyseerr:
-            icon: jellyseerr.png
-            href: https://jellyseerr.rcrumana.xyz
-            description: Media requests
-            namespace: media
-            podSelector: app=arr-stack
+        - Nextcloud:
+            icon: nextcloud.png
+            href: https://nextcloud.rcrumana.xyz
+            description: Files and collaboration
+            namespace: productivity
+            app: nextcloud
             widget:
-              type: seerr
-              url: http://jellyseerr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
-              fields: ["pending", "approved", "completed", "issues"]
+              type: nextcloud
+              url: http://nextcloud.productivity.svc.cluster.local:8080
+              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
+              fields: ["freespace", "activeusers", "numfiles", "numshares"]
               hideErrors: true
-        - Sonarr:
-            icon: sonarr.png
-            href: https://sonarr.rcrumana.xyz
-            description: Series automation
-            namespace: media
-            podSelector: app=arr-stack
-            widget:
-              type: sonarr
-              url: http://sonarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
-              enableQueue: true
-              fields: ["wanted", "queued", "series"]
-              hideErrors: true
-        - Radarr:
-            icon: radarr.png
-            href: https://radarr.rcrumana.xyz
-            description: Movie automation
-            namespace: media
-            podSelector: app=arr-stack
-            widget:
-              type: radarr
-              url: http://radarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
-              enableQueue: true
-              fields: ["wanted", "missing", "queued", "movies"]
-              hideErrors: true
-        - Lidarr:
-            icon: lidarr.png
-            href: https://lidarr.rcrumana.xyz
-            description: Music automation
-            namespace: media
-            podSelector: app=arr-stack
-            widget:
-              type: lidarr
-              url: http://lidarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
-              fields: ["wanted", "queued", "artists"]
-              hideErrors: true
-        - Prowlarr:
-            icon: prowlarr.png
-            href: https://prowlarr.rcrumana.xyz
-            description: Indexer management
-            namespace: media
-            podSelector: app=arr-stack
-            widget:
-              type: prowlarr
-              url: http://prowlarr.media.svc.cluster.local
-              key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
-              fields: ["numberOfGrabs", "numberOfQueries", "numberOfFailGrabs", "numberOfFailQueries"]
-              hideErrors: true
+        - LibreChat:
+            icon: librechat.png
+            href: https://chat.rcrumana.xyz
+            description: AI chat frontend
+            namespace: ai
+            app: librechat
+        - Vaultwarden:
+            icon: vaultwarden.png
+            href: https://vault.rcrumana.xyz
+            description: Password vault
+            namespace: productivity
+            app: vaultwarden
+
+    - Storage and Networking:
+        - Storage:
+            - Media NAS:
+                icon: truenas.png
+                href: https://nas-2.rcrumana.xyz
+                description: Primary NAS
+                widget:
+                  type: truenas
+                  url: https://nas-2.rcrumana.xyz
+                  version: 2
+                  key: "{{HOMEPAGE_VAR_TRUENAS_MEDIA_API_KEY}}"
+                  enablePools: true
+                  nasType: scale
+                  fields: ["load", "uptime", "alerts"]
+                  hideErrors: true
+            - Backups NAS:
+                icon: truenas.png
+                href: https://nas.rcrumana.xyz
+                description: NAS for backups
+                widget:
+                  type: truenas
+                  url: https://nas.rcrumana.xyz
+                  version: 2
+                  key: "{{HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY}}"
+                  enablePools: true
+                  nasType: scale
+                  fields: ["load", "uptime", "alerts"]
+                  hideErrors: true
+        - Networking:
+            - Firewall:
+                - OPNsense:
+                    icon: opnsense.png
+                    href: https://router.rcrumana.xyz
+                    description: Router and firewall
+                    widget:
+                      type: opnsense
+                      url: https://router.rcrumana.xyz
+                      username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
+                      password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
+                      wan: "{{HOMEPAGE_VAR_OPNSENSE_WAN}}"
+                      fields: ["cpu", "memory", "wanUpload", "wanDownload"]
+                      hideErrors: true
+            - Network Services:
+                - UniFi:
+                    icon: unifi.png
+                    href: https://unifi.rcrumana.xyz
+                    description: Network controller
+                    namespace: productivity
+                    app: unifi-os-server
+                - Headscale:
+                    icon: headscale.png
+                    href: https://headscale.rcrumana.xyz/web
+                    description: Tailnet admin UI
+                    namespace: other
+                    app: headscale
 
     - Torrenting:
         - qBittorrent:
@@ -353,25 +304,56 @@ data:
               fields: ["leech", "download", "seed", "upload"]
               hideErrors: true
 
-    - AI and Web:
-        - LibreChat:
-            icon: librechat.png
-            href: https://chat.rcrumana.xyz
-            description: AI chat frontend
-            namespace: ai
-            app: librechat
-        - Portfolio:
-            icon: mdi-web
-            href: https://rcrumana.xyz
-            description: Public portfolio
-            namespace: web
-            app: portfolio
-        - Portfolio Staging:
-            icon: mdi-web
-            href: https://staging.rcrumana.xyz
-            description: Staging portfolio
-            namespace: web
-            app: portfolio-staging
+    - Cluster:
+        - Argo CD:
+            icon: argo-cd.png
+            href: https://argocd.rcrumana.xyz
+            description: GitOps control plane
+            namespace: argocd
+            app: argocd-server
+            widget:
+              type: argocd
+              url: http://argocd-server.argocd.svc.cluster.local
+              key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+              fields: ["apps", "synced", "outOfSync", "healthy"]
+              hideErrors: true
+        - Grafana:
+            icon: grafana.png
+            href: https://grafana.rcrumana.xyz
+            description: Metrics and log dashboards
+            namespace: monitoring
+            app: grafana
+            widget:
+              type: grafana
+              version: 2
+              alerts: alertmanager
+              url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local
+              username: "{{HOMEPAGE_VAR_GRAFANA_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+              fields: ["dashboards", "datasources", "totalalerts", "alertstriggered"]
+              hideErrors: true
+        - Uptime Kuma:
+            icon: uptime-kuma.png
+            href: https://uptime.rcrumana.xyz
+            description: External and service uptime checks
+            namespace: productivity
+            app: uptime-kuma
+            widget:
+              type: uptimekuma
+              url: http://uptime-kuma.productivity.svc.cluster.local
+              slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
+              fields: ["up", "down", "uptime", "incident"]
+              hideErrors: true
+        - Ceph:
+            icon: ceph.png
+            href: https://ceph.rcrumana.xyz
+            description: Ceph storage dashboard
+            namespace: rook-ceph
+            app: ceph-mgr
+        - MinIO:
+            icon: minio.png
+            href: https://minio.rcrumana.xyz
+            description: Object storage console
 
     - Graphs:
         - Melchior:
@@ -395,6 +377,20 @@ data:
               src: https://grafana.rcrumana.xyz/d/homepage-node-casper/homepage-node-casper?orgId=1&timezone=browser&theme=dark&kiosk
               classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
+
+    - Portfolio:
+        - Portfolio:
+            icon: mdi-web
+            href: https://rcrumana.xyz
+            description: Public portfolio
+            namespace: web
+            app: portfolio
+        - Portfolio Staging:
+            icon: mdi-web
+            href: https://staging.rcrumana.xyz
+            description: Staging portfolio
+            namespace: web
+            app: portfolio-staging
 
   bookmarks.yaml: ""
   widgets.yaml: ""
