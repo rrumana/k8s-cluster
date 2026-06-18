@@ -32,7 +32,7 @@ data:
       AI and Web:
         style: row
         columns: 3
-    Graphs:
+      Graphs:
         style: row
         columns: 1
       Hosts:
