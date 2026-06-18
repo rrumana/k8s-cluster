@@ -41,9 +41,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -68,7 +68,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"})",
+              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"iowait\"}[1m]))",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -90,9 +90,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -117,7 +117,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.13:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.13:9100\"})",
+              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.13:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -261,7 +261,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 3,
+      "version": 4,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -313,9 +313,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -340,7 +340,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"})",
+              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"iowait\"}[1m]))",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -362,9 +362,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -389,7 +389,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.14:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.14:9100\"})",
+              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.14:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -533,7 +533,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 3,
+      "version": 4,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -585,9 +585,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -612,7 +612,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * sum without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=~\"user|system|nice|irq|softirq|steal\"}[1m])) / count without (cpu, mode) (node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"})",
+              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"iowait\"}[1m]))",
               "legendFormat": "CPU",
               "refId": "A"
             }
@@ -634,9 +634,9 @@ data:
                 "fillOpacity": 10,
                 "showPoints": "never"
               },
-              "max": 100,
+              "max": 1,
               "min": 0,
-              "unit": "percent"
+              "unit": "percentunit"
             },
             "overrides": []
           },
@@ -661,7 +661,7 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"192.168.1.15:9100\"} / node_memory_MemTotal_bytes{instance=\"192.168.1.15:9100\"})",
+              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.15:9100\"}",
               "legendFormat": "RAM",
               "refId": "A"
             }
@@ -805,7 +805,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 3,
+      "version": 4,
       "timepicker": {
         "refresh_intervals": [
           "1s",
