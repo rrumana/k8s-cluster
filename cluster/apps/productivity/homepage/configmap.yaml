@@ -95,6 +95,12 @@ data:
                 description: Media requests
                 namespace: media
                 podSelector: app=arr-stack
+                widget:
+                  type: seerr
+                  url: http://jellyseerr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
             - Sonarr:
                 icon: sonarr.png
                 href: https://sonarr.rcrumana.xyz
@@ -102,6 +108,13 @@ data:
                 description: Series automation
                 namespace: media
                 podSelector: app=arr-stack
+                widget:
+                  type: sonarr
+                  url: http://sonarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
+                  enableQueue: true
+                  fields: []
+                  hideErrors: true
             - Radarr:
                 icon: radarr.png
                 href: https://radarr.rcrumana.xyz
@@ -109,6 +122,13 @@ data:
                 description: Movie automation
                 namespace: media
                 podSelector: app=arr-stack
+                widget:
+                  type: radarr
+                  url: http://radarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+                  enableQueue: true
+                  fields: []
+                  hideErrors: true
             - Lidarr:
                 icon: lidarr.png
                 href: https://lidarr.rcrumana.xyz
@@ -116,6 +136,12 @@ data:
                 description: Music automation
                 namespace: media
                 podSelector: app=arr-stack
+                widget:
+                  type: lidarr
+                  url: http://lidarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
             - Prowlarr:
                 icon: prowlarr.png
                 href: https://prowlarr.rcrumana.xyz
@@ -123,6 +149,12 @@ data:
                 description: Indexer management
                 namespace: media
                 podSelector: app=arr-stack
+                widget:
+                  type: prowlarr
+                  url: http://prowlarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
 
     - Services:
         - Jellyfin:
@@ -136,6 +168,10 @@ data:
               url: http://jellyfin.media.svc.cluster.local:8096
               key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
               version: 2
+              enableBlocks: true
+              enableNowPlaying: false
+              enableUser: true
+              enableMediaControl: true
               fields: ["movies", "series", "episodes"]
               hideErrors: true
         - Immich:

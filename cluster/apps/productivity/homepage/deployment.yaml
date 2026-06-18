@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-18-hide-subheaders-arr-monitor"
+        homepage.rcrumana.xyz/config-revision: "2026-06-18-hidden-arr-widgets"
         linkerd.io/inject: enabled
       labels:
         app: homepage
