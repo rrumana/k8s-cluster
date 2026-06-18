@@ -170,16 +170,16 @@ data:
                 namespace: media
                 app: jellyfin
                 widget:
-                type: jellyfin
-                url: http://jellyfin.media.svc.cluster.local:8096
-                key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
-                version: 2
-                enableBlocks: true
-                enableNowPlaying: false
-                enableUser: true
-                enableMediaControl: true
-                fields: ["movies", "series", "episodes"]
-                hideErrors: true
+                    type: jellyfin
+                    url: http://jellyfin.media.svc.cluster.local:8096
+                    key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
+                    version: 2
+                    enableBlocks: true
+                    enableNowPlaying: false
+                    enableUser: true
+                    enableMediaControl: true
+                    fields: ["movies", "series", "episodes"]
+                    hideErrors: true
             - Immich:
                 icon: immich.png
                 href: https://immich.rcrumana.xyz
@@ -187,12 +187,12 @@ data:
                 namespace: media
                 app: immich
                 widget:
-                type: immich
-                url: http://immich-server.media.svc.cluster.local:2283
-                key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
-                version: 2
-                fields: ["photos", "videos", "storage"]
-                hideErrors: true
+                    type: immich
+                    url: http://immich-server.media.svc.cluster.local:2283
+                    key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
+                    version: 2
+                    fields: ["photos", "videos", "storage"]
+                    hideErrors: true
         - Productivity:
             - Nextcloud:
                 - Nextcloud:
@@ -202,12 +202,12 @@ data:
                     namespace: productivity
                     app: nextcloud
                     widget:
-                    type: nextcloud
-                    url: http://nextcloud.productivity.svc.cluster.local:8080
-                    username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
-                    password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
-                    fields: ["freespace", "activeusers", "numfiles", "numshares"]
-                    hideErrors: true
+                        type: nextcloud
+                        url: http://nextcloud.productivity.svc.cluster.local:8080
+                        username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+                        password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
+                        fields: ["freespace", "activeusers", "numfiles", "numshares"]
+                        hideErrors: true
             - Other:
                 - LibreChat:
                     icon: librechat.png
