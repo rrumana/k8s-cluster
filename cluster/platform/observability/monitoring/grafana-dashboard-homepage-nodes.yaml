@@ -216,8 +216,8 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
+            "h": 8,
+            "w": 6,
             "x": 12,
             "y": 0
           },
@@ -275,10 +275,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
-            "x": 12,
-            "y": 4
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 0
           },
           "id": 4,
           "options": {
@@ -331,7 +331,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 7,
+      "version": 8,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -558,8 +558,8 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
+            "h": 8,
+            "w": 6,
             "x": 12,
             "y": 0
           },
@@ -617,10 +617,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
-            "x": 12,
-            "y": 4
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 0
           },
           "id": 4,
           "options": {
@@ -673,7 +673,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 7,
+      "version": 8,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -900,8 +900,8 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
+            "h": 8,
+            "w": 6,
             "x": 12,
             "y": 0
           },
@@ -959,10 +959,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
-            "w": 12,
-            "x": 12,
-            "y": 4
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 0
           },
           "id": 4,
           "options": {
@@ -1015,7 +1015,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 7,
+      "version": 8,
       "timepicker": {
         "refresh_intervals": [
           "1s",
