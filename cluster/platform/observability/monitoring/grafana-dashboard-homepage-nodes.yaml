@@ -34,13 +34,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -54,11 +85,15 @@ data:
           "id": 1,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -74,7 +109,7 @@ data:
           ],
           "title": "CPU usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -83,13 +118,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -103,11 +169,15 @@ data:
           "id": 2,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -123,7 +193,7 @@ data:
           ],
           "title": "RAM usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -261,7 +331,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 5,
+      "version": 6,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -306,13 +376,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -326,11 +427,15 @@ data:
           "id": 1,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -346,7 +451,7 @@ data:
           ],
           "title": "CPU usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -355,13 +460,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -375,11 +511,15 @@ data:
           "id": 2,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -395,7 +535,7 @@ data:
           ],
           "title": "RAM usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -533,7 +673,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 5,
+      "version": 6,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -578,13 +718,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -598,11 +769,15 @@ data:
           "id": 1,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -618,7 +793,7 @@ data:
           ],
           "title": "CPU usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -627,13 +802,44 @@ data:
           },
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "custom": {
-                "fillOpacity": 100,
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
                 "showPoints": "never",
+                "spanNulls": false,
                 "stacking": {
-                  "mode": "normal"
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
+              "max": 1,
+              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -647,11 +853,15 @@ data:
           "id": 2,
           "options": {
             "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
               "showLegend": false
             },
             "tooltip": {
-              "mode": "multi",
-              "sort": "desc"
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
             }
           },
           "targets": [
@@ -667,7 +877,7 @@ data:
           ],
           "title": "RAM usage",
           "type": "timeseries",
-          "pluginVersion": "v11.4.0"
+          "pluginVersion": "12.3.1"
         },
         {
           "datasource": {
@@ -805,7 +1015,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 5,
+      "version": 6,
       "timepicker": {
         "refresh_intervals": [
           "1s",
