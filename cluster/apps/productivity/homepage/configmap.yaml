@@ -103,8 +103,7 @@ data:
               type: unifi
               url: https://unifi.rcrumana.xyz
               site: "{{HOMEPAGE_VAR_UNIFI_SITE}}"
-              username: "{{HOMEPAGE_VAR_UNIFI_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_UNIFI_PASSWORD}}"
+              key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
               fields: ["wan", "lan_users", "wlan_users", "wlan_devices"]
               hideErrors: true
         - Headscale:
@@ -113,13 +112,6 @@ data:
             description: Tailnet admin UI
             namespace: other
             app: headscale
-            widget:
-              type: headscale
-              url: http://headscale.other.svc.cluster.local
-              nodeId: "{{HOMEPAGE_VAR_HEADSCALE_NODE_ID}}"
-              key: "{{HOMEPAGE_VAR_HEADSCALE_TOKEN}}"
-              fields: ["name", "address", "last_seen", "status"]
-              hideErrors: true
 
     - Storage:
         - Ceph:
@@ -169,7 +161,8 @@ data:
             widget:
               type: nextcloud
               url: http://nextcloud.productivity.svc.cluster.local:8080
-              key: "{{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}"
+              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
               fields: ["freespace", "activeusers", "numfiles", "numshares"]
               hideErrors: true
         - Vaultwarden:
@@ -203,12 +196,6 @@ data:
                   service_name: Lidarr
                   color: purple
                   baseUrl: https://lidarr.rcrumana.xyz
-                - type: ical
-                  url: "{{HOMEPAGE_VAR_ICAL_URL}}"
-                  name: Calendar
-                  color: blue
-                  params:
-                    showName: true
 
     - Media:
         - Plex:
