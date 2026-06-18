@@ -77,7 +77,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 0,
             "y": 0
@@ -161,7 +161,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 6,
             "y": 0
@@ -216,7 +216,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
             "y": 0
@@ -275,10 +275,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
-            "y": 8
+            "y": 4
           },
           "id": 4,
           "options": {
@@ -331,7 +331,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 6,
+      "version": 7,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -419,7 +419,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 0,
             "y": 0
@@ -503,7 +503,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 6,
             "y": 0
@@ -558,7 +558,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
             "y": 0
@@ -617,10 +617,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
-            "y": 8
+            "y": 4
           },
           "id": 4,
           "options": {
@@ -673,7 +673,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 6,
+      "version": 7,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -761,7 +761,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 0,
             "y": 0
@@ -845,7 +845,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 16,
+            "h": 8,
             "w": 6,
             "x": 6,
             "y": 0
@@ -900,7 +900,7 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
             "y": 0
@@ -959,10 +959,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 8,
+            "h": 4,
             "w": 12,
             "x": 12,
-            "y": 8
+            "y": 4
           },
           "id": 4,
           "options": {
@@ -1015,7 +1015,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 6,
+      "version": 7,
       "timepicker": {
         "refresh_intervals": [
           "1s",
