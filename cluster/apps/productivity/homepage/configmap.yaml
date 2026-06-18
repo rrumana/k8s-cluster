@@ -255,6 +255,7 @@ data:
                 - OPNsense:
                     icon: opnsense.png
                     href: https://router.rcrumana.xyz
+                    siteMonitor: https://router.rcrumana.xyz
                     description: Router and firewall
                     widget:
                       type: opnsense
@@ -282,6 +283,7 @@ data:
         - qBittorrent:
             icon: qbittorrent.png
             href: https://qbit.rcrumana.xyz
+            siteMonitor: http://qbit.media.svc.cluster.local
             description: Primary torrent client
             namespace: media
             podSelector: app=arr-stack
