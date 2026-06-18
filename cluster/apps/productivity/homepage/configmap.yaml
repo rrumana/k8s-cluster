@@ -14,12 +14,6 @@ data:
     target: _blank
     statusStyle: dot
     layout:
-      Nodes:
-        style: row
-        columns: 3
-      Graphs:
-        style: row
-        columns: 1
       Cluster:
         style: row
         columns: 3
@@ -38,6 +32,9 @@ data:
       AI and Web:
         style: row
         columns: 3
+    Graphs:
+        style: row
+        columns: 1
       Hosts:
         style: row
         columns: 4
@@ -214,107 +211,6 @@ data:
             namespace: web
             app: portfolio-staging
 
-    - Nodes:
-        - Melchior:
-            icon: mdi-server
-            href: https://melchior.rcrumana.xyz
-            description: 192.168.1.13
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 1000
-              metrics:
-                - label: CPU
-                  query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.13:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.13:9100",mode="idle"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: RAM
-                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.13:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.13:9100"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: Used
-                  query: node_memory_MemTotal_bytes{instance="192.168.1.13:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.13:9100"}
-                  format:
-                    type: bytes
-                    options:
-                      maximumFractionDigits: 1
-                - label: Load
-                  query: node_load1{instance="192.168.1.13:9100"}
-                  format:
-                    type: number
-                    options:
-                      maximumFractionDigits: 2
-        - Balthasar:
-            icon: mdi-server
-            href: https://balthasar.rcrumana.xyz
-            description: 192.168.1.14
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 1000
-              metrics:
-                - label: CPU
-                  query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.14:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.14:9100",mode="idle"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: RAM
-                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.14:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.14:9100"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: Used
-                  query: node_memory_MemTotal_bytes{instance="192.168.1.14:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.14:9100"}
-                  format:
-                    type: bytes
-                    options:
-                      maximumFractionDigits: 1
-                - label: Load
-                  query: node_load1{instance="192.168.1.14:9100"}
-                  format:
-                    type: number
-                    options:
-                      maximumFractionDigits: 2
-        - Casper:
-            icon: mdi-server
-            href: https://casper.rcrumana.xyz
-            description: 192.168.1.15
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 1000
-              metrics:
-                - label: CPU
-                  query: 100 * sum(rate(node_cpu_seconds_total{instance="192.168.1.15:9100",mode=~"user|system|nice|irq|softirq|steal"}[1m])) / count(node_cpu_seconds_total{instance="192.168.1.15:9100",mode="idle"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: RAM
-                  query: 100 * (1 - node_memory_MemAvailable_bytes{instance="192.168.1.15:9100"} / node_memory_MemTotal_bytes{instance="192.168.1.15:9100"})
-                  format:
-                    type: percent
-                    options:
-                      maximumFractionDigits: 1
-                - label: Used
-                  query: node_memory_MemTotal_bytes{instance="192.168.1.15:9100"} - node_memory_MemAvailable_bytes{instance="192.168.1.15:9100"}
-                  format:
-                    type: bytes
-                    options:
-                      maximumFractionDigits: 1
-                - label: Load
-                  query: node_load1{instance="192.168.1.15:9100"}
-                  format:
-                    type: number
-                    options:
-                      maximumFractionDigits: 2
-
     - Graphs:
         - Melchior:
             widget:
@@ -338,25 +234,8 @@ data:
               classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
               referrerPolicy: same-origin
 
-  bookmarks.yaml: |
-    - Operations:
-        - Cluster Repo:
-            - abbr: Git
-              href: https://github.com/rrumana/k8s-homelab-2
-    - Dashboards:
-        - Grafana:
-            - abbr: Gr
-              href: https://grafana.rcrumana.xyz
-        - Argo CD:
-            - abbr: Argo
-              href: https://argocd.rcrumana.xyz
-        - Uptime Kuma:
-            - abbr: UK
-              href: https://uptime.rcrumana.xyz
-  widgets.yaml: |
-    - search:
-        provider: duckduckgo
-        target: _blank
+  bookmarks.yaml: ""
+  widgets.yaml: ""
   docker.yaml: ""
   custom.css: ""
   custom.js: ""
