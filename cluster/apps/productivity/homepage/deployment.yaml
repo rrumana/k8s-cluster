@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-18-service-widget-stubs"
+        homepage.rcrumana.xyz/config-revision: "2026-06-18-hide-subheaders-arr-monitor"
         linkerd.io/inject: enabled
       labels:
         app: homepage

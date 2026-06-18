@@ -18,9 +18,11 @@ data:
         style: row
         columns: 2
         Calendar:
+          header: false
           style: column
           columns: 1
         Media Automation:
+          header: false
           style: column
           columns: 1
       Services:
@@ -30,15 +32,19 @@ data:
         style: row
         columns: 2
         Storage:
+          header: false
           style: row
           columns: 2
         Networking:
+          header: false
           style: row
           columns: 2
           Firewall:
+            header: false
             style: row
             columns: 1
           Network Services:
+            header: false
             style: row
             columns: 1
       Torrenting:
@@ -85,65 +91,38 @@ data:
             - Jellyseerr:
                 icon: jellyseerr.png
                 href: https://jellyseerr.rcrumana.xyz
+                siteMonitor: http://jellyseerr.media.svc.cluster.local
                 description: Media requests
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: seerr
-                  url: http://jellyseerr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
-                  fields: ["pending", "approved", "completed"]
-                  hideErrors: true
             - Sonarr:
                 icon: sonarr.png
                 href: https://sonarr.rcrumana.xyz
+                siteMonitor: http://sonarr.media.svc.cluster.local
                 description: Series automation
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: sonarr
-                  url: http://sonarr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
-                  enableQueue: true
-                  fields: ["wanted", "queued", "series"]
-                  hideErrors: true
             - Radarr:
                 icon: radarr.png
                 href: https://radarr.rcrumana.xyz
+                siteMonitor: http://radarr.media.svc.cluster.local
                 description: Movie automation
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: radarr
-                  url: http://radarr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
-                  enableQueue: true
-                  fields: ["wanted", "queued", "movies"]
-                  hideErrors: true
             - Lidarr:
                 icon: lidarr.png
                 href: https://lidarr.rcrumana.xyz
+                siteMonitor: http://lidarr.media.svc.cluster.local
                 description: Music automation
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: lidarr
-                  url: http://lidarr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
-                  fields: ["wanted", "queued", "artists"]
-                  hideErrors: true
             - Prowlarr:
                 icon: prowlarr.png
                 href: https://prowlarr.rcrumana.xyz
+                siteMonitor: http://prowlarr.media.svc.cluster.local
                 description: Indexer management
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: prowlarr
-                  url: http://prowlarr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
-                  fields: ["numberOfGrabs", "numberOfQueries", "numberOfFailGrabs"]
-                  hideErrors: true
 
     - Services:
         - Jellyfin:
@@ -157,10 +136,7 @@ data:
               url: http://jellyfin.media.svc.cluster.local:8096
               key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
               version: 2
-              enableBlocks: true
-              enableUser: true
-              enableMediaControl: true
-              fields: ["movies", "series", "episodes", "songs"]
+              fields: ["movies", "series", "episodes"]
               hideErrors: true
         - Immich:
             icon: immich.png
@@ -173,7 +149,7 @@ data:
               url: http://immich-server.media.svc.cluster.local:2283
               key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
               version: 2
-              fields: ["users", "photos", "videos", "storage"]
+              fields: ["photos", "videos", "storage"]
               hideErrors: true
         - Nextcloud:
             icon: nextcloud.png
