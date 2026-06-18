@@ -29,6 +29,9 @@ data:
       Media:
         style: row
         columns: 4
+      Torrenting:
+        style: row
+        columns: 3
       AI and Web:
         style: row
         columns: 3
@@ -176,7 +179,7 @@ data:
             description: Upcoming media and personal events
             widget:
               type: calendar
-              view: agenda
+              view: monthly
               maxEvents: 12
               showTime: true
               timezone: America/Los_Angeles
@@ -302,6 +305,8 @@ data:
               key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
               fields: ["numberOfGrabs", "numberOfQueries", "numberOfFailGrabs", "numberOfFailQueries"]
               hideErrors: true
+
+    - Torrenting:
         - qBittorrent:
             icon: qbittorrent.png
             href: https://qbit.rcrumana.xyz
