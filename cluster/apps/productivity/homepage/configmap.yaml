@@ -92,20 +92,12 @@ data:
                 icon: jellyseerr.png
                 href: https://jellyseerr.rcrumana.xyz
                 siteMonitor: http://jellyseerr.media.svc.cluster.local
-                description: Media requests
                 namespace: media
                 podSelector: app=arr-stack
-                widget:
-                  type: seerr
-                  url: http://jellyseerr.media.svc.cluster.local
-                  key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
-                  fields: []
-                  hideErrors: true
             - Sonarr:
                 icon: sonarr.png
                 href: https://sonarr.rcrumana.xyz
                 siteMonitor: http://sonarr.media.svc.cluster.local
-                description: Series automation
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -119,7 +111,6 @@ data:
                 icon: radarr.png
                 href: https://radarr.rcrumana.xyz
                 siteMonitor: http://radarr.media.svc.cluster.local
-                description: Movie automation
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -133,7 +124,6 @@ data:
                 icon: lidarr.png
                 href: https://lidarr.rcrumana.xyz
                 siteMonitor: http://lidarr.media.svc.cluster.local
-                description: Music automation
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -146,7 +136,6 @@ data:
                 icon: prowlarr.png
                 href: https://prowlarr.rcrumana.xyz
                 siteMonitor: http://prowlarr.media.svc.cluster.local
-                description: Indexer management
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -327,7 +316,7 @@ data:
               type: argocd
               url: http://argocd-server.argocd.svc.cluster.local
               key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
-              fields: ["apps", "synced", "outOfSync", "healthy"]
+              fields: ["apps", "synced", "healthy"]
               hideErrors: true
         - Grafana:
             icon: grafana.png
@@ -347,7 +336,7 @@ data:
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
-            description: External and service uptime checks
+            description: Service uptime checks
             namespace: productivity
             app: uptime-kuma
             widget:
