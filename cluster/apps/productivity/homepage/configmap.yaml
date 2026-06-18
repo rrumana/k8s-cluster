@@ -14,7 +14,8 @@ data:
     target: _blank
     statusStyle: dot
     layout:
-      Media:
+      Acquisition:
+        header: false
         style: row
         columns: 2
         Calendar:
@@ -27,7 +28,23 @@ data:
           columns: 1
       Services:
         style: row
-        columns: 5
+        columns: 2
+        Media:
+          header: false
+          style: row
+          columns: 2
+        Productivity:
+          header: false
+          style: row
+          columns: 2
+          Nextcloud:
+            header: false
+            style: row
+            columns: 1
+          Other:
+            header: false
+            style: row
+            columns: 1
       Storage and Networking:
         style: row
         columns: 2
@@ -60,11 +77,10 @@ data:
         style: row
         columns: 2
   services.yaml: |
-    - Media:
+    - Acquisition:
         - Calendar:
             - Calendar:
                 icon: mdi-calendar-month
-                description: Upcoming media and personal events
                 widget:
                   type: calendar
                   view: monthly
@@ -146,61 +162,65 @@ data:
                   hideErrors: true
 
     - Services:
-        - Jellyfin:
-            icon: jellyfin.png
-            href: https://jellyfin.rcrumana.xyz
-            description: Media server
-            namespace: media
-            app: jellyfin
-            widget:
-              type: jellyfin
-              url: http://jellyfin.media.svc.cluster.local:8096
-              key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
-              version: 2
-              enableBlocks: true
-              enableNowPlaying: false
-              enableUser: true
-              enableMediaControl: true
-              fields: ["movies", "series", "episodes"]
-              hideErrors: true
-        - Immich:
-            icon: immich.png
-            href: https://immich.rcrumana.xyz
-            description: Photo library
-            namespace: media
-            app: immich
-            widget:
-              type: immich
-              url: http://immich-server.media.svc.cluster.local:2283
-              key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
-              version: 2
-              fields: ["photos", "videos", "storage"]
-              hideErrors: true
-        - Nextcloud:
-            icon: nextcloud.png
-            href: https://nextcloud.rcrumana.xyz
-            description: Files and collaboration
-            namespace: productivity
-            app: nextcloud
-            widget:
-              type: nextcloud
-              url: http://nextcloud.productivity.svc.cluster.local:8080
-              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
-              fields: ["freespace", "activeusers", "numfiles", "numshares"]
-              hideErrors: true
-        - LibreChat:
-            icon: librechat.png
-            href: https://chat.rcrumana.xyz
-            description: AI chat frontend
-            namespace: ai
-            app: librechat
-        - Vaultwarden:
-            icon: vaultwarden.png
-            href: https://vault.rcrumana.xyz
-            description: Password vault
-            namespace: productivity
-            app: vaultwarden
+        - Media: 
+            - Jellyfin:
+                icon: jellyfin.png
+                href: https://jellyfin.rcrumana.xyz
+                description: Media server
+                namespace: media
+                app: jellyfin
+                widget:
+                type: jellyfin
+                url: http://jellyfin.media.svc.cluster.local:8096
+                key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
+                version: 2
+                enableBlocks: true
+                enableNowPlaying: false
+                enableUser: true
+                enableMediaControl: true
+                fields: ["movies", "series", "episodes"]
+                hideErrors: true
+            - Immich:
+                icon: immich.png
+                href: https://immich.rcrumana.xyz
+                description: Photo library
+                namespace: media
+                app: immich
+                widget:
+                type: immich
+                url: http://immich-server.media.svc.cluster.local:2283
+                key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
+                version: 2
+                fields: ["photos", "videos", "storage"]
+                hideErrors: true
+        - Productivity:
+            - Nextcloud:
+                - Nextcloud:
+                    icon: nextcloud.png
+                    href: https://nextcloud.rcrumana.xyz
+                    description: Files and collaboration
+                    namespace: productivity
+                    app: nextcloud
+                    widget:
+                    type: nextcloud
+                    url: http://nextcloud.productivity.svc.cluster.local:8080
+                    username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+                    password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
+                    fields: ["freespace", "activeusers", "numfiles", "numshares"]
+                    hideErrors: true
+            - Other:
+                - LibreChat:
+                    icon: librechat.png
+                    href: https://chat.rcrumana.xyz
+                    description: AI chat frontend
+                    namespace: ai
+                    app: librechat
+                - Vaultwarden:
+                    icon: vaultwarden.png
+                    href: https://vault.rcrumana.xyz
+                    description: Password vault
+                    namespace: productivity
+                    app: vaultwarden
 
     - Storage and Networking:
         - Storage:
