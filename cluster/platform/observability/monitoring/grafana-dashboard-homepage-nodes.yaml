@@ -34,15 +34,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -56,10 +54,11 @@ data:
           "id": 1,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -68,13 +67,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.13:9100\",mode=\"iowait\"}[1m]))",
-              "legendFormat": "CPU",
+              "expr": "instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", instance=\"192.168.1.13:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "CPU usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -83,15 +83,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -105,10 +103,11 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -117,13 +116,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.13:9100\"}",
-              "legendFormat": "RAM",
+              "expr": "instance:node_memory_utilisation:ratio{job=\"node-exporter\", instance=\"192.168.1.13:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "RAM usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -261,7 +261,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Melchior",
       "uid": "homepage-node-melchior",
-      "version": 4,
+      "version": 5,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -306,15 +306,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -328,10 +326,11 @@ data:
           "id": 1,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -340,13 +339,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.14:9100\",mode=\"iowait\"}[1m]))",
-              "legendFormat": "CPU",
+              "expr": "instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", instance=\"192.168.1.14:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "CPU usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -355,15 +355,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -377,10 +375,11 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -389,13 +388,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.14:9100\"}",
-              "legendFormat": "RAM",
+              "expr": "instance:node_memory_utilisation:ratio{job=\"node-exporter\", instance=\"192.168.1.14:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "RAM usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -533,7 +533,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Balthasar",
       "uid": "homepage-node-balthasar",
-      "version": 4,
+      "version": 5,
       "timepicker": {
         "refresh_intervals": [
           "1s",
@@ -578,15 +578,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -600,10 +598,11 @@ data:
           "id": 1,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -612,13 +611,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "1 - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"idle\"}[1m])) - avg without (cpu, mode) (rate(node_cpu_seconds_total{instance=\"192.168.1.15:9100\",mode=\"iowait\"}[1m]))",
-              "legendFormat": "CPU",
+              "expr": "instance:node_cpu_utilisation:rate5m{job=\"node-exporter\", instance=\"192.168.1.15:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "CPU usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -627,15 +627,13 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
               "custom": {
-                "fillOpacity": 10,
-                "showPoints": "never"
+                "fillOpacity": 100,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "normal"
+                }
               },
-              "max": 1,
-              "min": 0,
               "unit": "percentunit"
             },
             "overrides": []
@@ -649,10 +647,11 @@ data:
           "id": 2,
           "options": {
             "legend": {
-              "displayMode": "hidden"
+              "showLegend": false
             },
             "tooltip": {
-              "mode": "single"
+              "mode": "multi",
+              "sort": "desc"
             }
           },
           "targets": [
@@ -661,13 +660,14 @@ data:
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "instance:node_memory_utilisation:ratio{instance=\"192.168.1.15:9100\"}",
-              "legendFormat": "RAM",
+              "expr": "instance:node_memory_utilisation:ratio{job=\"node-exporter\", instance=\"192.168.1.15:9100\"} != 0",
+              "legendFormat": "Utilisation",
               "refId": "A"
             }
           ],
           "title": "RAM usage",
-          "type": "timeseries"
+          "type": "timeseries",
+          "pluginVersion": "v11.4.0"
         },
         {
           "datasource": {
@@ -805,7 +805,7 @@ data:
       "timezone": "browser",
       "title": "Homepage Node / Casper",
       "uid": "homepage-node-casper",
-      "version": 4,
+      "version": 5,
       "timepicker": {
         "refresh_intervals": [
           "1s",
