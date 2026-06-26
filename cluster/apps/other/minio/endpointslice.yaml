@@ -12,7 +12,7 @@ ports:
     port: 9000
 endpoints:
   - addresses:
-      - 192.168.1.10
+      - 192.168.1.19
     conditions:
       ready: true
 ---
@@ -30,6 +30,6 @@ ports:
     port: 9002
 endpoints:
   - addresses:
-      - 192.168.1.10
+      - 192.168.1.19
     conditions:
       ready: true

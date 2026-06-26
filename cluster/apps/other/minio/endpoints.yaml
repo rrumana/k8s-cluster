@@ -4,7 +4,7 @@ metadata:
   name: minio
 subsets:
   - addresses:
-      - ip: 192.168.1.10
+      - ip: 192.168.1.19
     ports:
       - name: http
         port: 9002
@@ -16,7 +16,7 @@ metadata:
   name: minio-api
 subsets:
   - addresses:
-      - ip: 192.168.1.10
+      - ip: 192.168.1.19
     ports:
       - name: http
         port: 9000
