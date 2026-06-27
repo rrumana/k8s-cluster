@@ -21,9 +21,9 @@ cluster:
 # Ensure Cilium can reach the API server during bootstrap, even before
 # kube-dns / Service routing is fully functional.
 #
-# Prefer a stable control-plane endpoint (VIP/DNS) that resolves on all nodes.
-# For the current single-node bootstrap, the node InternalIP also works.
-k8sServiceHost: 192.168.1.13
+# Use the kubeadm control-plane endpoint. This DNS name should resolve to the
+# kube-vip API VIP after bootstrap, and it is present in the apiserver cert SANs.
+k8sServiceHost: k8s-api.lab.home
 k8sServicePort: 6443
 
 # Replace kube-proxy with eBPF (kube-proxy-free).

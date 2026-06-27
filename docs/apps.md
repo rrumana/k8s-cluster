@@ -177,10 +177,10 @@ snapshot.
 ### External service bridges
 
 - The repo defines service bridges to systems outside Kubernetes:
-- MinIO at `192.168.1.10:9000/9002`
+- MinIO at `192.168.1.19:9000/9002`
 - OPNsense at `192.168.1.1:4443`
-- TrueNAS at `192.168.1.10:443`
-- Desktop and host dashboards at `192.168.1.11:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, and `192.168.1.15:7681`
+- TrueNAS at `192.168.1.19:443` and `192.168.1.20:443`
+- Desktop and host dashboards at `192.168.1.10:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, and `192.168.1.15:7681`
 
 ## 3) Shared data platforms
 
@@ -360,10 +360,10 @@ snapshot.
 
 ### MinIO, OPNsense, and TrueNAS bridges
 
-- `minio` and `minio-api` front the external MinIO instance on `192.168.1.10`.
+- `minio` and `minio-api` front the external MinIO instance on `192.168.1.19`.
 - `opnsense-https` fronts the router UI/API at `192.168.1.1:4443`.
-- `truenas-https` fronts the NAS UI at `192.168.1.10:443`.
-- `truenas-2-https` fronts the new NAS UI at `192.168.1.16:443`.
+- `truenas-https` fronts the NAS UI at `192.168.1.19:443`.
+- `truenas-2-https` fronts the new NAS UI at `192.168.1.20:443`.
 - All four are exposed through restricted ingress.
 
 ## `web` namespace
@@ -473,12 +473,12 @@ snapshot.
 
 | Namespace | Service | External target | Purpose |
 |---|---|---|---|
-| `other` | `minio` | `192.168.1.10:9002` | MinIO console and admin endpoint for backup workflows. |
-| `other` | `minio-api` | `192.168.1.10:9000` | MinIO S3 API endpoint for VolSync and CNPG backups. |
+| `other` | `minio` | `192.168.1.19:9002` | MinIO console and admin endpoint for backup workflows. |
+| `other` | `minio-api` | `192.168.1.19:9000` | MinIO S3 API endpoint for VolSync and CNPG backups. |
 | `other` | `opnsense-https` | `192.168.1.1:4443` | Reverse-proxied access path to OPNsense. |
-| `other` | `truenas-https` | `192.168.1.10:443` | Reverse-proxied access path to TrueNAS. |
-| `other` | `truenas-2-https` | `192.168.1.16:443` | Reverse-proxied access path to the new TrueNAS. |
-| `other` | `desktop-http` | `192.168.1.11:7681` | Desktop dashboard bridge. |
+| `other` | `truenas-https` | `192.168.1.19:443` | Reverse-proxied access path to TrueNAS. |
+| `other` | `truenas-2-https` | `192.168.1.20:443` | Reverse-proxied access path to the new TrueNAS. |
+| `other` | `desktop-http` | `192.168.1.10:7681` | Desktop dashboard bridge. |
 | `other` | `melchior-http` | `192.168.1.13:7681` | `melchior-1` dashboard bridge. |
 | `other` | `balthasar-http` | `192.168.1.14:7681` | `balthasar-2` dashboard bridge. |
 | `other` | `casper-http` | `192.168.1.15:7681` | `casper-3` dashboard bridge. |

@@ -97,10 +97,10 @@ Apps -> Ceph PVCs / CNPG / Valkey -> Snapshots + VolSync -> MinIO (external brid
 
 The cluster also defines service bridges to systems outside Kubernetes:
 
-- MinIO (`192.168.1.10:9000/9002`)
+- MinIO (`192.168.1.19:9000/9002`)
 - OPNsense (`192.168.1.1:4443`)
-- TrueNAS (`192.168.1.10:443`)
-- Desktop / host dashboards (`192.168.1.11:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, `192.168.1.15:7681`)
+- TrueNAS (`192.168.1.19:443`, `192.168.1.20:443`)
+- Desktop / host dashboards (`192.168.1.10:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, `192.168.1.15:7681`)
 
 ## Workloads By Domain
 

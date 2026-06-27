@@ -25,7 +25,7 @@ helm upgrade --install cilium cilium/cilium \
   --version 1.18.4 \
   --set cluster.name=k8s-homelab \
   --set cluster.id=1 \
-  --set k8sServiceHost=192.168.1.13 \
+  --set k8sServiceHost=k8s-api.lab.home \
   --set k8sServicePort=6443
 ```
 
