@@ -20,7 +20,7 @@ spec:
             - name: harbor-pull-creds
           containers:
             - name: renovate
-              image: harbor.rcrumana.xyz/proxy-ghcr/renovatebot/renovate:43.205.3
+              image: harbor.rcrumana.xyz/proxy-ghcr/renovatebot/renovate:43.249.5
               imagePullPolicy: IfNotPresent
               env:
                 - name: LOG_LEVEL
