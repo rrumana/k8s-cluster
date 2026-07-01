@@ -23,7 +23,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: meilisearch
-          image: harbor.rcrumana.xyz/proxy-dockerhub/getmeili/meilisearch:v1.45
+          image: harbor.rcrumana.xyz/proxy-dockerhub/getmeili/meilisearch:v1.48
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
