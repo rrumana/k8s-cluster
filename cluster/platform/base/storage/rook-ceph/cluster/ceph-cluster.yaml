@@ -38,14 +38,15 @@ spec:
 
   placement:
     all:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: homelab.rcrumana.xyz/node-plane
-                  operator: In
-                  values:
-                    - storage
+      # Re-enable after the new storage nodes exist and are labeled.
+      # nodeAffinity:
+      #   requiredDuringSchedulingIgnoredDuringExecution:
+      #     nodeSelectorTerms:
+      #       - matchExpressions:
+      #           - key: homelab.rcrumana.xyz/node-plane
+      #             operator: In
+      #             values:
+      #               - storage
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
