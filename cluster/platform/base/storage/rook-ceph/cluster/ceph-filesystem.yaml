@@ -18,3 +18,23 @@ spec:
   metadataServer:
     activeCount: 1
     activeStandby: true
+    placement:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: homelab.rcrumana.xyz/node-plane
+                  operator: In
+                  values:
+                    - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: rook-ceph-mds
+            topologyKey: kubernetes.io/hostname

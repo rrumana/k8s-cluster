@@ -38,15 +38,6 @@ spec:
 
   placement:
     all:
-      # Re-enable after the new storage nodes exist and are labeled.
-      # nodeAffinity:
-      #   requiredDuringSchedulingIgnoredDuringExecution:
-      #     nodeSelectorTerms:
-      #       - matchExpressions:
-      #           - key: homelab.rcrumana.xyz/node-plane
-      #             operator: In
-      #             values:
-      #               - storage
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
@@ -58,6 +49,47 @@ spec:
           operator: Equal
           value: "true"
           effect: NoSchedule
+    mon:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: homelab.rcrumana.xyz/node-plane
+                  operator: In
+                  values:
+                    - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: rook-ceph-mon
+    mgr:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: homelab.rcrumana.xyz/node-plane
+                  operator: In
+                  values:
+                    - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: rook-ceph-mgr
+            topologyKey: kubernetes.io/hostname
 
   monitoring:
     enabled: true
