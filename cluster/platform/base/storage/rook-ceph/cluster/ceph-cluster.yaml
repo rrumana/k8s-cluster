@@ -71,8 +71,8 @@ spec:
     global:
       public_network: "192.168.1.0/24"
       cluster_network: "192.168.1.0/24"
-      osd_max_backfills: "3"
-      osd_recovery_max_active: "3"
+      osd_max_backfills: "6"
+      osd_recovery_max_active: "6"
       osd_recovery_sleep: "0.1"
 
   storage:
