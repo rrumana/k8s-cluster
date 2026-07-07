@@ -115,9 +115,8 @@ spec:
     useAllNodes: false
     useAllDevices: false
     osdMaxUpdatesInParallel: 1
-    # Migration step 1: add initial clean Eva OSD devices while retaining the
-    # existing control-plane OSDs. Move the remaining OSDs one at a time after
-    # this added capacity is healthy and fully backfilled.
+    # Migration step 2: old control-plane OSDs have been evacuated and will be
+    # physically moved to the Eva storage nodes before being re-added here.
     nodes:
       - name: eva-1
         devices:
@@ -128,15 +127,3 @@ spec:
       - name: eva-3
         devices:
           - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W944501L
-      - name: melchior-1
-        devices:
-          - name: /dev/disk/by-id/nvme-CT2000P310SSD8_252350935F8C
-          - name: /dev/disk/by-id/nvme-CT2000P310SSD8_252350935FBF
-      - name: balthasar-2
-        devices:
-          - name: /dev/disk/by-id/nvme-Sabrent_Rocket_Q_23CD0705089800199528
-          - name: /dev/disk/by-id/nvme-ADATA_LEGEND_900_4N42210FA46C
-      - name: casper-3
-        devices:
-          - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S7KHNJ0Y612649F
-          - name: /dev/disk/by-id/nvme-Fanxiang_S880_2TB_FXS880254440074
