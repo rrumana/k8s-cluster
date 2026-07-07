@@ -66,13 +66,17 @@ spec:
     # fixed Ceph image is available, then remove this override.
     metricsDisabled: true
 
-  # Conservative recovery/backfill settings for 2.5Gb links.
+  # Migration recovery settings tuned for NVMe OSDs during the storage-node
+  # migration. Revisit after the one-time OSD moves are complete.
   cephConfig:
     global:
       public_network: "192.168.1.0/24"
       cluster_network: "192.168.1.0/24"
+      osd_mclock_override_recovery_settings: "true"
+      osd_mclock_profile: high_recovery_ops
       osd_max_backfills: "6"
       osd_recovery_max_active: "6"
+      osd_recovery_max_single_start: "6"
       osd_recovery_sleep: "0.1"
 
   storage:
