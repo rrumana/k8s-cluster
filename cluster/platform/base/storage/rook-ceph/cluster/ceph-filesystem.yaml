@@ -5,22 +5,30 @@ metadata:
   namespace: rook-ceph
 spec:
   metadataPool:
+    parameters:
+      pg_autoscale_mode: "on"
     replicated:
       size: 3
       requireSafeReplicaSize: true
   dataPools:
     - name: data0
       failureDomain: host
+      parameters:
+        pg_autoscale_mode: "on"
       replicated:
         size: 3
         requireSafeReplicaSize: true
     - name: replicated
       failureDomain: host
+      parameters:
+        pg_autoscale_mode: "on"
       replicated:
         size: 3
         requireSafeReplicaSize: true
     - name: bulk
       failureDomain: host
+      parameters:
+        pg_autoscale_mode: "on"
       replicated:
         size: 2
         requireSafeReplicaSize: true

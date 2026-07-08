@@ -5,6 +5,8 @@ metadata:
   namespace: rook-ceph
 spec:
   failureDomain: host
+  parameters:
+    pg_autoscale_mode: "on"
   replicated:
     size: 3
 ---
@@ -15,6 +17,8 @@ metadata:
   namespace: rook-ceph
 spec:
   failureDomain: host
+  parameters:
+    pg_autoscale_mode: "on"
   replicated:
     size: 3
     requireSafeReplicaSize: true
@@ -26,6 +30,8 @@ metadata:
   namespace: rook-ceph
 spec:
   failureDomain: host
+  parameters:
+    pg_autoscale_mode: "on"
   replicated:
     size: 2
     requireSafeReplicaSize: true

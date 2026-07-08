@@ -100,16 +100,16 @@ spec:
     metricsDisabled: true
 
   # Maintenance recovery settings tuned to keep client workloads responsive
-  # while the media migration and OSD rebalancing are still active.
+  # while allowing post-migration OSD rebalancing to make steady progress.
   cephConfig:
     global:
       public_network: "192.168.1.0/24"
       cluster_network: "192.168.1.0/24"
       osd_mclock_override_recovery_settings: "true"
       osd_mclock_profile: high_client_ops
-      osd_max_backfills: "1"
-      osd_recovery_max_active: "1"
-      osd_recovery_max_single_start: "1"
+      osd_max_backfills: "2"
+      osd_recovery_max_active: "2"
+      osd_recovery_max_single_start: "2"
       osd_recovery_sleep: "0.2"
 
   storage:
