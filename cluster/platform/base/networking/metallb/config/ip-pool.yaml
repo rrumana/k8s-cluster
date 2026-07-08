@@ -17,3 +17,4 @@ spec:
   - default-pool
   interfaces:
   - enp196s0
+  - enp3s0
