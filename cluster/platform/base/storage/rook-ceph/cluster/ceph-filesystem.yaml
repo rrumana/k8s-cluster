@@ -22,7 +22,7 @@ spec:
     - name: bulk
       failureDomain: host
       replicated:
-        size: 3
+        size: 2
         requireSafeReplicaSize: true
   preserveFilesystemOnDelete: true
   metadataServer:
