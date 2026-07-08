@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ceph-nfs-bulk-media-export
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      containers:
+        - name: create-export
+          image: harbor.rcrumana.xyz/mirror/rook/ceph:v1.19.3
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              set -euo pipefail
+              MON_HOST=$(echo "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${MON_HOST}
+              EOF
+              cp /etc/ceph-admin/keyring /etc/ceph/ceph.client.admin.keyring
+              ceph mgr module enable rook || true
+              ceph mgr module enable nfs || true
+              ceph nfs export create cephfs \
+                ceph-nfs-bulk \
+                /media \
+                ceph-filesystem \
+                /volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5 \
+                --squash no_root_squash \
+                --sectype sys || true
+              ceph nfs export info ceph-nfs-bulk /media
+          env:
+            - name: ROOK_CEPH_MON_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: rook-ceph-mon-endpoints
+                  key: data
+            - name: ROOK_CEPH_FSID
+              valueFrom:
+                secretKeyRef:
+                  name: rook-ceph-mon
+                  key: fsid
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
