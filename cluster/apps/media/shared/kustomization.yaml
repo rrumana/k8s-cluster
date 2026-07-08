@@ -6,6 +6,7 @@ namespace: media
 resources:
   - externalsecret.yaml
   - media-library-pv.yaml
+  - media-library-torrent-pv.yaml
   - serviceaccount.yaml
 
 commonLabels:

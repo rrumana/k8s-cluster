@@ -32,7 +32,7 @@ spec:
             claimName: arr-lts-qbit-config
         - name: media
           persistentVolumeClaim:
-            claimName: media-library
+            claimName: media-library-torrent
         - name: pf-state
           emptyDir: {}
         - name: pf-sync
