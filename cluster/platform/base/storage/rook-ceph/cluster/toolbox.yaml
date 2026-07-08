@@ -17,12 +17,18 @@ spec:
     spec:
       imagePullSecrets:
         - name: harbor-pull-creds
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
           effect: NoSchedule
         - key: node-role.kubernetes.io/master
           operator: Exists
+          effect: NoSchedule
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
           effect: NoSchedule
       containers:
         - name: rook-ceph-tools

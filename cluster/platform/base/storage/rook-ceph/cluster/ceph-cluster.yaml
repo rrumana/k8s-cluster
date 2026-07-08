@@ -9,7 +9,8 @@ spec:
   cephVersion:
     image: harbor.rcrumana.xyz/mirror/ceph/ceph:v20.2.0
 
-  # Keep Ceph traffic on the primary LAN during the storage-node migration.
+  # Ceph traffic stays on the primary LAN until a dedicated storage network is
+  # introduced and validated.
   network:
     provider: host
     publicNetwork: "192.168.1.0/24"
@@ -98,8 +99,8 @@ spec:
     # fixed Ceph image is available, then remove this override.
     metricsDisabled: true
 
-  # Migration recovery settings tuned for NVMe OSDs during the storage-node
-  # migration. Revisit after the one-time OSD moves are complete.
+  # Maintenance recovery settings tuned for NVMe OSD operations. Keep these
+  # explicit while follow-up storage work is still active.
   cephConfig:
     global:
       public_network: "192.168.1.0/24"
@@ -115,8 +116,7 @@ spec:
     useAllNodes: false
     useAllDevices: false
     osdMaxUpdatesInParallel: 1
-    # Migration step 2: old control-plane OSDs have been evacuated and will be
-    # physically moved to the Eva storage nodes before being re-added here.
+    # Final explicit OSD inventory for the Eva storage nodes.
     nodes:
       - name: eva-1
         devices:
