@@ -31,7 +31,7 @@ spec:
       - name: rook
         enabled: true
       - name: nfs
-        enabled: false
+        enabled: true
 
   dashboard:
     enabled: true

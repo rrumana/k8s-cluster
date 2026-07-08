@@ -7,8 +7,13 @@ resources:
   - ceph-cluster.yaml
   - ceph-block-pool.yaml
   - ceph-filesystem.yaml
+  - ceph-nfs-bulk.yaml
   - rook-config-override.yaml
   - storage-class.yaml
+  - storage-class-ceph-block-critical.yaml
+  - storage-class-ceph-block-db.yaml
   - storage-class-ceph-filesystem.yaml
+  - storage-class-cephfs-replicated.yaml
+  - storage-class-cephfs-bulk.yaml
   - volume-snapshot-class.yaml
   - toolbox.yaml

@@ -14,6 +14,16 @@ spec:
       replicated:
         size: 3
         requireSafeReplicaSize: true
+    - name: replicated
+      failureDomain: host
+      replicated:
+        size: 3
+        requireSafeReplicaSize: true
+    - name: bulk
+      failureDomain: host
+      replicated:
+        size: 3
+        requireSafeReplicaSize: true
   preserveFilesystemOnDelete: true
   metadataServer:
     activeCount: 1

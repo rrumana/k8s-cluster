@@ -1,0 +1,29 @@
+apiVersion: ceph.rook.io/v1
+kind: CephNFS
+metadata:
+  name: ceph-nfs-bulk
+  namespace: rook-ceph
+spec:
+  server:
+    active: 1
+    placement:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: homelab.rcrumana.xyz/node-plane
+                  operator: In
+                  values:
+                    - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "2"
+        memory: 2Gi
