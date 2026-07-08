@@ -46,7 +46,8 @@ spec:
           persistentVolumeClaim:
             claimName: arr-stack-jellyseerr-config
         - name: media
-          hostPath: { path: /NAS, type: Directory }
+          persistentVolumeClaim:
+            claimName: media-library
         - name: temp
           hostPath: { path: /var/lib/qbit-temp, type: DirectoryOrCreate }
         - name: pf-state
