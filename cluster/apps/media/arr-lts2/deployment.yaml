@@ -31,7 +31,8 @@ spec:
           persistentVolumeClaim:
             claimName: arr-lts2-qbit-config
         - name: media
-          hostPath: { path: /NAS, type: Directory }
+          persistentVolumeClaim:
+            claimName: media-library
         - name: pf-state
           emptyDir: {}
         - name: pf-sync
