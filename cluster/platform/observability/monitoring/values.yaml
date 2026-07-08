@@ -9,6 +9,7 @@ crds:
 defaultRules:
   create: true
   rules:
+    kubeApiserverBurnrate: false
     kubeProxy: false
 
 kubeProxy:
