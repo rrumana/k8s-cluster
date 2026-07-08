@@ -62,12 +62,15 @@ spec:
               mountPath: /config
             - name: cache
               mountPath: /cache
-            - name: tv
+            - name: media-library
               mountPath: /tv
-            - name: movies
+              subPath: Torrent/Shows
+            - name: media-library
               mountPath: /movies
-            - name: music
+              subPath: Torrent/Movies
+            - name: media-library
               mountPath: /music
+              subPath: Torrent/Music
             - name: dri
               mountPath: /dev/dri
           resources:
@@ -83,18 +86,9 @@ spec:
             claimName: jellyfin-config
         - name: cache
           emptyDir: {}
-        - name: tv
-          hostPath:
-            path: /NAS/Torrent/Shows
-            type: Directory
-        - name: movies
-          hostPath:
-            path: /NAS/Torrent/Movies
-            type: Directory
-        - name: music
-          hostPath:
-            path: /NAS/Torrent/Music
-            type: Directory
+        - name: media-library
+          persistentVolumeClaim:
+            claimName: media-library
         - name: dri
           hostPath:
             path: /dev/dri
