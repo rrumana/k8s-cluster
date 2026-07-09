@@ -19,6 +19,15 @@ expose:
 
 externalURL: https://harbor.rcrumana.xyz
 
+storageNodeSelector: &storageNodeSelector
+  homelab.rcrumana.xyz/node-plane: storage
+
+storageTolerations: &storageTolerations
+  - key: homelab.rcrumana.xyz/storage
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+
 updateStrategy:
   type: Recreate
 
@@ -61,6 +70,8 @@ notary:
 
 trivy:
   enabled: true
+  nodeSelector: *storageNodeSelector
+  tolerations: *storageTolerations
 
 portal:
   replicas: 2
@@ -84,6 +95,8 @@ core:
 
 jobservice:
   replicas: 1
+  nodeSelector: *storageNodeSelector
+  tolerations: *storageTolerations
   resources:
     requests:
       cpu: 100m
@@ -94,6 +107,8 @@ jobservice:
 
 registry:
   replicas: 1
+  nodeSelector: *storageNodeSelector
+  tolerations: *storageTolerations
   registry:
     resources:
       requests:

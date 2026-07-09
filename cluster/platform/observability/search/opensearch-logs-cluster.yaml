@@ -35,6 +35,13 @@ spec:
       replicas: 3
       diskSize: "200Gi"
       jvm: "-Xms2g -Xmx2g"
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

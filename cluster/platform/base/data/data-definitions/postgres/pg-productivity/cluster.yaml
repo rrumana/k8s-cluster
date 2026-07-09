@@ -19,6 +19,13 @@ spec:
     enablePodAntiAffinity: true
     podAntiAffinityType: required
     topologyKey: kubernetes.io/hostname
+    nodeSelector:
+      homelab.rcrumana.xyz/node-plane: storage
+    tolerations:
+      - key: homelab.rcrumana.xyz/storage
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 
   storage:
     storageClass: ceph-block

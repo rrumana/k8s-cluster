@@ -114,6 +114,13 @@ prometheusOperator:
 
 prometheus:
   prometheusSpec:
+    nodeSelector:
+      homelab.rcrumana.xyz/node-plane: storage
+    tolerations:
+      - key: homelab.rcrumana.xyz/storage
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
     retention: 30d
     retentionSize: 90GiB
     scrapeInterval: 10s
