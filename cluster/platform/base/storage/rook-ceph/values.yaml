@@ -25,6 +25,9 @@ discover:
   tolerations:
     - operator: Exists
 
+nodeSelector:
+  homelab.rcrumana.xyz/node-plane: control
+
 # Keep CSI enabled so we can validate provisioning as soon as a CephCluster exists.
 csi:
   cephcsi:
@@ -56,6 +59,7 @@ csi:
   # Enable CephFS CSI so RWX StorageClasses (e.g. ceph-filesystem) can provision.
   enableCephfsDriver: true
 
-# This cluster schedules workloads on control-plane nodes today; tolerate all taints.
+# The operator is a controller, not a storage data-path workload. Keep it on the
+# control plane while still tolerating taints for emergency scheduling.
 tolerations:
   - operator: Exists
