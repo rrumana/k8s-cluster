@@ -15,6 +15,16 @@ image:
 imagePullSecrets:
   - name: harbor-pull-creds
 
+monitoring:
+  enabled: true
+
+enableDiscoveryDaemon: true
+discoveryDaemonInterval: "60m"
+
+discover:
+  tolerations:
+    - operator: Exists
+
 # Keep CSI enabled so we can validate provisioning as soon as a CephCluster exists.
 csi:
   cephcsi:

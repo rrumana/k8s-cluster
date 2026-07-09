@@ -7,7 +7,7 @@ spec:
   dataDirHostPath: /var/lib/rook
 
   cephVersion:
-    image: harbor.rcrumana.xyz/mirror/ceph/ceph:v20.2.0
+    image: harbor.rcrumana.xyz/mirror/ceph/ceph:v20.2.2
 
   # Ceph traffic stays on the primary LAN until a dedicated storage network is
   # introduced and validated.
@@ -94,10 +94,7 @@ spec:
 
   monitoring:
     enabled: true
-    # Ceph v20.2.0 has a prometheus mgr startup regression that can crash the
-    # module on Rook-managed clusters. Disable Ceph-exported metrics until a
-    # fixed Ceph image is available, then remove this override.
-    metricsDisabled: true
+    metricsDisabled: false
 
   # Maintenance recovery settings tuned to keep client workloads responsive
   # while allowing post-migration OSD rebalancing to make steady progress.
@@ -115,6 +112,9 @@ spec:
       client_readahead_max_periods: "1"
       client_readahead_max_bytes: "4194304"
       client_readahead_min: "131072"
+    mgr:
+      mgr/dashboard/PROMETHEUS_API_HOST: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090"
+      mgr/dashboard/PROMETHEUS_API_SSL_VERIFY: "false"
 
   storage:
     useAllNodes: false
