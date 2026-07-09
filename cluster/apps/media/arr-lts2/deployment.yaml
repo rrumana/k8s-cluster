@@ -4,7 +4,7 @@ metadata:
   name: arr-lts2
   labels: { app: arr-lts2 }
 spec:
-  replicas: 0
+  replicas: 1
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: arr-lts2 }
@@ -14,6 +14,13 @@ spec:
         app: arr-lts2
         traffic-tier: bulk-seed
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: eva-3
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       dnsPolicy: None
       dnsConfig:
         nameservers:

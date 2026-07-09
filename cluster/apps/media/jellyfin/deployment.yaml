@@ -5,7 +5,7 @@ metadata:
   labels:
     app: jellyfin
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -16,6 +16,13 @@ spec:
       labels:
         app: jellyfin
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: eva-3
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       dnsPolicy: ClusterFirstWithHostNet
       affinity:
         podAntiAffinity:
