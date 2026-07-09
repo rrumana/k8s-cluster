@@ -107,9 +107,9 @@ spec:
       cluster_network: "192.168.1.0/24"
       osd_mclock_override_recovery_settings: "true"
       osd_mclock_profile: high_client_ops
-      osd_max_backfills: "2"
-      osd_recovery_max_active: "2"
-      osd_recovery_max_single_start: "2"
+      osd_max_backfills: "4"
+      osd_recovery_max_active: "4"
+      osd_recovery_max_single_start: "4"
       osd_recovery_sleep: "0.2"
     client:
       client_readahead_max_periods: "1"
