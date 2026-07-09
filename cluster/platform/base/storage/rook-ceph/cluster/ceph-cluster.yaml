@@ -111,6 +111,10 @@ spec:
       osd_recovery_max_active: "2"
       osd_recovery_max_single_start: "2"
       osd_recovery_sleep: "0.2"
+    client:
+      client_readahead_max_periods: "1"
+      client_readahead_max_bytes: "4194304"
+      client_readahead_min: "131072"
 
   storage:
     useAllNodes: false
