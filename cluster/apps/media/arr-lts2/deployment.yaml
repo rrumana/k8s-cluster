@@ -4,7 +4,7 @@ metadata:
   name: arr-lts2
   labels: { app: arr-lts2 }
 spec:
-  replicas: 0
+  replicas: 1
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: arr-lts2 }
