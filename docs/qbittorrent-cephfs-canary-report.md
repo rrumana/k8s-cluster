@@ -12,7 +12,7 @@ Ceph read-to-upload amplification, and retain 1 Gbps-class seeding.
 The final canary runs:
 
 - qBittorrent 5.2.0 with libtorrent 2.0.12
-- LinuxServer image `lscr.io/linuxserver/qbittorrent:5.2.0_v2.0.12-ls454`
+- LinuxServer image `harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0_v2.0.12-ls454`
 - Linux 7.1.2 on `eva-3`
 - Ceph 20.2.2 with a size-2 replicated CephFS bulk data pool
 - `Simple pread/pwrite`, two asynchronous I/O threads, and four hash threads
@@ -59,13 +59,26 @@ The selected qBittorrent preferences are:
 | Send-buffer low watermark | 16 KiB |
 | Send-buffer maximum | 128 KiB |
 | Send-buffer factor | 250% |
-| Container memory request/limit | 1 GiB / 12 GiB |
+| Container memory request/limit | 2 GiB / 6 GiB |
 | Termination grace period | 180 seconds |
 
 These application preferences are currently persisted in the qBittorrent
 configuration PVC, not rendered by GitOps. The image, memory allocation,
-termination grace period, VPN endpoint override, PV, and mount options are
-declarative.
+termination grace period, PV, and mount options are declarative. VPN endpoint
+values are owned by Vault and rendered into the pod by External Secrets.
+
+### Memory right-sizing
+
+At the 12 GiB test limit, the container cgroup reached 12.0 GiB even though
+`kubectl top` reported a 2.2 GiB working set. Cgroup accounting showed about
+1.0 GiB of anonymous memory and 10.9 GiB of file cache, of which 9.8 GiB was
+inactive and reclaimable. The cgroup recorded memory-limit reclaim events but
+no OOM or OOM-kill event. VPA's target working set was about 2.6 GiB.
+
+The canary now requests 2 GiB and is limited to 6 GiB. This preserves roughly
+5 GiB for useful media page cache while preventing an idle reclaimable cache
+from occupying 12 GiB. The limit is a ceiling rather than a reservation; the
+2 GiB request is the amount considered by the scheduler.
 
 The qBittorrent 5.2.0 source maps value 3 to `SimplePreadPwrite`. It implements
 that mode through libtorrent's mmap disk backend while forcing actual file I/O
@@ -169,12 +182,11 @@ migration rather than detected payload corruption.
 The arr-lts2 WireGuard endpoint failed during the locality test. It received
 zero tunnel bytes across in-place and full pod restarts. Both its endpoint IP
 and server public key were absent from Gluetun's current Proton database, while
-the old IP still answered ICMP. The canary now overrides the stale Vault values
-with a current San Jose port-forwarding server's public IP and public server
-key. The existing private client key was retained and connected immediately.
-
-This override should eventually be moved into Vault, followed by removal of the
-two explicit environment overrides from the Deployment.
+the old IP still answered ICMP. A current San Jose port-forwarding server's
+public IP and public server key were written to the existing Vault fields. The
+existing private client key was retained and connected immediately. External
+Secrets synchronized the values and the temporary Deployment overrides were
+removed.
 
 ### Restart behavior
 
@@ -199,12 +211,11 @@ That behavior remains and should be automated or investigated separately.
    `crush_location` value for localized reads.
 4. Automate the post-restart interface refresh, ideally only after Gluetun has
    published a forwarded port, instead of relying on a manual toggle.
-5. Move the current Proton endpoint into Vault or replace fixed custom-server
-   configuration with a supported server-selection workflow that can rotate
-   retired endpoints.
-6. Reassess the 12 GiB memory limit after the endurance run. The final canary
-   used about 532 MiB after the controlled rechecks, but live page-cache growth
-   needs a longer observation window.
+5. Replace fixed custom-server configuration with a supported server-selection
+   workflow that can rotate retired Proton endpoints.
+6. Reassess the 6 GiB memory limit after the endurance run using cgroup
+   `memory.stat`, refaults, and OOM events rather than working-set telemetry
+   alone.
 7. Test qBittorrent 5.2.1 as a separate image-only change after this storage
    configuration has a stable endurance baseline.
 

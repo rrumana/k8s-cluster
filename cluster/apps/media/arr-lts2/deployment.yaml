@@ -96,9 +96,6 @@ spec:
           envFrom:
             - secretRef: { name: gluetun-lts2-env }
           env:
-            # Public server details override the retired endpoint still stored in Vault.
-            - { name: VPN_ENDPOINT_IP, value: "79.127.185.162" }
-            - { name: WIREGUARD_PUBLIC_KEY, value: "2RxTx5coxCtv/b3fRKHTq5WjdUxvNxESsYjaXIJWmDA=" }
             - { name: FIREWALL_INPUT_PORTS, value: "8022" }
             - { name: HEALTH_TARGET_ADDRESS, value: "127.0.0.1:9999" }
             - { name: VPN_PORT_FORWARDING_STATUS_FILE, value: "/pf/state/forwarded_port" }
@@ -129,7 +126,7 @@ spec:
             limits:   { cpu: "25m", memory: "64Mi" }
 
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.2.0_v2.0.12-ls454
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0_v2.0.12-ls454
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -143,5 +140,5 @@ spec:
             - { name: qbit-config, mountPath: /config }
             - { name: media,       mountPath: /media }
           resources:
-            requests: { cpu: "300m", memory: "1Gi" }
-            limits:   { cpu: "2", memory: "12Gi" }
+            requests: { cpu: "300m", memory: "2Gi" }
+            limits:   { cpu: "2", memory: "6Gi" }
