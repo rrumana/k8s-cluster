@@ -23,7 +23,7 @@ spec:
     volumeHandle: cephfs-media-library-torrent-eva-3-canary
   mountOptions:
     - noatime
-    - rasize=0
+    - rasize=65536
     - read_from_replica=localize
     - crush_location=host:eva-3
   nodeAffinity:
