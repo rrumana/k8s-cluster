@@ -227,3 +227,28 @@ That behavior remains and should be automated or investigated separately.
 
 Testing a libtorrent 1.2 build remains a last resort and is not currently
 justified by the canary results.
+
+## Main-client rollout
+
+The validated posture was rolled out to the main `arr-stack` qBittorrent on
+eva-1 on 2026-07-10. The production deployment now uses qBittorrent 5.2.0,
+the 2 GiB / 6 GiB memory request and limit, a 180-second termination grace
+period, and a dedicated `media-library-torrent-eva-1` mount with the same
+readahead and localized-replica options as the canary.
+
+Before the mount change, the main client used POSIX I/O, 96 I/O and hashing
+threads, unlimited upload slots, and `rasize=0`. Its queue measured 1,436 to
+1,580 ms while uploading only 10-14 MB/s. Changing the application settings
+without replacing the mount did not improve that baseline.
+
+After the rollout and initial cache warmup, the main client measured 452 ms at
+49 MB/s with no queued jobs. At the same time, `qbit-lts` measured 212 ms at
+60 MB/s, so the two clients were serving approximately 108 MB/s combined.
+All 1,186 main-client torrents loaded with no error or missing state. Every
+container endpoint in the nine-container `arr-stack` responded after the
+recreate, Argo CD was synced and healthy, and Ceph remained `HEALTH_OK` with
+all 337 PGs active and clean.
+
+This is a short post-rollout sample rather than an endurance result. The next
+useful evidence is steady-state queue latency, page-cache refaults, and Ceph
+read operations over several days of ordinary peer demand.
