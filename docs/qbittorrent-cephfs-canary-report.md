@@ -80,6 +80,12 @@ The canary now requests 2 GiB and is limited to 6 GiB. This preserves roughly
 from occupying 12 GiB. The limit is a ceiling rather than a reservation; the
 2 GiB request is the amount considered by the scheduler.
 
+Post-change validation reached 103 MB/s of upload at about 224 ms queue
+latency. At that load the cgroup held about 1.1 GiB of anonymous memory and
+4.7 GiB of file cache. It recorded reclaim events and only 1,960 file refaults,
+with zero OOM or OOM-kill events. Six GiB therefore retains useful cache while
+four GiB would leave materially less headroom for the measured working set.
+
 The qBittorrent 5.2.0 source maps value 3 to `SimplePreadPwrite`. It implements
 that mode through libtorrent's mmap disk backend while forcing actual file I/O
 to pread/pwrite. In contrast, libtorrent's POSIX backend performs reads inline
