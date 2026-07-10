@@ -316,28 +316,29 @@ run on Eva.
 
 | Workload | Target | Exact preferred node | Spread | Justification |
 | --- | --- | --- | --- | --- |
-| `media/arr-stack` | storage | `eva-1` | separate from other qBittorrent stacks when possible | Main qBittorrent/Servarr stack is sustained network and CephFS IO. It already demonstrated storage-path sensitivity. Use `media-library-torrent` with `rasize=0`, and keep `/temp` local. |
-| `media/arr-lts` | storage | `eva-2` | separate from other qBittorrent stacks when possible | Torrent seeding is the clearest Eva candidate after Ceph itself. Spread to avoid one node owning all outbound traffic and all CephFS client reads. |
-| `media/arr-lts2` | storage | `eva-3` | separate from other qBittorrent stacks when possible | Same torrent/CephFS reasoning. |
+| `media/arr-stack` | storage | `eva-3` for current thermal balancing | sole active qBittorrent | Main qBittorrent/Servarr stack is sustained network and CephFS IO. Use the host-localized `media-library-torrent-eva-3` mount with 128 KiB readahead and keep `/temp` local. |
+| `media/arr-lts` | storage standby | `eva-2` if restored | zero replicas during rollback window | Retained only as a rollback client after full qBittorrent consolidation. Its optimized eva-2 mount remains available but should not run concurrently in steady state. |
+| `media/arr-lts2` | storage standby | `eva-3` if restored | zero replicas during rollback window | Retained only as the earlier canary/rollback client. Its config and localized mount remain intact during testing. |
 | `media/plex` | storage | `eva-2` preferred | anti-affined from Jellyfin | Plex reads large media files from CephFS. Direct-play workloads benefit from storage proximity. Keep transcode on local scratch. If transcoding load proves Radeon 610 is insufficient, move Plex to a control GPU node and accept the storage hop. |
 | `media/jellyfin` | storage | `eva-3` preferred | anti-affined from Plex | Same media-read reasoning as Plex. Jellyfin should use local cache/transcode and normal `media-library`, not the torrent PVC. |
 | `media/immich-server` | control | spread/any control node | control preferred | Immich is compute/GPU and app-latency oriented. Its photo PVC is important but not the same high-throughput immutable media path. The HX370/890M nodes are better suited for video/photo processing. |
 | `media/immich-machine-learning` | control | spread/any control node | control preferred | ML inference/cache workload. Better CPU/GPU/memory posture on the control nodes. |
 | `media/media-library` PVC consumers | depends on consumer | n/a | n/a | Sequential readers use normal `media-library`; torrent seeders use `media-library-torrent`. |
 
-The recommended first hard media spread is:
+The current media placement is:
 
-- `arr-stack` on `eva-1`
-- `arr-lts` on `eva-2`
-- `arr-lts2` on `eva-3`
+- `arr-stack` active on `eva-3`
+- `arr-lts` retained at zero replicas with eva-2 placement
+- `arr-lts2` retained at zero replicas with eva-3 placement
 - `plex` preferred on `eva-2`
 - `jellyfin` preferred on `eva-3`
 
-This avoids stacking all qBittorrent clients on one node and gives the two media
-servers separate nodes. It is acceptable for qBittorrent plus one media server
-to share an Eva because the final 10 Gb storage backbone should carry this load.
-If streaming suffers during high seeding, reduce qBittorrent IO priority or move
-Plex/Jellyfin to the least busy Eva.
+The qBittorrent placement on eva-3 is an interim thermal decision while cooling
+and network placement are being improved. The optimized eva-1 and eva-2 static
+mounts remain available so a future rebalance only requires changing the
+workload's node selector and claim together. If streaming suffers during high
+seeding, move Plex/Jellyfin or qBittorrent to the least busy Eva rather than
+starting a duplicate seeding client.
 
 ### AI
 

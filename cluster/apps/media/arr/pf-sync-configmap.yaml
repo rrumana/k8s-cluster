@@ -41,13 +41,15 @@ data:
               # qBittorrent sometimes retains a stale interface binding when
               # it starts after Gluetun in the shared network namespace.
               if [ "$qbit_available" = false ]; then
+                echo "pf-sync(sidecar): waiting for qBittorrent session initialization"
+                sleep 30
                 echo "pf-sync(sidecar): refreshing qBittorrent interface binding"
                 any_interface='{"current_network_interface": ""}'
                 tun_interface='{"current_network_interface": "tun0"}'
                 if curl -fsS -b /tmp/c \
                      --data-urlencode "json=$any_interface" \
                      "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null \
-                  && sleep 1 \
+                  && sleep 10 \
                   && curl -fsS -b /tmp/c \
                      --data-urlencode "json=$tun_interface" \
                      "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null

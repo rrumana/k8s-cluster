@@ -233,8 +233,16 @@ justified by the canary results.
 The validated posture was rolled out to the main `arr-stack` qBittorrent on
 eva-1 on 2026-07-10. The production deployment now uses qBittorrent 5.2.0,
 the 2 GiB / 6 GiB memory request and limit, a 180-second termination grace
-period, and a dedicated `media-library-torrent-eva-1` mount with the same
-readahead and localized-replica options as the canary.
+period, and the same readahead and localized-replica options as the canary. It
+initially used the dedicated `media-library-torrent-eva-1` mount.
+
+Later that day, `arr-stack` moved to eva-3 as an interim thermal-balancing
+measure. It now uses the dedicated `media-library-torrent-eva-3` mount with
+`crush_location=host:eva-3`; all other tuning is unchanged. The first restart
+again required a delayed qBittorrent interface refresh after the VPN was
+healthy. The port-forward sidecar now waits 30 seconds for session
+initialization and leaves 10 seconds between the `Any interface` and `tun0`
+updates so future restarts reproduce the successful recovery timing.
 
 Before the mount change, the main client used POSIX I/O, 96 I/O and hashing
 threads, unlimited upload slots, and `rasize=0`. Its queue measured 1,436 to

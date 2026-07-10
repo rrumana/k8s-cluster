@@ -10,7 +10,6 @@ resources:
   - media-library-torrent-eva-2-pv.yaml
   - media-library-torrent-eva-3-pv.yaml
   - media-library-torrent-eva-3-canary-pv.yaml
-  - media-library-torrent-pv.yaml
   - serviceaccount.yaml
 
 commonLabels:
