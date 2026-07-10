@@ -14,6 +14,7 @@ spec:
         app: arr-stack
         traffic-tier: bulk-seed
     spec:
+      terminationGracePeriodSeconds: 180
       nodeSelector:
         kubernetes.io/hostname: eva-1
       tolerations:
@@ -54,7 +55,7 @@ spec:
             claimName: arr-stack-jellyseerr-config
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-torrent
+            claimName: media-library-torrent-eva-1
         - name: temp
           hostPath: { path: /var/lib/qbit-temp, type: DirectoryOrCreate }
         - name: pf-state
@@ -147,7 +148,7 @@ spec:
             limits:   { cpu: "25m", memory: "64Mi" }
 
         - name: qbittorrent
-          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.1.4
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -162,8 +163,8 @@ spec:
             - { name: media,       mountPath: /media }
             - { name: temp,        mountPath: /temp }
           resources:
-            requests: { cpu: "300m", memory: "128Mi" }
-            limits:   { cpu: "2", memory: "4Gi" }
+            requests: { cpu: "300m", memory: "2Gi" }
+            limits:   { cpu: "2", memory: "6Gi" }
 
         - name: sonarr
           image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.16.2944-ls298
