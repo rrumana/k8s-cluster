@@ -14,6 +14,7 @@ spec:
         app: arr-lts2
         traffic-tier: bulk-seed
     spec:
+      terminationGracePeriodSeconds: 180
       nodeSelector:
         kubernetes.io/hostname: eva-3
       tolerations:
@@ -139,5 +140,5 @@ spec:
             - { name: qbit-config, mountPath: /config }
             - { name: media,       mountPath: /media }
           resources:
-            requests: { cpu: "300m", memory: "512Mi" }
-            limits:   { cpu: "2", memory: "4Gi" }
+            requests: { cpu: "300m", memory: "1Gi" }
+            limits:   { cpu: "2", memory: "12Gi" }
