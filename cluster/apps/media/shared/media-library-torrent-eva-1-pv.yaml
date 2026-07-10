@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cephfs-media-library-torrent-eva-1
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 7Ti
+  claimRef:
+    namespace: media
+    name: media-library-torrent-eva-1
+  csi:
+    driver: rook-ceph.cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      name: rook-csi-cephfs-node
+      namespace: rook-ceph
+    volumeAttributes:
+      clusterID: rook-ceph
+      fsName: ceph-filesystem
+      staticVolume: "true"
+      rootPath: /volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5
+    volumeHandle: cephfs-media-library-torrent-eva-1
+  mountOptions:
+    - noatime
+    - rasize=131072
+    - read_from_replica=localize
+    - crush_location=host:eva-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - eva-1
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-library-torrent-eva-1
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 7Ti
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: cephfs-media-library-torrent-eva-1
