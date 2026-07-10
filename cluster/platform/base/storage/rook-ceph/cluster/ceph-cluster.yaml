@@ -32,6 +32,8 @@ spec:
         enabled: true
       - name: nfs
         enabled: true
+      - name: stats
+        enabled: true
 
   dashboard:
     enabled: true
