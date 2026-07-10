@@ -48,6 +48,42 @@ External Secrets rendered the new values without any inline Deployment
 override. The replacement tunnel remained healthy past the prior failure
 window and qBittorrent reconnected with more than 1,200 peers.
 
+## Final single-client consolidation
+
+The remaining LTS client was consolidated into the main `arr-stack`
+qBittorrent on 2026-07-10. The main client is now the only active qBittorrent
+deployment; `arr-lts` and `arr-lts2` are both held at zero replicas with their
+configuration PVCs retained for rollback.
+
+Before cutover, the main and LTS clients had exactly the same 1,186 torrent
+hashes and no unique torrents. Main remained the merge target because it owns
+the Sonarr/Radarr categories and authoritative renamed paths. The merger
+therefore retained main's metadata while adding the LTS byte counters and
+history. Since `arr-lts` already contained the prior `arr-lts2` merge, the
+final result preserves history from all three former clients.
+
+The single-client gate ran until the evidence was decisive. Main sustained
+84-109 MB/s, with most samples between 98 and 109 MB/s. Its current cgroup I/O
+PSI fell from approximately 13-15% with two clients to 7-9%, and the cumulative
+qBittorrent queue average fell from 438 to 386 ms. Ceph client reads fell from
+approximately 105 MiB/s and 2.08k operations/s to 64 MiB/s and 1.05k
+operations/s while upload remained near line rate. Ceph stayed `HEALTH_OK`.
+
+The final offline merge produced these counters before main resumed protocol
+traffic:
+
+| Counter | Merged value |
+| --- | ---: |
+| All-time upload | 3,873,146,794,668,376 B |
+| All-time download | 123,754,562,253,704 B |
+| Per-torrent upload | 3,706,119,972,675,439 B |
+| Per-torrent download | 4,881,034,182,086 B |
+
+The protected snapshots and outputs are retained at
+`/home/rcrumana/qbittorrent-consolidation-backups/20260710T220750Z`. A second
+copy of the pre-merge main files is retained inside the `arr-stack` qBittorrent
+config PVC under `history-merge-backup-20260710T220750Z`.
+
 ## Live inventory
 
 | Property | `arr-lts` | `arr-lts2` |

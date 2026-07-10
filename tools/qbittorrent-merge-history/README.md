@@ -5,8 +5,10 @@ that contain the same torrent IDs. It is intended for the `arr-lts` and
 `arr-lts2` consolidation and must only be run against files captured after both
 qBittorrent processes have stopped cleanly.
 
-It writes new files and never changes either input. Read-only input snapshots
-are supported; only the newly created outputs are made owner-writable.
+It writes new files and never changes either input. SQLite source snapshots
+are opened through an immutable read-only URI, and only newly created outputs
+are made owner-writable. This permits the input directories themselves to be
+write-protected after capture.
 
 ## Merged state
 

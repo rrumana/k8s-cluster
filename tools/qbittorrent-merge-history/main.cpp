@@ -7,6 +7,8 @@
 #include <QSettings>
 #include <QString>
 #include <QTextStream>
+#include <QUrl>
+#include <QUrlQuery>
 #include <QVariantHash>
 
 #include <sqlite3.h>
@@ -313,6 +315,25 @@ namespace
         return database;
     }
 
+    Database openImmutableDatabase(const QString &path)
+    {
+        QUrl uri = QUrl::fromLocalFile(QFileInfo(path).absoluteFilePath());
+        QUrlQuery query;
+        query.addQueryItem(QStringLiteral("mode"), QStringLiteral("ro"));
+        query.addQueryItem(QStringLiteral("immutable"), QStringLiteral("1"));
+        uri.setQuery(query);
+
+        sqlite3 *raw = nullptr;
+        const QByteArray encodedUri = uri.toEncoded(QUrl::FullyEncoded);
+        const int result = sqlite3_open_v2(encodedUri.constData(), &raw
+            , SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nullptr);
+        Database database(raw);
+        if (result != SQLITE_OK)
+            fail(QStringLiteral("Cannot open immutable SQLite database %1: %2")
+                .arg(path, QString::fromUtf8(sqlite3_errmsg(raw))));
+        return database;
+    }
+
     void execute(sqlite3 *database, const char *sql)
     {
         char *error = nullptr;
@@ -377,7 +398,7 @@ namespace
             fail(QStringLiteral("Cannot copy target database to %1").arg(outputPath));
         makeOwnerWritable(outputPath);
 
-        Database source = openDatabase(sourcePath, SQLITE_OPEN_READONLY);
+        Database source = openImmutableDatabase(sourcePath);
         Database output = openDatabase(outputPath, SQLITE_OPEN_READWRITE);
         verifyDatabase(source.get(), QStringLiteral("source"));
         verifyDatabase(output.get(), QStringLiteral("target"));
