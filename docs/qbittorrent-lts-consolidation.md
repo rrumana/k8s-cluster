@@ -12,6 +12,34 @@ The clean long-term outcome is to roll the tested settings into `arr-lts`, keep
 the stable `qbit-lts` Service and ingress names, and then retire `arr-lts2`
 after a rollback window. No media copy or torrent import is required.
 
+## Cutover status
+
+The consolidation completed on 2026-07-10. `arr-lts` is the surviving
+deployment behind `qbit-lts`; `arr-lts2` is held at zero replicas and its
+configuration PVC remains intact for rollback.
+
+The final offline merge processed all 1,186 torrents and produced these
+cutover counters before the survivor resumed protocol traffic:
+
+| Counter | Merged value |
+| --- | ---: |
+| All-time upload | 2,570,812,445,989,938 B |
+| All-time download | 78,786,134,235,853 B |
+| Per-torrent upload | 2,461,234,772,721,440 B |
+| Per-torrent download | 414,821,590,553 B |
+
+The immutable local snapshots and merger outputs are retained at
+`/home/rcrumana/qbittorrent-consolidation-backups/20260710T181519Z`. A second
+copy of the pre-merge target files is retained inside the `arr-lts` config PVC
+under `history-merge-backup-20260710T181519Z`.
+
+The restarted survivor reported all 1,186 torrents, no error or missing
+states, a global ratio of 32.63, approximately 105 MB/s upload, and a 93 ms I/O
+queue during the initial validation sample. Its port-forward sidecar now
+refreshes the qBittorrent network-interface binding after each detected
+process start because the previously observed stale binding recurred during
+the cutover.
+
 ## Live inventory
 
 | Property | `arr-lts` | `arr-lts2` |

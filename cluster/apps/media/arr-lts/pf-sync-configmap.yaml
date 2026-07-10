@@ -11,7 +11,7 @@ data:
     WEBUI_PORT="${QB_WEBUI_PORT:?missing QB_WEBUI_PORT}"
     echo "pf-sync(sidecar): watching $PF_FILE for qB WebUI :$WEBUI_PORT"
 
-    last_applied=""
+    qbit_available=false
     while :; do
       if [ -f "$PF_FILE" ]; then
         p="$(cat "$PF_FILE" 2>/dev/null || true)"
@@ -19,7 +19,8 @@ data:
           ''|*[!0-9]*) : ;;
           *)
             if curl -fsS -c /tmp/c -b /tmp/c \
-                 --data "username=${QB_USERNAME}&password=${QB_PASSWORD}" \
+                 --data-urlencode "username=${QB_USERNAME}" \
+                 --data-urlencode "password=${QB_PASSWORD}" \
                  "http://127.0.0.1:${WEBUI_PORT}/api/v2/auth/login" >/dev/null
             then
               cur="$(curl -fsS -b /tmp/c "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/preferences" \
@@ -32,13 +33,34 @@ data:
                      "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
                 then
                   echo "pf-sync(sidecar): set listen_port=$p OK"
-                  last_applied="$p"
                 else
                   echo "pf-sync(sidecar): setPreferences failed"
                 fi
               fi
+
+              # qBittorrent sometimes retains a stale interface binding when
+              # it starts after Gluetun in the shared network namespace.
+              if [ "$qbit_available" = false ]; then
+                echo "pf-sync(sidecar): refreshing qBittorrent interface binding"
+                any_interface='{"current_network_interface": ""}'
+                tun_interface='{"current_network_interface": "tun0"}'
+                if curl -fsS -b /tmp/c \
+                     --data-urlencode "json=$any_interface" \
+                     "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null \
+                  && sleep 1 \
+                  && curl -fsS -b /tmp/c \
+                     --data-urlencode "json=$tun_interface" \
+                     "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
+                then
+                  echo "pf-sync(sidecar): interface binding refreshed to tun0"
+                  qbit_available=true
+                else
+                  echo "pf-sync(sidecar): interface refresh failed"
+                fi
+              fi
             else
               echo "pf-sync(sidecar): login failed"
+              qbit_available=false
             fi
             ;;
         esac
