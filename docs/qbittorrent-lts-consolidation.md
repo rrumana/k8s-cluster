@@ -40,6 +40,14 @@ refreshes the qBittorrent network-interface binding after each detected
 process start because the previously observed stale binding recurred during
 the cutover.
 
+During the final restart, the survivor's previous Proton endpoint stopped
+passing Gluetun health checks and port-forward RPCs. The endpoint IP, port, and
+server public key from the healthy retired client were copied between the
+corresponding Vault records; the survivor's private client key was retained.
+External Secrets rendered the new values without any inline Deployment
+override. The replacement tunnel remained healthy past the prior failure
+window and qBittorrent reconnected with more than 1,200 peers.
+
 ## Live inventory
 
 | Property | `arr-lts` | `arr-lts2` |
