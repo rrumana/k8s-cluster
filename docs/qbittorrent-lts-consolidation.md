@@ -35,23 +35,34 @@ At assessment time, qBittorrent reported:
 
 | Counter | `arr-lts` | `arr-lts2` | Combined snapshot |
 | --- | ---: | ---: | ---: |
-| All-time upload | 1,244,749,355,042,179 B | 1,325,788,556,700,865 B | 2,570,537,911,743,044 B |
-| All-time download | 38,229,692,474,196 B | 40,548,275,525,326 B | 78,777,967,999,522 B |
+| All-time upload | 1,244,758,191,920,844 B | 1,325,817,161,871,536 B | 2,570,575,353,792,380 B |
+| All-time download | 38,229,959,839,570 B | 40,549,123,858,022 B | 78,779,083,697,592 B |
 | Human-readable upload | 1.11 PiB | 1.18 PiB | 2.28 PiB |
 | Human-readable download | 34.77 TiB | 36.88 TiB | 71.65 TiB |
 | Combined ratio | - | - | 32.63 |
 
-These counters cannot be cleanly merged inside qBittorrent. The application
-stores global totals as a serialized Qt `QVariantHash` in
-`qBittorrent-data.conf`; there is no supported Web API for setting them.
-Per-torrent uploaded/downloaded counters are similarly owned by each
-instance's resume database. Editing either format would be unsupported and
-would still not produce a fully consistent merge.
+There is no supported qBittorrent API for importing these counters. The
+application stores global totals as a serialized Qt `QVariantHash` in
+`qBittorrent-data.conf`, while per-torrent counters are bencoded inside each
+row of `torrents.db`.
 
-The combined snapshot above should be treated as the historical handoff. The
-retired config PVC should be retained during the rollback window, so its UI and
-counters remain recoverable if needed. Future durable statistics should come
-from an exporter/Prometheus rather than qBittorrent's local lifetime counter.
+`tools/qbittorrent-merge-history` performs a deliberate offline merge of both
+formats. It sums uploaded/downloaded bytes, preserves the earliest lifecycle
+timestamps and latest activity timestamps, and takes the maximum active and
+seeding duration to avoid double-counting wall time from concurrent duplicate
+clients. It requires identical torrent sets, checks all SQLite databases, and
+writes new files rather than changing its inputs.
+
+The merged global total will remain larger than the sum of current per-torrent
+totals. qBittorrent's global counter includes protocol traffic and torrents
+removed in the past, whereas resume rows only describe the 1,186 torrents that
+still exist. Both values are retained according to their original semantics.
+
+The table is a tested snapshot, not the final cutover value. The tool will
+recalculate the final totals after both clients stop. The retired config PVC
+and timestamped copies of all four input files must remain available through
+the rollback window. Future durable statistics should still come from an
+exporter/Prometheus rather than only qBittorrent's local lifetime counter.
 
 ## Benefits of consolidation
 
@@ -79,13 +90,22 @@ recovery.
 3. Verify all 1,186 hashes, the single category difference, forwarded-port
    synchronization, VueTorrent, tracker reachability, and sustained line-rate
    upload on `qbit-lts`.
-4. Stop all torrents on `arr-lts2` and observe `arr-lts` alone for 24 hours.
-5. Set `arr-lts2` to zero replicas through GitOps. Retain its config PVC,
-   ExternalSecrets, Service, and ingress for a short rollback window.
-6. After the rollback window, remove the `arr-lts2` workload, Service, ingress,
+4. Stop both qBittorrent processes cleanly so statistics and resume data are
+   flushed. Capture `torrents.db` and `qBittorrent-data.conf` from both PVCs,
+   retain timestamped originals, and run `qbittorrent-merge-history` with
+   `arr-lts` as the target.
+5. Install the two validated output files in the `arr-lts` config PVC, restore
+   ownership to `1000:1000`, remove stale `torrents.db-wal` and
+   `torrents.db-shm` files after backing them up, and start only `arr-lts`.
+   Confirm its API totals match the merger output before resuming service.
+6. Observe `arr-lts` alone for 24 hours, then set `arr-lts2` to zero replicas
+   through GitOps. Retain its config PVC, ExternalSecrets, Service, and ingress
+   for a short rollback window.
+7. After the rollback window, remove the `arr-lts2` workload, Service, ingress,
    certificate, Homepage entry, and unused VPN/WebUI Vault records. Handle the
    config PVC according to the normal retained-volume cleanup policy.
 
-Do not merge or overwrite the two config PVCs. Since every torrent already
-exists in `arr-lts`, copying the canary database would replace rather than add
-state and would discard the survivor's own statistics.
+Do not copy the canary database over the survivor. Since every torrent already
+exists in `arr-lts`, a direct copy would discard the survivor's history. Only
+the merger outputs should replace the two target files, and only while the
+surviving qBittorrent process is stopped.
