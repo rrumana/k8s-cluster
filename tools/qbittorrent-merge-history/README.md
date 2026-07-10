@@ -5,7 +5,8 @@ that contain the same torrent IDs. It is intended for the `arr-lts` and
 `arr-lts2` consolidation and must only be run against files captured after both
 qBittorrent processes have stopped cleanly.
 
-It writes new files and never changes either input.
+It writes new files and never changes either input. Read-only input snapshots
+are supported; only the newly created outputs are made owner-writable.
 
 ## Merged state
 

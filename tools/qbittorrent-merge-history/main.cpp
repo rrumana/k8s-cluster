@@ -364,10 +364,18 @@ namespace
         TorrentTotals merged;
     };
 
+    void makeOwnerWritable(const QString &path)
+    {
+        QFile file(path);
+        if (!file.setPermissions(file.permissions() | QFileDevice::WriteOwner))
+            fail(QStringLiteral("Cannot make new output writable: %1").arg(path));
+    }
+
     TorrentMergeTotals mergeTorrentDatabases(const QString &targetPath, const QString &sourcePath, const QString &outputPath)
     {
         if (!QFile::copy(targetPath, outputPath))
             fail(QStringLiteral("Cannot copy target database to %1").arg(outputPath));
+        makeOwnerWritable(outputPath);
 
         Database source = openDatabase(sourcePath, SQLITE_OPEN_READONLY);
         Database output = openDatabase(outputPath, SQLITE_OPEN_READWRITE);
@@ -500,6 +508,7 @@ namespace
 
         if (!QFile::copy(targetPath, outputPath))
             fail(QStringLiteral("Cannot copy target statistics to %1").arg(outputPath));
+        makeOwnerWritable(outputPath);
 
         QSettings output(outputPath, QSettings::IniFormat);
         QVariantHash merged = targetStats;
