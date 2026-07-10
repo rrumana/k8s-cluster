@@ -4,7 +4,7 @@ metadata:
   name: arr-lts
   labels: { app: arr-lts }
 spec:
-  replicas: 1
+  replicas: 0
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: arr-lts }
@@ -14,6 +14,7 @@ spec:
         app: arr-lts
         traffic-tier: bulk-seed
     spec:
+      terminationGracePeriodSeconds: 180
       nodeSelector:
         kubernetes.io/hostname: eva-2
       tolerations:
@@ -39,7 +40,7 @@ spec:
             claimName: arr-lts-qbit-config
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-torrent
+            claimName: media-library-torrent-eva-2
         - name: pf-state
           emptyDir: {}
         - name: pf-sync
@@ -125,7 +126,7 @@ spec:
             limits:   { cpu: "25m", memory: "64Mi" }
 
         - name: qbittorrent
-          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.1.4
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -139,5 +140,5 @@ spec:
             - { name: qbit-config, mountPath: /config }
             - { name: media,       mountPath: /media }
           resources:
-            requests: { cpu: "300m", memory: "512Mi" }
-            limits:   { cpu: "2", memory: "4Gi" }
+            requests: { cpu: "300m", memory: "2Gi" }
+            limits:   { cpu: "2", memory: "6Gi" }
