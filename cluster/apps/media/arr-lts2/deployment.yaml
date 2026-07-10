@@ -96,6 +96,9 @@ spec:
           envFrom:
             - secretRef: { name: gluetun-lts2-env }
           env:
+            # Public server details override the retired endpoint still stored in Vault.
+            - { name: VPN_ENDPOINT_IP, value: "79.127.185.162" }
+            - { name: WIREGUARD_PUBLIC_KEY, value: "2RxTx5coxCtv/b3fRKHTq5WjdUxvNxESsYjaXIJWmDA=" }
             - { name: FIREWALL_INPUT_PORTS, value: "8022" }
             - { name: HEALTH_TARGET_ADDRESS, value: "127.0.0.1:9999" }
             - { name: VPN_PORT_FORWARDING_STATUS_FILE, value: "/pf/state/forwarded_port" }
