@@ -40,7 +40,7 @@ spec:
             claimName: arr-lts2-qbit-config
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-torrent
+            claimName: media-library-torrent-eva-3-canary
         - name: pf-state
           emptyDir: {}
         - name: pf-sync
