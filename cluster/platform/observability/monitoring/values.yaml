@@ -18,6 +18,11 @@ kubeProxy:
 kubeEtcd:
   enabled: false
 
+kubelet:
+  serviceMonitor:
+    resource: true
+    resourcePath: /metrics/resource
+
 kubeControllerManager:
   enabled: false
 

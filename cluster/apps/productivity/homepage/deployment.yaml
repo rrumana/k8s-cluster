@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-06-18-opnsense-qbit-status"
+        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-cleanup"
         linkerd.io/inject: enabled
       labels:
         app: homepage
