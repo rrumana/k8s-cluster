@@ -9,6 +9,16 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v20.2.2
 
+  # Four NVMe OSDs run on each 64 GiB Eva node. The hard limit prevents each
+  # BlueStore cache from sizing itself against the entire node, while the
+  # matching request reserves the full OSD memory budget for scheduling.
+  resources:
+    osd:
+      requests:
+        memory: 8Gi
+      limits:
+        memory: 8Gi
+
   # Ceph traffic stays on the primary LAN until a dedicated storage network is
   # introduced and validated.
   network:
