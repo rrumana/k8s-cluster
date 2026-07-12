@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-cleanup"
+        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-storage-node-fix"
         linkerd.io/inject: enabled
       labels:
         app: homepage
@@ -62,6 +62,16 @@ spec:
                 name: homepage-qbit-env
                 optional: true
           env:
+            - name: HOMEPAGE_VAR_NEXTCLOUD_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-admin
+                  key: nextcloud-username
+            - name: HOMEPAGE_VAR_NEXTCLOUD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-admin
+                  key: nextcloud-password
             - name: TZ
               value: America/Los_Angeles
             - name: LOG_LEVEL

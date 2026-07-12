@@ -29,8 +29,6 @@ HOMEPAGE_VAR_OPNSENSE_WAN
 HOMEPAGE_VAR_UNIFI_SITE
 HOMEPAGE_VAR_UNIFI_API_KEY
 HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY
-HOMEPAGE_VAR_NEXTCLOUD_USERNAME
-HOMEPAGE_VAR_NEXTCLOUD_PASSWORD
 HOMEPAGE_VAR_JELLYFIN_API_KEY
 HOMEPAGE_VAR_IMMICH_API_KEY
 HOMEPAGE_VAR_JELLYSEERR_API_KEY
@@ -44,6 +42,10 @@ The `homepage-env` Kubernetes Secret is consumed with optional `envFrom`, so the
 deployment can start before this Vault path exists. Environment-backed Homepage
 config values are read at process start, so roll the pods after adding or
 changing Vault values.
+
+The Nextcloud widget reads its username and password directly from the
+`nextcloud-admin` Secret used by the Nextcloud deployment. Do not duplicate
+those credentials in `homepage-env`.
 
 ## Node Cards
 

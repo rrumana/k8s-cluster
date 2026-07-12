@@ -2,6 +2,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: homepage-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 data:
   kubernetes.yaml: |
     mode: cluster
@@ -46,26 +48,10 @@ data:
             header: false
             style: row
             columns: 1
-      Storage and Networking:
+      Storage:
         style: row
-        columns: 2
-        Storage:
-          header: false
-          style: row
-          columns: 1
-        Networking:
-          header: false
-          style: row
-          columns: 2
-          Firewall:
-            header: false
-            style: row
-            columns: 1
-          Network Services:
-            header: false
-            style: row
-            columns: 1
-      Torrenting:
+        columns: 3
+      Networking:
         style: row
         columns: 3
       Nodes:
@@ -73,7 +59,7 @@ data:
         columns: 3
       Cluster:
         style: row
-        columns: 3
+        columns: 4
       Portfolio:
         style: row
         columns: 2
@@ -161,6 +147,22 @@ data:
                   key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
                   fields: []
                   hideErrors: true
+            - qBittorrent:
+                icon: qbittorrent.png
+                href: https://qbit.rcrumana.xyz
+                siteMonitor: http://qbit.media.svc.cluster.local
+                description: Primary torrent client
+                namespace: media
+                podSelector: app=arr-stack
+                widget:
+                  type: qbittorrent
+                  url: http://qbit.media.svc.cluster.local
+                  username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
+                  password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
+                  enableLeechProgress: true
+                  enableLeechSize: true
+                  fields: ["leech", "download", "seed", "upload"]
+                  hideErrors: true
 
     - Services:
         - Media: 
@@ -223,67 +225,124 @@ data:
                     namespace: productivity
                     app: vaultwarden
 
-    - Storage and Networking:
-        - Storage:
-            - Backups NAS:
-                icon: truenas.png
-                href: https://nas.rcrumana.xyz
-                description: NAS for backups
-                widget:
-                  type: truenas
-                  url: https://nas.rcrumana.xyz
-                  version: 2
-                  key: "{{HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY}}"
-                  enablePools: true
-                  nasType: scale
-                  fields: ["load", "uptime", "alerts"]
-                  hideErrors: true
-        - Networking:
-            - Firewall:
-                - OPNsense:
-                    icon: opnsense.png
-                    href: https://router.rcrumana.xyz
-                    siteMonitor: https://router.rcrumana.xyz
-                    description: Router and firewall
-                    widget:
-                      type: opnsense
-                      url: https://router.rcrumana.xyz
-                      username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
-                      password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
-                      wan: "{{HOMEPAGE_VAR_OPNSENSE_WAN}}"
-                      fields: ["cpu", "memory", "wanUpload", "wanDownload"]
-                      hideErrors: true
-            - Network Services:
-                - UniFi:
-                    icon: unifi.png
-                    href: https://unifi.rcrumana.xyz
-                    description: Network controller
-                    namespace: productivity
-                    app: unifi-os-server
-                - Headscale:
-                    icon: headscale.png
-                    href: https://headscale.rcrumana.xyz/web
-                    description: Tailnet admin UI
-                    namespace: other
-                    app: headscale
-
-    - Torrenting:
-        - qBittorrent:
-            icon: qbittorrent.png
-            href: https://qbit.rcrumana.xyz
-            siteMonitor: http://qbit.media.svc.cluster.local
-            description: Primary torrent client
-            namespace: media
-            podSelector: app=arr-stack
+    - Storage:
+        - Ceph:
+            icon: ceph.png
+            href: https://ceph.rcrumana.xyz
+            description: Primary cluster storage
+            namespace: rook-ceph
+            app: ceph-mgr
             widget:
-              type: qbittorrent
-              url: http://qbit.media.svc.cluster.local
-              username: "{{HOMEPAGE_VAR_QBIT_USERNAME}}"
-              password: "{{HOMEPAGE_VAR_QBIT_PASSWORD}}"
-              enableLeechProgress: true
-              enableLeechSize: true
-              fields: ["leech", "download", "seed", "upload"]
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Health:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 100
+                    - level: good
+                      when: eq
+                      value: 100
+                OSDs:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 100
+                    - level: good
+                      when: eq
+                      value: 100
+                PGs:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 100
+                    - level: good
+                      when: eq
+                      value: 100
+                Used:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 90
+                    - level: warn
+                      when: gte
+                      value: 75
+              metrics:
+                - label: Health
+                  query: '1 - clamp_max(ceph_health_status, 1)'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: OSDs
+                  query: 'sum(ceph_osd_up) / count(ceph_osd_metadata)'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: PGs
+                  query: 'sum(ceph_pg_clean) / sum(ceph_pg_total)'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Used
+                  query: 'ceph_cluster_total_used_bytes / ceph_cluster_total_bytes'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+        - MinIO:
+            icon: minio.png
+            href: https://minio.rcrumana.xyz
+            siteMonitor: http://minio-api.other.svc.cluster.local:9000/minio/health/live
+            description: Object storage and backup target
+        - Backups NAS:
+            icon: truenas.png
+            href: https://nas.rcrumana.xyz
+            description: NAS for backups
+            widget:
+              type: truenas
+              url: https://nas.rcrumana.xyz
+              version: 2
+              key: "{{HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY}}"
+              enablePools: true
+              nasType: scale
+              fields: ["load", "uptime", "alerts"]
               hideErrors: true
+
+    - Networking:
+        - OPNsense:
+            icon: opnsense.png
+            href: https://router.rcrumana.xyz
+            siteMonitor: https://router.rcrumana.xyz
+            description: Router and firewall
+            widget:
+              type: opnsense
+              url: https://router.rcrumana.xyz
+              username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
+              password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
+              wan: "{{HOMEPAGE_VAR_OPNSENSE_WAN}}"
+              fields: ["cpu", "memory", "wanUpload", "wanDownload"]
+              hideErrors: true
+        - UniFi:
+            icon: unifi.png
+            href: https://unifi.rcrumana.xyz
+            description: Network controller
+            namespace: productivity
+            app: unifi-os-server
+        - Headscale:
+            icon: headscale.png
+            href: https://headscale.rcrumana.xyz/web
+            description: Tailnet admin UI
+            namespace: other
+            app: headscale
     - Nodes:
         - melchior-1:
             icon: mdi-server
@@ -331,18 +390,21 @@ data:
                   query: 'kube_node_status_condition{node="melchior-1",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="melchior-1"}[2m]) / on(node) kube_node_status_capacity{node="melchior-1",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="melchior-1"} / on(node) kube_node_status_capacity{node="melchior-1",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -366,18 +428,21 @@ data:
                   query: 'kube_node_status_condition{node="balthasar-2",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="balthasar-2"}[2m]) / on(node) kube_node_status_capacity{node="balthasar-2",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="balthasar-2"} / on(node) kube_node_status_capacity{node="balthasar-2",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -401,18 +466,21 @@ data:
                   query: 'kube_node_status_condition{node="casper-3",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="casper-3"}[2m]) / on(node) kube_node_status_capacity{node="casper-3",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="casper-3"} / on(node) kube_node_status_capacity{node="casper-3",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -436,18 +504,21 @@ data:
                   query: 'kube_node_status_condition{node="eva-1",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="eva-1"}[2m]) / on(node) kube_node_status_capacity{node="eva-1",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="eva-1"} / on(node) kube_node_status_capacity{node="eva-1",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -471,18 +542,21 @@ data:
                   query: 'kube_node_status_condition{node="eva-2",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="eva-2"}[2m]) / on(node) kube_node_status_capacity{node="eva-2",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="eva-2"} / on(node) kube_node_status_capacity{node="eva-2",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -506,18 +580,21 @@ data:
                   query: 'kube_node_status_condition{node="eva-3",condition="Ready",status="true"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: CPU
                   query: 'rate(node_cpu_usage_seconds_total{node="eva-3"}[2m]) / on(node) kube_node_status_capacity{node="eva-3",resource="cpu",unit="core"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: RAM
                   query: 'node_memory_working_set_bytes{node="eva-3"} / on(node) kube_node_status_capacity{node="eva-3",resource="memory",unit="byte"}'
                   format:
                     type: percent
+                    scale: 100
                     options:
                       maximumFractionDigits: 0
                 - label: Temp
@@ -567,16 +644,6 @@ data:
               slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
               fields: ["up", "down", "uptime", "incident"]
               hideErrors: true
-        - Ceph:
-            icon: ceph.png
-            href: https://ceph.rcrumana.xyz
-            description: Ceph storage dashboard
-            namespace: rook-ceph
-            app: ceph-mgr
-        - MinIO:
-            icon: minio.png
-            href: https://minio.rcrumana.xyz
-            description: Object storage console
         - Harbor:
             icon: harbor.png
             href: https://harbor.rcrumana.xyz
