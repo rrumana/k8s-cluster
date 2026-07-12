@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-storage-node-fix"
+        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-alignment-cache-fix"
         linkerd.io/inject: enabled
       labels:
         app: homepage
@@ -114,6 +114,29 @@ spec:
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    node -e '
+                      let attempts = 0;
+                      const revalidate = () => fetch("http://127.0.0.1:3000/api/revalidate", {
+                        headers: { Host: "dash.rcrumana.xyz" }
+                      }).then((response) => {
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                      }).catch((error) => {
+                        attempts += 1;
+                        if (attempts >= 30) {
+                          console.error(`Homepage revalidation failed: ${error.message}`);
+                          process.exit(1);
+                        }
+                        setTimeout(revalidate, 1000);
+                      });
+                      revalidate();
+                    '
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config/kubernetes.yaml

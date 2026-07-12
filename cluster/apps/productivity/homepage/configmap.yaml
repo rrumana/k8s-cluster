@@ -209,7 +209,7 @@ data:
                         url: http://nextcloud.productivity.svc.cluster.local:8080
                         username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
                         password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
-                        fields: ["freespace", "activeusers", "numfiles", "numshares"]
+                        fields: ["numfiles"]
                         hideErrors: true
             - Other:
                 - LibreChat:
@@ -668,5 +668,13 @@ data:
   bookmarks.yaml: ""
   widgets.yaml: ""
   docker.yaml: ""
-  custom.css: ""
+  custom.css: |
+    /* Keep a single-card nested column aligned with its taller sibling column. */
+    @media (min-width: 768px) {
+      #layout-groups .services-group.subgroup:has(> div > .services-list > .service:only-child) > div,
+      #layout-groups .services-group.subgroup:has(> div > .services-list > .service:only-child) > div > .services-list,
+      #layout-groups .services-group.subgroup > div > .services-list > .service:only-child {
+        height: 100%;
+      }
+    }
   custom.js: ""

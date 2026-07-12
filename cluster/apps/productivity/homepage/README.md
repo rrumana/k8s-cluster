@@ -47,6 +47,14 @@ The Nextcloud widget reads its username and password directly from the
 `nextcloud-admin` Secret used by the Nextcloud deployment. Do not duplicate
 those credentials in `homepage-env`.
 
+## Static Settings Revalidation
+
+Homepage caches the rendered `settings.yaml` separately in each replica. The
+container `postStart` hook calls the local `/api/revalidate` endpoint so every
+replica starts with the mounted layout settings. Keep the config revision
+annotation current when changing the ConfigMap so all replicas roll and
+revalidate together.
+
 ## Node Cards
 
 The six node cards use Homepage's `prometheusmetric` widget. Ready state comes
