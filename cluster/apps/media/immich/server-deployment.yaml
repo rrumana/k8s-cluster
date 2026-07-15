@@ -23,7 +23,7 @@ spec:
       serviceAccountName: immich-server
       containers:
         - name: immich-server
-          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-server:v2.7.5
+          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-server:v3.0.3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2283
