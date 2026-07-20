@@ -1,7 +1,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: volsync-minio
+  name: volsync-object-store
   namespace: other
   annotations:
     argocd.argoproj.io/sync-wave: "-20"
@@ -11,24 +11,24 @@ spec:
     name: vault
     kind: ClusterSecretStore
   target:
-    name: volsync-minio
+    name: volsync-object-store
     creationPolicy: Owner
   data:
     - secretKey: RESTIC_REPOSITORY
       remoteRef:
-        key: apps/other/volsync-minio
+        key: apps/other/volsync-object-store
         property: RESTIC_REPOSITORY
     - secretKey: RESTIC_PASSWORD
       remoteRef:
-        key: apps/other/volsync-minio
+        key: apps/other/volsync-object-store
         property: RESTIC_PASSWORD
     - secretKey: AWS_ACCESS_KEY_ID
       remoteRef:
-        key: apps/other/volsync-minio
+        key: apps/other/volsync-object-store
         property: AWS_ACCESS_KEY_ID
     - secretKey: AWS_SECRET_ACCESS_KEY
       remoteRef:
-        key: apps/other/volsync-minio
+        key: apps/other/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
 apiVersion: volsync.backube/v1alpha1
@@ -43,7 +43,7 @@ spec:
   restic:
     copyMethod: Snapshot
     volumeSnapshotClassName: ceph-block-snap
-    repository: volsync-minio
+    repository: volsync-object-store
     pruneIntervalDays: 14
     moverSecurityContext:
       runAsUser: 0

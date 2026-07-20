@@ -1,7 +1,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: volsync-minio
+  name: volsync-object-store
   namespace: ai
   annotations:
     argocd.argoproj.io/sync-wave: "-20"
@@ -11,24 +11,24 @@ spec:
     name: vault
     kind: ClusterSecretStore
   target:
-    name: volsync-minio
+    name: volsync-object-store
     creationPolicy: Owner
   data:
     - secretKey: RESTIC_REPOSITORY
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_REPOSITORY
     - secretKey: RESTIC_PASSWORD
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_PASSWORD
     - secretKey: AWS_ACCESS_KEY_ID
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_ACCESS_KEY_ID
     - secretKey: AWS_SECRET_ACCESS_KEY
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
 apiVersion: external-secrets.io/v1
@@ -56,19 +56,19 @@ spec:
   data:
     - secretKey: resticRepository
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_REPOSITORY
     - secretKey: resticPassword
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_PASSWORD
     - secretKey: awsAccessKeyId
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_ACCESS_KEY_ID
     - secretKey: awsSecretAccessKey
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
 apiVersion: volsync.backube/v1alpha1
@@ -119,19 +119,19 @@ spec:
   data:
     - secretKey: resticRepository
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_REPOSITORY
     - secretKey: resticPassword
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_PASSWORD
     - secretKey: awsAccessKeyId
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_ACCESS_KEY_ID
     - secretKey: awsSecretAccessKey
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
 apiVersion: volsync.backube/v1alpha1
@@ -182,19 +182,19 @@ spec:
   data:
     - secretKey: resticRepository
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_REPOSITORY
     - secretKey: resticPassword
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: RESTIC_PASSWORD
     - secretKey: awsAccessKeyId
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_ACCESS_KEY_ID
     - secretKey: awsSecretAccessKey
       remoteRef:
-        key: apps/ai/volsync-minio
+        key: apps/ai/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
 apiVersion: volsync.backube/v1alpha1
