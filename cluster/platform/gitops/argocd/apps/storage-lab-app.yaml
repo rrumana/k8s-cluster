@@ -1,28 +1,21 @@
-# platform/gitops/argocd/apps/arr-lts2-app.yaml
+# Draft only. This Application is intentionally not listed in
+# cluster/platform/gitops/argocd/apps/kustomization.yaml.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: arr-lts2
+  name: storage-lab
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   project: default
-
   source:
     repoURL: https://github.com/rrumana/k8s-homelab-2.git
     targetRevision: main
-    path: cluster/apps/media/arr-lts2
-
+    path: cluster/platform/base/storage/storage-lab
   destination:
     server: https://kubernetes.default.svc
-    namespace: media
-
+    namespace: storage-lab
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=true
