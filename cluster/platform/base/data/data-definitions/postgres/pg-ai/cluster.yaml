@@ -32,9 +32,11 @@ spec:
   storage:
     storageClass: ceph-block-app-replicated
     size: 50Gi
+    resizeInUseVolumes: false
   walStorage:
     storageClass: ceph-block-app-replicated
     size: 30Gi
+    resizeInUseVolumes: false
 
   enableSuperuserAccess: true
 
