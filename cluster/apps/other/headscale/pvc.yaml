@@ -10,3 +10,16 @@ spec:
   resources:
     requests:
       storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headscale-data-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 5Gi
