@@ -298,25 +298,6 @@ data:
                     scale: 100
                     options:
                       maximumFractionDigits: 0
-        - MinIO:
-            icon: minio.png
-            href: https://minio.rcrumana.xyz
-            siteMonitor: http://minio-api.other.svc.cluster.local:9000/minio/health/live
-            description: Object storage and backup target
-        - Backups NAS:
-            icon: truenas.png
-            href: https://nas.rcrumana.xyz
-            description: NAS for backups
-            widget:
-              type: truenas
-              url: https://nas.rcrumana.xyz
-              version: 2
-              key: "{{HOMEPAGE_VAR_TRUENAS_BACKUPS_API_KEY}}"
-              enablePools: true
-              nasType: scale
-              fields: ["load", "uptime", "alerts"]
-              hideErrors: true
-
     - Networking:
         - OPNsense:
             icon: opnsense.png
