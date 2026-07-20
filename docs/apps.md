@@ -29,7 +29,7 @@ snapshot.
 | Renovate | Twice-monthly dependency update scanner against GitHub and Harbor. |
 | Rook/Ceph | Distributed block and filesystem storage for most persistent workloads. |
 | Snapshot Controller | Enables CSI snapshots for Ceph-backed volumes. |
-| VolSync | Runs scheduled PVC backups to MinIO through snapshot + restic flows. |
+| VolSync | Retains paused snapshot + restic definitions that fail closed until a replacement object-storage target is selected. |
 | kube-prometheus-stack | Prometheus Operator stack providing persistent metrics, alerting, node monitoring, and Grafana. |
 | OpenSearch Operator | Manages the shared OpenSearch cluster used for centralized logs and future search workloads. |
 | Data Prepper | Receives cluster log events and writes normalized daily indices into OpenSearch. |
@@ -43,7 +43,7 @@ snapshot.
 
 | App | One-sentence description |
 |---|---|
-| CloudNativePG operator | Manages lifecycle, failover, and backups for PostgreSQL clusters. |
+| CloudNativePG operator | Manages lifecycle and failover for PostgreSQL clusters; object-store backups are currently disabled. |
 | `pg-ai` | Shared PostgreSQL cluster for AI workloads. |
 | `pg-media` | Shared PostgreSQL cluster for media workloads. |
 | `pg-platform` | Shared PostgreSQL cluster for platform and infrastructure services. |
@@ -51,7 +51,6 @@ snapshot.
 | `pg-other` | Shared PostgreSQL cluster for miscellaneous workloads. |
 | `valkey-cache` | Shared replicated cache tier with LRU eviction and no persistence. |
 | `valkey-queue` | Shared replicated queue/state tier with AOF-backed persistence and no-eviction behavior. |
-| MinIO service bridge | In-cluster services that front the external MinIO instance used for backups and object APIs. |
 
 ### User-facing and domain apps
 
@@ -60,14 +59,11 @@ snapshot.
 | LibreChat | Browser-based AI chat UI with local-model and RAG support. |
 | llama-backend | Internal AMD GPU-backed `llama.cpp` workers plus a LiteLLM OpenAI-compatible gateway. |
 | arr-stack | Main media automation pod bundling qBittorrent, Servarr apps, Jellyseerr, FlareSolverr, and Gluetun. |
-| arr-lts | Secondary qBittorrent + Gluetun stack for isolated long-term workflows. |
-| arr-lts2 | Third qBittorrent + Gluetun stack for additional isolated torrent throughput. |
 | Jellyfin | Self-hosted media streaming server. |
 | Plex | Self-hosted media streaming server with native-client LAN exposure. |
 | Immich | Self-hosted photo and video backup platform with ROCm-backed ML workers. |
 | Nextcloud | Private cloud suite for files, collaboration, and extensions. |
 | Collabora | Web office editor integrated with Nextcloud. |
-| Homarr | Dashboard and service launcher with widgets backed by Postgres and Valkey. |
 | UniFi OS Server | Self-hosted UniFi appliance stack exposed through ingress and MetalLB. |
 | Uptime Kuma | Uptime dashboard and endpoint monitor. |
 | Vaultwarden | Bitwarden-compatible password manager server. |
@@ -75,11 +71,8 @@ snapshot.
 | Elasticsearch | Search backend currently used by Nextcloud. |
 | Headscale | Self-hosted Tailscale-compatible coordination server. |
 | Headscale UI | Restricted browser UI for Headscale. |
-| Host dashboards | Restricted ingress bridges to the desktop and each cluster node on port `7681`. |
-| Folding@Home | Three-replica donation workload with one stateful pod per node. |
 | Hypermind | Experimental host-networked shared map/chat service. |
 | OPNsense service bridge | In-cluster proxy path to the external router UI/API endpoint. |
-| TrueNAS service bridge | In-cluster proxy path to the external NAS UI endpoint. |
 | Portfolio (prod) | Production personal site deployment. |
 | Portfolio (staging) | Staging deployment for the same site. |
 
@@ -147,7 +140,7 @@ snapshot.
 ### Primary storage: Rook/Ceph
 
 - Rook deploys a 3-node Ceph cluster with OSDs on two dedicated NVMe devices per node.
-- Ceph public and replication traffic are both pinned to the dedicated storage network `172.16.100.0/24`.
+- Ceph public and replication traffic both use the primary LAN `192.168.1.0/24`.
 - The main storage interfaces exposed to Kubernetes are:
 - `ceph-block`: default RBD `StorageClass` for `ReadWriteOnce` PVCs
 - `ceph-filesystem`: CephFS `StorageClass` for RWX PVCs
@@ -162,11 +155,10 @@ snapshot.
 ### Backup engines
 
 - VolSync runs in `backup`.
-- Replication sources are declared across `ai`, `media`, `productivity`, `other`, and selected `databases` PVCs.
-- The common pattern is `copyMethod: Snapshot` with `ceph-block-snap` plus restic push to MinIO.
-- Most replication sources retain `daily 7 / weekly 4 / monthly 3` and prune restic data every 14 days.
-- CloudNativePG clusters also run scheduled backups to `s3://cluster-backups/cnpg/*` via `minio-api.other.svc.cluster.local:9000`.
-- CNPG retention is 30 days.
+- Replication sources are declared across `ai`, `media`, `productivity`, `other`, and selected `databases` PVCs, but every source is paused.
+- The common object-store credential points at a non-routable `.invalid` placeholder so the paused definitions fail closed.
+- CloudNativePG scheduled backups are suspended, WAL archiving is skipped, and the clusters have no active object-store backup block.
+- A replacement S3-compatible endpoint and retention policy have not yet been selected.
 
 ### Emergency dump operation
 
@@ -177,10 +169,7 @@ snapshot.
 ### External service bridges
 
 - The repo defines service bridges to systems outside Kubernetes:
-- MinIO at `192.168.1.19:9000/9002`
 - OPNsense at `192.168.1.1:4443`
-- TrueNAS at `192.168.1.19:443` and `192.168.1.20:443`
-- Desktop and host dashboards at `192.168.1.10:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, and `192.168.1.15:7681`
 
 ## 3) Shared data platforms
 
@@ -236,10 +225,7 @@ snapshot.
 
 ### ARR ecosystem
 
-- There are three qBittorrent-based stacks:
-- `arr-stack`
-- `arr-lts`
-- `arr-lts2`
+- The active qBittorrent-based stack is `arr-stack`.
 - All qBittorrent traffic is routed through a colocated Gluetun VPN container.
 - The main `arr-stack` pod also includes `sonarr`, `radarr`, `lidarr`, `prowlarr`, `jellyseerr`, `flaresolverr`, and the `pf-sync` helper.
 - `arr-stack` is labeled `traffic-tier=bulk-seed`, which makes it subject to `egress-qos`.
@@ -291,12 +277,6 @@ snapshot.
 - Runs as a standalone deployment exposed at `collabora.rcrumana.xyz`.
 - Configured for TLS termination at ingress and trusted integration with Nextcloud.
 
-### Homarr
-
-- Deployed from the OCI Helm chart.
-- Uses shared PostgreSQL plus shared `valkey-cache`.
-- Exposed through restricted ingress at `homarr.rcrumana.xyz`.
-
 ### UniFi OS Server
 
 - Replaced the older UniFi controller layout with the `lemker/unifi-os-server` image.
@@ -338,33 +318,15 @@ snapshot.
 - The UI is published on the same host under `/web` with a restricted ingress policy.
 - The Tailnet base domain is `tail.rcrumana.xyz`.
 
-### Host dashboards
-
-- The repo defines ClusterIP services plus `EndpointSlice` objects for:
-- `desktop-http`
-- `melchior-http`
-- `balthasar-http`
-- `casper-http`
-- Restricted ingresses publish those bridges at `desktop.rcrumana.xyz`, `melchior.rcrumana.xyz`, `balthasar.rcrumana.xyz`, and `casper.rcrumana.xyz`.
-
-### Folding@Home
-
-- Runs as a 3-replica StatefulSet with `podManagementPolicy: Parallel`.
-- Each replica gets its own `5Gi` Ceph-backed config PVC.
-- The workload is internal only and exposed through a headless service.
-
 ### Hypermind
 
 - Single deployment published at `hypermind.rcrumana.xyz`.
 - Uses `hostNetwork: true` because the upstream service expects direct host networking for its P2P behavior.
 
-### MinIO, OPNsense, and TrueNAS bridges
+### OPNsense bridge
 
-- `minio` and `minio-api` front the external MinIO instance on `192.168.1.19`.
 - `opnsense-https` fronts the router UI/API at `192.168.1.1:4443`.
-- `truenas-https` fronts the NAS UI at `192.168.1.19:443`.
-- `truenas-2-https` fronts the new NAS UI at `192.168.1.20:443`.
-- All four are exposed through restricted ingress.
+- It is exposed through restricted ingress.
 
 ## `web` namespace
 
@@ -385,7 +347,7 @@ snapshot.
 - cert-manager issues the TLS material used by HAProxy ingresses and Harbor.
 - MetalLB provides LAN IPs for HAProxy plus the directly exposed media and UniFi services.
 - Rook/Ceph provides almost all persistent storage through `ceph-block` and `ceph-filesystem`.
-- Snapshot Controller and VolSync protect many PVCs on a schedule, while CNPG handles PostgreSQL backups natively.
+- Snapshot Controller and VolSync definitions are retained but paused, and CNPG object-store backups are disabled pending a replacement target.
 - The emergency dump workflow gives a second operational recovery path for selected workloads.
 - CNPG provides shared relational storage and Valkey provides shared cache or queue storage.
 - The AI path is: LibreChat -> RAG API / PG / Valkey -> LiteLLM gateway -> `llama.cpp` workers.
@@ -411,8 +373,8 @@ snapshot.
 - `scheduling`: VPA components and descheduler.
 - `ai`: LibreChat and local LLM services.
 - `media`: ARR stacks, Jellyfin, Plex, and Immich.
-- `productivity`: Nextcloud, Collabora, Homarr, UniFi OS Server, Uptime Kuma, Vaultwarden, Whiteboard, and Elasticsearch.
-- `other`: Headscale, host dashboards, Folding@Home, Hypermind, and external service bridges.
+- `productivity`: Nextcloud, Collabora, UniFi OS Server, Uptime Kuma, Vaultwarden, Whiteboard, and Elasticsearch.
+- `other`: Headscale, Hypermind, and the OPNsense service bridge.
 - `web`: portfolio production and staging.
 - Reserved placeholders declared in repo: `ingress` and `networking`.
 
@@ -421,32 +383,21 @@ snapshot.
 | Hostname | Path | Namespace | Ingress | Class | Backend service:port |
 |---|---|---|---|---|---|
 | `argocd.rcrumana.xyz` | `/` | `argocd` | `argocd` | `haproxy-restricted` | `argocd-server:80` |
-| `balthasar.rcrumana.xyz` | `/` | `other` | `balthasar-proxy` | `haproxy-restricted` | `balthasar-http:7681` |
-| `casper.rcrumana.xyz` | `/` | `other` | `casper-proxy` | `haproxy-restricted` | `casper-http:7681` |
 | `ceph.rcrumana.xyz` | `/` | `rook-ceph` | `ceph-dashboard` | `haproxy-restricted` | `rook-ceph-mgr-dashboard:8443` |
 | `chat.rcrumana.xyz` | `/` | `ai` | `librechat` | `haproxy-restricted` | `librechat:80` |
 | `collabora.rcrumana.xyz` | `/` | `productivity` | `collabora` | `haproxy-restricted` | `collabora:9980` |
-| `desktop.rcrumana.xyz` | `/` | `other` | `desktop-proxy` | `haproxy-restricted` | `desktop-http:7681` |
 | `grafana.rcrumana.xyz` | `/` | `monitoring` | `grafana` | `haproxy-restricted` | `kube-prometheus-stack-grafana:80` |
 | `harbor.rcrumana.xyz` | `/` | `harbor` | `harbor` | `haproxy` | `harbor-portal:80`, plus `harbor-core:80` for API and registry paths |
 | `headscale.rcrumana.xyz` | `/` | `other` | `headscale-api` | `haproxy` | `headscale:80` |
 | `headscale.rcrumana.xyz` | `/web` | `other` | `headscale-ui` | `haproxy-restricted` | `headscale-ui:80` |
-| `homarr.rcrumana.xyz` | `/` | `productivity` | `homarr` | `haproxy-restricted` | `homarr-helm:7575` |
 | `hypermind.rcrumana.xyz` | `/` | `other` | `hypermind` | `haproxy-restricted` | `hypermind:80` |
 | `immich.rcrumana.xyz` | `/` | `media` | `immich` | `haproxy-restricted` | `immich-server:2283` |
 | `jellyfin.rcrumana.xyz` | `/` | `media` | `jellyfin` | `haproxy-restricted` | `jellyfin:8096` |
 | `jellyseerr.rcrumana.xyz` | `/` | `media` | `jellyseerr` | `haproxy-restricted` | `jellyseerr:80` |
 | `lidarr.rcrumana.xyz` | `/` | `media` | `lidarr` | `haproxy-restricted` | `lidarr:80` |
-| `melchior.rcrumana.xyz` | `/` | `other` | `melchior-proxy` | `haproxy-restricted` | `melchior-http:7681` |
-| `minio-api.rcrumana.xyz` | `/` | `other` | `minio-api-proxy` | `haproxy-restricted` | `minio-api:9000` |
-| `minio.rcrumana.xyz` | `/` | `other` | `minio-proxy` | `haproxy-restricted` | `minio:9002` |
-| `nas.rcrumana.xyz` | `/` | `other` | `truenas-proxy` | `haproxy-restricted` | `truenas-https:443` |
-| `nas-2.rcrumana.xyz` | `/` | `other` | `truenas-2-proxy` | `haproxy-restricted` | `truenas-2-https:443` |
 | `nextcloud.rcrumana.xyz` | `/` | `productivity` | `nextcloud` | `haproxy-restricted` | `nextcloud:8080` |
 | `plex.rcrumana.xyz` | `/` | `media` | `plex` | `haproxy-restricted` | `plex:32400` |
 | `prowlarr.rcrumana.xyz` | `/` | `media` | `prowlarr` | `haproxy-restricted` | `prowlarr:80` |
-| `qbit-lts.rcrumana.xyz` | `/` | `media` | `qbit-lts` | `haproxy-restricted` | `qbit-lts:80` |
-| `qbit-lts2.rcrumana.xyz` | `/` | `media` | `qbit-lts2` | `haproxy-restricted` | `qbit-lts2:80` |
 | `qbit.rcrumana.xyz` | `/` | `media` | `qbit` | `haproxy-restricted` | `qbit:80` |
 | `radarr.rcrumana.xyz` | `/` | `media` | `radarr` | `haproxy-restricted` | `radarr:80` |
 | `rcrumana.xyz` | `/` | `web` | `portfolio` | `haproxy` | `portfolio:80` |
@@ -473,12 +424,4 @@ snapshot.
 
 | Namespace | Service | External target | Purpose |
 |---|---|---|---|
-| `other` | `minio` | `192.168.1.19:9002` | MinIO console and admin endpoint for backup workflows. |
-| `other` | `minio-api` | `192.168.1.19:9000` | MinIO S3 API endpoint for VolSync and CNPG backups. |
 | `other` | `opnsense-https` | `192.168.1.1:4443` | Reverse-proxied access path to OPNsense. |
-| `other` | `truenas-https` | `192.168.1.19:443` | Reverse-proxied access path to TrueNAS. |
-| `other` | `truenas-2-https` | `192.168.1.20:443` | Reverse-proxied access path to the new TrueNAS. |
-| `other` | `desktop-http` | `192.168.1.10:7681` | Desktop dashboard bridge. |
-| `other` | `melchior-http` | `192.168.1.13:7681` | `melchior-1` dashboard bridge. |
-| `other` | `balthasar-http` | `192.168.1.14:7681` | `balthasar-2` dashboard bridge. |
-| `other` | `casper-http` | `192.168.1.15:7681` | `casper-3` dashboard bridge. |

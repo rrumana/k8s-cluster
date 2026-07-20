@@ -6,7 +6,7 @@ A live, bare-metal Kubernetes homelab run with GitOps and real workloads for fam
 
 This project is for fun and for learning.
 
-It is live and stores data that matters to me and to people I care about. That said it is backed up often and most of this data lives elsewhere.
+It is live and stores data that matters to me and to people I care about. Backups are temporarily paused while a replacement object-storage target is selected.
 
 
 ## Cluster Details
@@ -52,7 +52,8 @@ Ingress path:
 Internet/LAN -> Cloudflare DNS -> MetalLB VIP (HAProxy) -> Ingress -> Services
 
 Data path:
-Apps -> Ceph PVCs / CNPG / Valkey -> Snapshots + VolSync -> MinIO (external bridge)
+Apps -> Ceph PVCs / CNPG / Valkey
+         \-> paused VolSync/CNPG backup definitions -> future object-storage target
 ```
 
 ## Platform Foundation
@@ -66,7 +67,7 @@ Apps -> Ceph PVCs / CNPG / Valkey -> Snapshots + VolSync -> MinIO (external brid
 | Secrets | Vault (HA Raft) + External Secrets | Secrets stay in Vault, synced into K8s secrets at runtime |
 | Storage | Rook/Ceph | `ceph-block` default StorageClass, `ceph-filesystem` for RWX workloads |
 | Snapshots | CSI Snapshot Controller | Default snapshot class `ceph-block-snap` |
-| Backups | VolSync + CNPG native backups | Snapshot + restic to MinIO for PVCs; CNPG to S3-compatible MinIO |
+| Backups | VolSync + CNPG native backups | Definitions retained but paused and fail-closed until a replacement object-storage target is selected |
 | Registry / charts | Harbor | Private registry, proxy cache, and OCI chart mirror at `harbor.rcrumana.xyz` |
 | Dependency updates | Renovate | Twice-monthly update discovery against GitHub + Harbor |
 | Shared SQL | CloudNativePG | 5 x HA Postgres clusters (`pg-ai`, `pg-media`, `pg-platform`, `pg-productivity`, `pg-other`) |
@@ -86,21 +87,17 @@ Apps -> Ceph PVCs / CNPG / Valkey -> Snapshots + VolSync -> MinIO (external brid
 
 ### Backups
 
-- VolSync replication sources exist across `ai`, `media`, `productivity`, `other`, and selected `databases` PVCs
-- Copy method: CSI snapshots (`ceph-block-snap`) plus restic push to MinIO
-- Typical retention: `daily 7 / weekly 4 / monthly 3`
-- CNPG clusters back up to `s3://cluster-backups/cnpg/*` via `minio-api.other.svc.cluster.local:9000`
-- CNPG retention policy: `30d`
+- VolSync replication sources remain declared across `ai`, `media`, `productivity`, `other`, and selected `databases` PVCs, but all sources are paused
+- Their shared object-store credentials point to a non-routable `.invalid` placeholder so accidental execution fails closed
+- CloudNativePG scheduled backups are suspended and WAL archiving is skipped; the clusters contain no active object-store backup configuration
+- A replacement S3-compatible target and retention policy still need to be selected
 - Emergency recovery also has a human-readable dump runbook and script that writes to `/NAS/dump`
 
 ### External Service Bridges
 
 The cluster also defines service bridges to systems outside Kubernetes:
 
-- MinIO (`192.168.1.19:9000/9002`)
 - OPNsense (`192.168.1.1:4443`)
-- TrueNAS (`192.168.1.19:443`, `192.168.1.20:443`)
-- Desktop / host dashboards (`192.168.1.10:7681`, `192.168.1.13:7681`, `192.168.1.14:7681`, `192.168.1.15:7681`)
 
 ## Workloads By Domain
 
@@ -116,14 +113,12 @@ For the full app catalog and ingress maps, read `docs/apps.md`.
 ### `media`
 
 - `arr-stack` (qBittorrent + Servarr + Jellyseerr + FlareSolverr + Gluetun + pf-sync)
-- `arr-lts` and `arr-lts2` for isolated long-term qBittorrent workflows
 - Jellyfin, Plex, and Immich
 - Media libraries mounted from host path `/NAS`
 
 ### `productivity`
 
 - Nextcloud + Collabora
-- Homarr
 - UniFi OS Server
 - Uptime Kuma
 - Vaultwarden
@@ -133,10 +128,8 @@ For the full app catalog and ingress maps, read `docs/apps.md`.
 ### `other`
 
 - Headscale + Headscale UI
-- Folding@Home
 - Hypermind
-- Desktop + node dashboard bridges
-- MinIO, OPNsense, and TrueNAS ingress/service bridges
+- OPNsense ingress/service bridge
 
 ### `web`
 

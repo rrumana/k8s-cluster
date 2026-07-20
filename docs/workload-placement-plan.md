@@ -317,8 +317,6 @@ run on Eva.
 | Workload | Target | Exact preferred node | Spread | Justification |
 | --- | --- | --- | --- | --- |
 | `media/arr-stack` | storage | `eva-3` for current thermal balancing | sole active qBittorrent | Main qBittorrent/Servarr stack is sustained network and CephFS IO. Use the host-localized `media-library-torrent-eva-3` mount with 128 KiB readahead and keep `/temp` local. |
-| `media/arr-lts` | storage standby | `eva-2` if restored | zero replicas during rollback window | Retained only as a rollback client after full qBittorrent consolidation. Its optimized eva-2 mount remains available but should not run concurrently in steady state. |
-| `media/arr-lts2` | storage standby | `eva-3` if restored | zero replicas during rollback window | Retained only as the earlier canary/rollback client. Its config and localized mount remain intact during testing. |
 | `media/plex` | storage | `eva-2` preferred | anti-affined from Jellyfin | Plex reads large media files from CephFS. Direct-play workloads benefit from storage proximity. Keep transcode on local scratch. If transcoding load proves Radeon 610 is insufficient, move Plex to a control GPU node and accept the storage hop. |
 | `media/jellyfin` | storage | `eva-3` preferred | anti-affined from Plex | Same media-read reasoning as Plex. Jellyfin should use local cache/transcode and normal `media-library`, not the torrent PVC. |
 | `media/immich-server` | control | spread/any control node | control preferred | Immich is compute/GPU and app-latency oriented. Its photo PVC is important but not the same high-throughput immutable media path. The HX370/890M nodes are better suited for video/photo processing. |
@@ -328,8 +326,6 @@ run on Eva.
 The current media placement is:
 
 - `arr-stack` active on `eva-3`
-- `arr-lts` retained at zero replicas with eva-2 placement
-- `arr-lts2` retained at zero replicas with eva-3 placement
 - `plex` preferred on `eva-2`
 - `jellyfin` preferred on `eva-3`
 
@@ -394,7 +390,6 @@ it on control.
 | `productivity/nextcloud` | control | single replica, control preferred | User-facing app with moderate RBD appdata. Compute/app latency and stronger control-node GPU/CPU matter more than storage locality. DB may move to Eva separately. |
 | `productivity/elasticsearch` | control | single replica, control preferred | Small 8 GiB app-local search service. No current evidence of IO saturation. |
 | `productivity/collabora` | control | single replica, control preferred | CPU/app workload, no PVC. |
-| `productivity/homarr-helm` | control | single replica, control preferred | Dashboard app, not storage-bound. |
 | `productivity/homepage` | control | three replicas, one per control node | Stateless dashboard. |
 | `productivity/unifi-os-server` | control | single replica, control preferred | Stateful singleton with several small RBD PVCs. Keep near general network/control services. |
 | `productivity/uptime-kuma` | control | single replica, control preferred | Small stateful monitor. No storage-throughput justification. |
@@ -408,12 +403,7 @@ it on control.
 | `other/headscale` | control | single replica, control preferred | Network coordination service with small PVC. No storage-throughput justification. |
 | `other/headscale-ui` | control | single replica, control preferred | UI, no PVC. |
 | `other/hypermind` | control | single replica, control preferred | No PVC. Keep on default compute pool. |
-| `other/foldingathome` | control | three replicas across control nodes | Compute workload. If it uses GPU, the control nodes have better GPUs. |
-| `other/host-dashboards` | external/service-only | n/a | Kubernetes Services/Endpoints only. |
-| `other/minio` | external/service-only | n/a | External endpoint. No pod placement. |
 | `other/opnsense` | external/service-only | n/a | External endpoint. No pod placement. |
-| `other/truenas` | external/service-only | n/a | External endpoint. No pod placement. |
-| `other/truenas-2` | external/service-only | n/a | External endpoint. No pod placement. |
 
 ### Web
 
