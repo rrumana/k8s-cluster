@@ -39,7 +39,6 @@ resources:
   - portfolio-app.yaml
   - portfolio-staging-app.yaml
   - opnsense-app.yaml
-  - minio-app.yaml
   - arr-app.yaml
   - collabora-app.yaml
   - elasticsearch-app.yaml
