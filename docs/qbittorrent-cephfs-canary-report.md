@@ -260,3 +260,43 @@ all 337 PGs active and clean.
 This is a short post-rollout sample rather than an endurance result. The next
 useful evidence is steady-state queue latency, page-cache refaults, and Ceph
 read operations over several days of ordinary peer demand.
+
+## 2026-07-20 post-restart throughput follow-up
+
+The main client sustained a 97.9 MiB/s average, 109.2 MiB/s median, and
+111.2 MiB/s maximum from 12:00 through 14:20. After the pod restarted at
+14:24, it averaged 84.5 MiB/s and did not exceed 89.0 MiB/s during the next
+72 one-minute samples. This step change coincided with reconnecting the peer
+set, not with a Ceph or node failure.
+
+Live diagnostics after the restart showed:
+
+- zero queued qBittorrent I/O jobs, 268-269 ms average queue time, and no read
+  cache overload;
+- about 56 MiB/s of reads from the CephFS bulk pool while qBittorrent uploaded
+  73-84 MiB/s, with the balance served from page cache;
+- about 0.28 CPU cores used, negligible CPU throttling, no tunnel packet drops,
+  and a healthy 2.5 Gb/s physical link;
+- working port forwarding and inbound reachability: 380 of 526 peers sampled
+  on active torrents were incoming connections;
+- global upload-slot saturation: 121 peers were explicitly unchoked, 136 were
+  transferring, and another 54 interested peers were choked with the global
+  limit set to 128;
+- a qBittorrent cgroup at its 6 GiB ceiling, consisting of roughly 700 MiB RSS
+  and 5.6 GiB file cache, with continuing cache reclaim and refaults but no OOM.
+
+The primary explanation is therefore a slower per-peer mix after reconnecting,
+made into an aggregate ceiling by the 128-slot limit. Storage cache pressure is
+a secondary efficiency issue, not the active throughput bottleneck.
+
+The follow-up GitOps posture raises global upload slots to 256, keeps the
+8-per-torrent bound, retains the live setting of three asynchronous I/O
+threads, and raises the qBittorrent memory limit to 8 GiB. The port-forward
+helper now reconciles these performance preferences from declarative
+environment values instead of relying on mutable PVC state.
+
+The `egress-qos` DaemonSet was also only scheduled on the three control nodes,
+so the `traffic-tier=bulk-seed` pod on tainted `eva-3` was not being classified.
+The DaemonSet now tolerates the storage taint and uses a kubectl client matching
+the Kubernetes 1.36 cluster. Its 700 Mbit/s bulk rate remains a guarantee; the
+class can borrow up to the 2.5 Gbit/s link ceiling when bandwidth is available.

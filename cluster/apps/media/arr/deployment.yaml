@@ -138,6 +138,14 @@ spec:
           env:
             - { name: PF_FILE, value: "/pf/state/forwarded_port" }
             - { name: QB_WEBUI_PORT, value: "8020" }
+            - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "256" }
+            - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "8" }
+            - { name: QB_DISK_IO_TYPE, value: "3" }
+            - { name: QB_ASYNC_IO_THREADS, value: "3" }
+            - { name: QB_HASHING_THREADS, value: "4" }
+            - { name: QB_SEND_BUFFER_LOW_WATERMARK, value: "16384" }
+            - { name: QB_SEND_BUFFER_WATERMARK, value: "131072" }
+            - { name: QB_SEND_BUFFER_WATERMARK_FACTOR, value: "250" }
             - { name: QB_USERNAME, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: username } } }
             - { name: QB_PASSWORD, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: password } } }
           volumeMounts:
@@ -164,7 +172,7 @@ spec:
             - { name: temp,        mountPath: /temp }
           resources:
             requests: { cpu: "300m", memory: "2Gi" }
-            limits:   { cpu: "2", memory: "6Gi" }
+            limits:   { cpu: "2", memory: "8Gi" }
 
         - name: sonarr
           image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.16.2944-ls298

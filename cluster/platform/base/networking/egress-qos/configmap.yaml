@@ -17,7 +17,7 @@ data:
     : "${LABEL_SELECTOR:=traffic-tier=bulk-seed}"
     : "${IPSET_NAME:=bulkseed-pods}"
     : "${FW_MARK:=1}"
-    : "${KUBECTL_VERSION:=v1.30.2}"
+    : "${KUBECTL_VERSION:=v1.36.2}"
 
     install_tools() {
       apk add --no-cache iproute2 iptables ipset jq curl >/dev/null

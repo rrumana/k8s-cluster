@@ -22,6 +22,10 @@ spec:
           effect: NoSchedule
         - key: "node-role.kubernetes.io/master"
           effect: NoSchedule
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       containers:
         - name: shaper
           image: alpine:3.24
@@ -50,7 +54,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             - name: KUBECTL_VERSION
-              value: "v1.30.2"
+              value: "v1.36.2"
           command: ["/bin/sh", "/etc/egress-qos/setup.sh"]
           volumeMounts:
             - name: script
