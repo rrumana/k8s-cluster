@@ -53,7 +53,6 @@ resources:
   - nextcloud-app.yaml
   - plex-app.yaml
   - headscale-app.yaml
-  - foldingathome-app.yaml
   - harbor-app.yaml
   - host-dashboards-app.yaml
   - renovate-app.yaml
