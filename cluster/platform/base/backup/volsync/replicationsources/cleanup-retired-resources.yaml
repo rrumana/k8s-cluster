@@ -1,0 +1,139 @@
+---
+# One-time exact-name cleanup for storage and TLS secrets left behind by
+# retired applications. Remove this manifest after the Job completes.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: retired-resource-cleanup
+  namespace: backup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: retired-resource-cleanup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    resourceNames:
+      - config-foldingathome-0
+      - config-foldingathome-1
+      - config-foldingathome-2
+      - data-homarr-helm-mysql-0
+      - data-homarr-redis-0
+    verbs:
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    resourceNames:
+      - qbit-lts-rcrumana-xyz-tls
+      - qbit-lts2-rcrumana-xyz-tls
+      - homarr-rcrumana-xyz-tls
+      - homarr-k8s-rcrumana-xyz-tls
+      - balthasar-rcrumana-xyz-tls
+      - casper-rcrumana-xyz-tls
+      - desktop-rcrumana-xyz-tls
+      - melchior-rcrumana-xyz-tls
+      - minio-rcrumana-xyz-tls
+      - minio-api-rcrumana-xyz-tls
+      - nas-rcrumana-xyz-tls
+      - nas-2-rcrumana-xyz-tls
+    verbs:
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: retired-resource-cleanup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: retired-resource-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: retired-resource-cleanup
+    namespace: backup
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: retired-resource-cleanup-v1
+  namespace: backup
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: retired-resource-cleanup
+      automountServiceAccountToken: true
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cleanup
+          image: harbor.rcrumana.xyz/mirror/bitnami/os-shell@sha256:53be43fdffe150388cdc08299d885cbeee92d7a35cdd26d2cfa620aa7d5bcd76
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ec
+          args:
+            - |
+              api_server="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}"
+              token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+              ca_file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+              delete_core_resource() {
+                namespace="$1"
+                resource="$2"
+                name="$3"
+                status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+                  --cacert "$ca_file" \
+                  --header "Authorization: Bearer $token" \
+                  --request DELETE \
+                  "$api_server/api/v1/namespaces/$namespace/$resource/$name?propagationPolicy=Background" || true)"
+                case "$status" in
+                  200|202|404) echo "$resource $namespace/$name removed or already absent" ;;
+                  *) echo "Unable to delete $resource $namespace/$name (HTTP $status)" >&2; exit 1 ;;
+                esac
+              }
+
+              delete_core_resource other persistentvolumeclaims config-foldingathome-0
+              delete_core_resource other persistentvolumeclaims config-foldingathome-1
+              delete_core_resource other persistentvolumeclaims config-foldingathome-2
+              delete_core_resource productivity persistentvolumeclaims data-homarr-helm-mysql-0
+              delete_core_resource productivity persistentvolumeclaims data-homarr-redis-0
+
+              delete_core_resource media secrets qbit-lts-rcrumana-xyz-tls
+              delete_core_resource media secrets qbit-lts2-rcrumana-xyz-tls
+              delete_core_resource productivity secrets homarr-rcrumana-xyz-tls
+              delete_core_resource productivity secrets homarr-k8s-rcrumana-xyz-tls
+              delete_core_resource other secrets balthasar-rcrumana-xyz-tls
+              delete_core_resource other secrets casper-rcrumana-xyz-tls
+              delete_core_resource other secrets desktop-rcrumana-xyz-tls
+              delete_core_resource other secrets melchior-rcrumana-xyz-tls
+              delete_core_resource other secrets minio-rcrumana-xyz-tls
+              delete_core_resource other secrets minio-api-rcrumana-xyz-tls
+              delete_core_resource other secrets nas-rcrumana-xyz-tls
+              delete_core_resource other secrets nas-2-rcrumana-xyz-tls
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
