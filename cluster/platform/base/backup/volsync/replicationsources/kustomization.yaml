@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ai.yaml
+  - cleanup-failed-jobs.yaml
   - media.yaml
   - other.yaml
   - platform.yaml

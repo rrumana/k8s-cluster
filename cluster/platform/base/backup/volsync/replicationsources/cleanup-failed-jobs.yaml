@@ -1,0 +1,102 @@
+---
+# One-time cleanup of Jobs that failed before replication was paused for the
+# NAS removal. Remove this manifest after the Job completes.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: volsync-failed-job-cleanup
+  namespace: backup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: volsync-failed-job-cleanup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    resourceNames:
+      - volsync-src-immich-photos-backup
+      - volsync-src-jellyfin-config-backup
+      - volsync-src-plex-config-backup
+      - volsync-src-nextcloud-appdata-backup
+    verbs:
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: volsync-failed-job-cleanup
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: volsync-failed-job-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: volsync-failed-job-cleanup
+    namespace: backup
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: volsync-failed-job-cleanup
+  namespace: backup
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: volsync-failed-job-cleanup
+      automountServiceAccountToken: true
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cleanup
+          # Digest is the image already running in this cluster's unifi init container.
+          image: harbor.rcrumana.xyz/mirror/bitnami/os-shell@sha256:53be43fdffe150388cdc08299d885cbeee92d7a35cdd26d2cfa620aa7d5bcd76
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ec
+          args:
+            - |
+              api_server="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}"
+              token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+              ca_file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+              delete_job() {
+                namespace="$1"
+                name="$2"
+                status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+                  --cacert "$ca_file" \
+                  --header "Authorization: Bearer $token" \
+                  --request DELETE \
+                  "$api_server/apis/batch/v1/namespaces/$namespace/jobs/$name?propagationPolicy=Background" || true)"
+                case "$status" in
+                  200|202|404) echo "Job $namespace/$name removed or already absent" ;;
+                  *) echo "Unable to delete Job $namespace/$name (HTTP $status)" >&2; exit 1 ;;
+                esac
+              }
+
+              delete_job media volsync-src-immich-photos-backup
+              delete_job media volsync-src-jellyfin-config-backup
+              delete_job media volsync-src-plex-config-backup
+              delete_job productivity volsync-src-nextcloud-appdata-backup
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
