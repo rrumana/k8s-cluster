@@ -4,6 +4,8 @@ metadata:
   name: opensearch-logs
   namespace: search
 spec:
+  confMgmt:
+    smartScaler: true
   general:
     serviceName: opensearch-logs
     version: "3.4.0"
@@ -35,7 +37,7 @@ spec:
     # Temporary source pool. Remove after the app-replicated pool is green and
     # OpenSearch has safely drained every shard from these nodes.
     - component: logs
-      replicas: 3
+      replicas: 0
       diskSize: "200Gi"
       jvm: "-Xms2g -Xmx2g"
       nodeSelector:
