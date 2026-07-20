@@ -47,16 +47,19 @@ subjects:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: volsync-failed-job-cleanup
+  name: volsync-failed-job-cleanup-v2
   namespace: backup
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  activeDeadlineSeconds: 300
   backoffLimit: 0
   template:
     spec:
       serviceAccountName: volsync-failed-job-cleanup
       automountServiceAccountToken: true
+      imagePullSecrets:
+        - name: harbor-pull-creds
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
