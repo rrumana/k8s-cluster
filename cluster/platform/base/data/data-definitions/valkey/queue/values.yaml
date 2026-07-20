@@ -51,7 +51,7 @@ replica:
   replicaCount: 2
   persistence:
     enabled: true
-    storageClass: ceph-block
+    storageClass: ceph-block-app-replicated
     size: 20Gi
   resources:
     requests:
