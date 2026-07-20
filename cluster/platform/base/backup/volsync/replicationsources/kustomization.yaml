@@ -7,3 +7,14 @@ resources:
   - other.yaml
   - platform.yaml
   - productivity.yaml
+
+# Temporary NAS-removal pause. Remove this patch to resume scheduled replication.
+patches:
+  - target:
+      group: volsync.backube
+      version: v1alpha1
+      kind: ReplicationSource
+    patch: |-
+      - op: add
+        path: /spec/paused
+        value: true

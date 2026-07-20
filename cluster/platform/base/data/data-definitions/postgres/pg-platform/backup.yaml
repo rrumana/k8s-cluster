@@ -6,6 +6,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "10"
 spec:
   schedule: "0 0 3 * * *"
+  # Temporary NAS-removal pause. Remove to resume scheduled base backups.
+  suspend: true
   backupOwnerReference: cluster
   cluster:
     name: pg-platform

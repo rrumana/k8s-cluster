@@ -4,6 +4,8 @@ metadata:
   name: pg-ai
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
+    # Temporary NAS-removal pause. Remove to resume WAL archiving.
+    cnpg.io/skipWalArchiving: "enabled"
   labels:
     app.kubernetes.io/name: pg-ai
     app.kubernetes.io/part-of: postgres
