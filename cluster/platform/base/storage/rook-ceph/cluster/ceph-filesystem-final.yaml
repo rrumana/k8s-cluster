@@ -34,7 +34,9 @@ spec:
   preserveFilesystemOnDelete: true
   metadataServer:
     activeCount: 1
-    activeStandby: true
+    # The legacy filesystem's broad anti-affinity occupies the other two
+    # storage nodes. Enable the standby after that filesystem is retired.
+    activeStandby: false
     placement:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
