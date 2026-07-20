@@ -41,7 +41,6 @@ resources:
   - opnsense-app.yaml
   - minio-app.yaml
   - arr-app.yaml
-  - arr-lts-app.yaml
   - collabora-app.yaml
   - elasticsearch-app.yaml
   - homepage-app.yaml
