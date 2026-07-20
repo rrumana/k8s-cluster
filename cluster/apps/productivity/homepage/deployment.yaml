@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-07-11-dashboard-alignment-cache-fix"
+        homepage.rcrumana.xyz/config-revision: "2026-07-20-dashboard-consolidation"
         linkerd.io/inject: enabled
       labels:
         app: homepage
