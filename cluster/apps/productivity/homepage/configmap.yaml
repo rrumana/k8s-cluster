@@ -14,6 +14,18 @@ data:
     title: Rcrumana Cluster
     language: en
     target: _blank
+    theme: dark
+    color: slate
+    headerStyle: clean
+    hideVersion: true
+    disableUpdateCheck: true
+    background:
+      image: /images/dashboard-background.webp
+      blur: sm
+      saturate: 70
+      brightness: 65
+      opacity: 90
+    cardBlur: md
     statusStyle: dot
     useEqualHeights: true
     layout:
@@ -189,14 +201,12 @@ data:
         - LibreChat:
             icon: librechat.png
             href: https://chat.rcrumana.xyz
-            siteMonitor: http://librechat.ai.svc.cluster.local/health
             description: AI chat frontend
             namespace: ai
             app: librechat
         - Vaultwarden:
             icon: vaultwarden.png
             href: https://vault.rcrumana.xyz
-            siteMonitor: http://vaultwarden.productivity.svc.cluster.local/alive
             description: Password vault
             namespace: productivity
             app: vaultwarden
@@ -215,14 +225,12 @@ data:
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
-            siteMonitor: http://uptime-kuma.productivity.svc.cluster.local
             description: Service uptime checks
             namespace: productivity
             app: uptime-kuma
         - Hypermind:
             icon: mdi-brain
             href: https://hypermind.rcrumana.xyz
-            siteMonitor: http://hypermind.other.svc.cluster.local/api/health
             description: Shared map and chat
             namespace: other
             app: hypermind
@@ -649,6 +657,29 @@ data:
   widgets.yaml: ""
   docker.yaml: ""
   custom.css: |
+    /* Translucent cards keep the background visible without sacrificing contrast. */
+    .service-card {
+      background-color: rgba(15, 23, 42, 0.56) !important;
+      border: 1px solid rgba(148, 163, 184, 0.18) !important;
+      box-shadow: 0 12px 30px rgba(2, 6, 23, 0.24) !important;
+      transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .service-card:hover {
+      background-color: rgba(15, 23, 42, 0.68) !important;
+      border-color: rgba(56, 189, 248, 0.34) !important;
+      transform: translateY(-1px);
+    }
+
+    #information-widgets {
+      border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+
+    /* Theme and color are fixed, so the remaining footer controls are unnecessary. */
+    #footer {
+      display: none !important;
+    }
+
     /* Keep a single-card nested column aligned with its taller sibling column. */
     @media (min-width: 768px) {
       #layout-groups .services-group.subgroup:has(> div > .services-list > .service:only-child) > div,

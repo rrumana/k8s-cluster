@@ -13,6 +13,14 @@ resources:
   - pdb.yaml
   - vpa.yaml
 
+configMapGenerator:
+  - name: homepage-assets
+    files:
+      - background.webp=assets/dashboard-background.webp
+    options:
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
+
 commonLabels:
   app.kubernetes.io/name: homepage
   app.kubernetes.io/managed-by: argocd

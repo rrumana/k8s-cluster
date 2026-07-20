@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-07-20-dashboard-integrations"
+        homepage.rcrumana.xyz/config-revision: "2026-07-20-dashboard-styling"
         linkerd.io/inject: enabled
       labels:
         app: homepage
@@ -148,6 +148,10 @@ spec:
                       revalidate();
                     '
           volumeMounts:
+            - name: homepage-assets
+              mountPath: /app/public/images/dashboard-background.webp
+              subPath: background.webp
+              readOnly: true
             - name: homepage-config
               mountPath: /app/config/kubernetes.yaml
               subPath: kubernetes.yaml
@@ -191,6 +195,9 @@ spec:
             - name: tmp
               mountPath: /tmp
       volumes:
+        - name: homepage-assets
+          configMap:
+            name: homepage-assets
         - name: homepage-config
           configMap:
             name: homepage-config
