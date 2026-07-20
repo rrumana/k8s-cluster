@@ -14,7 +14,6 @@ resources:
   - storage-class.yaml
   - storage-class-ceph-block-app-replicated.yaml
   - storage-class-ceph-block-critical.yaml
-  - storage-class-ceph-block-db.yaml
   - storage-class-ceph-filesystem.yaml
   - storage-class-cephfs-replicated.yaml
   - storage-class-cephfs-bulk.yaml

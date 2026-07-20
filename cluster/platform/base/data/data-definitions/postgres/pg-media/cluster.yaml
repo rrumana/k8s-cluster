@@ -30,10 +30,10 @@ spec:
         effect: NoSchedule
 
   storage:
-    storageClass: ceph-block
+    storageClass: ceph-block-app-replicated
     size: 100Gi
   walStorage:
-    storageClass: ceph-block
+    storageClass: ceph-block-app-replicated
     size: 30Gi
 
   enableSuperuserAccess: true
