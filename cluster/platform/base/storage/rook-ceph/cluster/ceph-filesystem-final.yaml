@@ -1,0 +1,58 @@
+apiVersion: ceph.rook.io/v1
+kind: CephFilesystem
+metadata:
+  name: cephfs
+  namespace: rook-ceph
+spec:
+  metadataPool:
+    failureDomain: host
+    parameters:
+      pg_autoscale_mode: "on"
+    replicated:
+      size: 3
+      requireSafeReplicaSize: true
+  dataPools:
+    # The first data pool is CephFS's immutable default. Keep the replicated
+    # pool first so future critical subvolumes never default to EC storage.
+    - name: replicated
+      failureDomain: host
+      parameters:
+        pg_autoscale_mode: "on"
+      replicated:
+        size: 3
+        requireSafeReplicaSize: true
+    - name: bulk
+      failureDomain: host
+      parameters:
+        allow_ec_optimizations: "true"
+        allow_ec_overwrites: "true"
+        bulk: "true"
+        pg_autoscale_mode: "on"
+      erasureCoded:
+        dataChunks: 2
+        codingChunks: 1
+  preserveFilesystemOnDelete: true
+  metadataServer:
+    activeCount: 1
+    activeStandby: true
+    placement:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: homelab.rcrumana.xyz/node-plane
+                  operator: In
+                  values:
+                    - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: rook-ceph-mds
+                rook_file_system: cephfs
+            topologyKey: kubernetes.io/hostname

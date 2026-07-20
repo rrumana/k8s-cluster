@@ -7,6 +7,7 @@ resources:
   - ceph-cluster.yaml
   - ceph-block-pool.yaml
   - ceph-filesystem.yaml
+  - ceph-filesystem-final.yaml
   - ceph-nfs-bulk.yaml
   - ceph-nfs-bulk-export-job.yaml
   - ceph-nfs-bulk-service.yaml
@@ -15,7 +16,5 @@ resources:
   - storage-class-ceph-block-app-replicated.yaml
   - storage-class-ceph-block-critical.yaml
   - storage-class-ceph-filesystem.yaml
-  - storage-class-cephfs-replicated.yaml
-  - storage-class-cephfs-bulk.yaml
   - volume-snapshot-class.yaml
   - toolbox.yaml
