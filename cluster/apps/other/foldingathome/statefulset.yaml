@@ -6,7 +6,7 @@ metadata:
     app: foldingathome
 spec:
   serviceName: foldingathome
-  replicas: 3
+  replicas: 0
   podManagementPolicy: Parallel
   revisionHistoryLimit: 2
   selector:
