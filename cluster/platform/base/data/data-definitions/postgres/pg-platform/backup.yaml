@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "10"
 spec:
   schedule: "0 0 3 * * *"
-  # Temporary NAS-removal pause. Remove to resume scheduled base backups.
+  # Safety hold while the Cluster has no object-store backup configuration.
   suspend: true
   backupOwnerReference: cluster
   cluster:

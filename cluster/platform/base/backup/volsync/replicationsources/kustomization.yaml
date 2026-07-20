@@ -8,7 +8,8 @@ resources:
   - platform.yaml
   - productivity.yaml
 
-# Temporary NAS-removal pause. Remove this patch to resume scheduled replication.
+# Safety pause while no object-storage target is configured. Reconfigure the
+# shared credentials before removing this patch.
 patches:
   - target:
       group: volsync.backube
