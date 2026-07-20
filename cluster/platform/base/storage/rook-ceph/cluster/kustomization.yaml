@@ -12,6 +12,7 @@ resources:
   - ceph-nfs-bulk-service.yaml
   - rook-config-override.yaml
   - storage-class.yaml
+  - storage-class-ceph-block-app-replicated.yaml
   - storage-class-ceph-block-critical.yaml
   - storage-class-ceph-block-db.yaml
   - storage-class-ceph-filesystem.yaml

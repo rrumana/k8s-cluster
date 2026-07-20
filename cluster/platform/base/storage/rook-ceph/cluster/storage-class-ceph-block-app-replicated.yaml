@@ -1,13 +1,11 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: ceph-block
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "false"
+  name: ceph-block-app-replicated
 provisioner: rook-ceph.rbd.csi.ceph.com
 parameters:
   clusterID: rook-ceph
-  pool: ceph-block
+  pool: ceph-block-app-replicated
   imageFormat: "2"
   imageFeatures: layering
   csi.storage.k8s.io/fstype: ext4

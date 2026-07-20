@@ -35,3 +35,16 @@ spec:
   replicated:
     size: 2
     requireSafeReplicaSize: true
+---
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: ceph-block-app-replicated
+  namespace: rook-ceph
+spec:
+  failureDomain: host
+  parameters:
+    pg_autoscale_mode: "on"
+  replicated:
+    size: 2
+    requireSafeReplicaSize: true
