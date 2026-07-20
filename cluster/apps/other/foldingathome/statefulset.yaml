@@ -7,6 +7,9 @@ metadata:
 spec:
   serviceName: foldingathome
   replicas: 0
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Retain
   podManagementPolicy: Parallel
   revisionHistoryLimit: 2
   selector:
