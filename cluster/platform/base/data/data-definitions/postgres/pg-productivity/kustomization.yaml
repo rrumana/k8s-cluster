@@ -6,4 +6,3 @@ namespace: databases
 resources:
   - cluster.yaml
   - backup.yaml
-  - homarr-database-cleanup.yaml

@@ -38,11 +38,6 @@ spec:
 
   enableSuperuserAccess: true
 
-  managed:
-    roles:
-      - name: homarr
-        ensure: absent
-
   monitoring:
     enablePodMonitor: true
 
