@@ -1,0 +1,12 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: homarr-cleanup
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  cluster:
+    name: pg-productivity
+  name: homarr
+  owner: homarr
+  ensure: absent
