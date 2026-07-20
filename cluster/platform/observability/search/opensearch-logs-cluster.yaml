@@ -11,6 +11,7 @@ spec:
     vendor: Opensearch
     serviceAccount: opensearch-logs
     setVMMaxMapCount: true
+    drainDataNodes: true
   initHelper:
     image: harbor.rcrumana.xyz/mirror/library/busybox:1.36
     version: "1.36"
@@ -31,6 +32,8 @@ spec:
       securityConfigSecret:
         name: opensearch-security-config
   nodePools:
+    # Temporary source pool. Remove after the app-replicated pool is green and
+    # OpenSearch has safely drained every shard from these nodes.
     - component: logs
       replicas: 3
       diskSize: "200Gi"
@@ -58,6 +61,49 @@ spec:
             matchLabels:
               opster.io/opensearch-cluster: opensearch-logs
               opster.io/opensearch-nodepool: logs
+      resources:
+        requests:
+          cpu: "1"
+          memory: 4Gi
+        limits:
+          cpu: "4"
+          memory: 8Gi
+      roles:
+        - cluster_manager
+        - data
+        - ingest
+    - component: logs-app-replicated
+      replicas: 3
+      diskSize: "200Gi"
+      persistence:
+        pvc:
+          storageClass: ceph-block-app-replicated
+          accessModes:
+            - ReadWriteOnce
+      jvm: "-Xms2g -Xmx2g"
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  opster.io/opensearch-cluster: opensearch-logs
+                  opster.io/opensearch-nodepool: logs-app-replicated
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              opster.io/opensearch-cluster: opensearch-logs
+              opster.io/opensearch-nodepool: logs-app-replicated
       resources:
         requests:
           cpu: "1"
