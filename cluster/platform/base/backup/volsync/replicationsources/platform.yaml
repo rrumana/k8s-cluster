@@ -77,7 +77,7 @@ metadata:
   name: valkey-queue-node-0-backup
   namespace: databases
 spec:
-  sourcePVC: valkey-data-valkey-queue-node-0
+  sourcePVC: valkey-data-valkey-queue-primary-0
   trigger:
     schedule: "20 4 * * *"
   restic:
@@ -140,7 +140,7 @@ metadata:
   name: valkey-queue-node-1-backup
   namespace: databases
 spec:
-  sourcePVC: valkey-data-valkey-queue-node-1
+  sourcePVC: valkey-data-valkey-queue-replicas-0
   trigger:
     schedule: "35 4 * * *"
   restic:
