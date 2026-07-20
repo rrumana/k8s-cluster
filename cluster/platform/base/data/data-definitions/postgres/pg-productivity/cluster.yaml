@@ -36,26 +36,6 @@ spec:
     storageClass: ceph-block
     size: 30Gi
 
-  backup:
-    barmanObjectStore:
-      destinationPath: s3://cluster-backups/cnpg/pg-productivity
-      endpointURL: http://minio-api.other.svc.cluster.local:9000
-      s3Credentials:
-        accessKeyId:
-          name: pg-productivity-backup-s3-creds
-          key: AWS_ACCESS_KEY_ID
-        secretAccessKey:
-          name: pg-productivity-backup-s3-creds
-          key: AWS_SECRET_ACCESS_KEY
-      data:
-        compression: gzip
-        jobs: 2
-      wal:
-        compression: gzip
-        maxParallel: 4
-    retentionPolicy: "30d"
-    target: prefer-standby
-
   enableSuperuserAccess: true
 
   monitoring:
