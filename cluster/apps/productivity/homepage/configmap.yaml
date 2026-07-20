@@ -189,12 +189,14 @@ data:
         - LibreChat:
             icon: librechat.png
             href: https://chat.rcrumana.xyz
+            siteMonitor: http://librechat.ai.svc.cluster.local/health
             description: AI chat frontend
             namespace: ai
             app: librechat
         - Vaultwarden:
             icon: vaultwarden.png
             href: https://vault.rcrumana.xyz
+            siteMonitor: http://vaultwarden.productivity.svc.cluster.local/alive
             description: Password vault
             namespace: productivity
             app: vaultwarden
@@ -204,25 +206,44 @@ data:
             description: Network controller
             namespace: productivity
             app: unifi-os-server
+            widget:
+              type: unifi
+              url: https://unifi.rcrumana.xyz
+              key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+              fields: ["uptime", "wan", "lan_users", "wlan_users"]
+              hideErrors: true
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
+            siteMonitor: http://uptime-kuma.productivity.svc.cluster.local
             description: Service uptime checks
             namespace: productivity
             app: uptime-kuma
-            widget:
-              type: uptimekuma
-              url: http://uptime-kuma.productivity.svc.cluster.local
-              slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
-              fields: ["up", "down", "uptime", "incident"]
-              hideErrors: true
         - Hypermind:
             icon: mdi-brain
             href: https://hypermind.rcrumana.xyz
-            siteMonitor: http://hypermind.other.svc.cluster.local
+            siteMonitor: http://hypermind.other.svc.cluster.local/api/health
             description: Shared map and chat
             namespace: other
             app: hypermind
+            widget:
+              type: customapi
+              url: http://hypermind.other.svc.cluster.local/api/stats
+              refreshInterval: 30000
+              mappings:
+                - field: peers
+                  label: Peers
+                  format: size
+                - field: totalUnique
+                  label: Known
+                  format: number
+                - field: diagnostics.heartbeatsReceived
+                  label: Received
+                  format: number
+                - field: diagnostics.heartbeatsRelayed
+                  label: Relayed
+                  format: number
+              hideErrors: true
 
     - Infrastructure:
         - Ceph:
@@ -308,7 +329,7 @@ data:
               username: "{{HOMEPAGE_VAR_OPNSENSE_KEY}}"
               password: "{{HOMEPAGE_VAR_OPNSENSE_SECRET}}"
               wan: "{{HOMEPAGE_VAR_OPNSENSE_WAN}}"
-              fields: ["cpu", "memory", "wanUpload", "wanDownload"]
+              fields: ["cpu", "wanUpload", "wanDownload"]
               hideErrors: true
         - Argo CD:
             icon: argo-cd.png

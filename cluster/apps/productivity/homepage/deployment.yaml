@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-07-20-dashboard-consolidation"
+        homepage.rcrumana.xyz/config-revision: "2026-07-20-dashboard-integrations"
         linkerd.io/inject: enabled
       labels:
         app: homepage
