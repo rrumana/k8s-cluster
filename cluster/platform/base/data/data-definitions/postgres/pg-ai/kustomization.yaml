@@ -4,6 +4,5 @@ kind: Kustomization
 namespace: databases
 
 resources:
-  - externalsecret.yaml
   - cluster.yaml
   - backup.yaml
