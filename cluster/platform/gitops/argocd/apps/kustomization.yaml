@@ -86,4 +86,4 @@ patches:
         path: /spec/source/helm/parameters
         value:
           - name: server.ha.replicas
-            value: "2"
+            value: "1"
