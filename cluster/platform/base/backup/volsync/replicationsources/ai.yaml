@@ -77,7 +77,7 @@ metadata:
   name: librechat-data-backup
   namespace: ai
 spec:
-  sourcePVC: librechat-data
+  sourcePVC: librechat-data-critical
   trigger:
     schedule: "5 7 * * *"
   restic:
@@ -140,7 +140,7 @@ metadata:
   name: librechat-mongodb-data-backup
   namespace: ai
 spec:
-  sourcePVC: librechat-mongodb-data
+  sourcePVC: librechat-mongodb-data-critical
   trigger:
     schedule: "20 7 * * *"
   restic:
@@ -203,7 +203,7 @@ metadata:
   name: librechat-meilisearch-data-backup
   namespace: ai
 spec:
-  sourcePVC: librechat-meilisearch-data
+  sourcePVC: librechat-meilisearch-data-critical
   trigger:
     schedule: "35 7 * * *"
   restic:

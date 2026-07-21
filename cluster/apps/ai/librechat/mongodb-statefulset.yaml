@@ -21,6 +21,27 @@ spec:
     spec:
       serviceAccountName: librechat-mongodb
       terminationGracePeriodSeconds: 30
+      initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: migration-source
+              mountPath: /source
+              readOnly: true
+            - name: mongodb-data
+              mountPath: /target
       containers:
         - name: mongodb
           image: harbor.rcrumana.xyz/proxy-dockerhub/library/mongo:8.3
@@ -80,6 +101,9 @@ spec:
             - name: mongodb-data
               mountPath: /data/db
       volumes:
-        - name: mongodb-data
+        - name: migration-source
           persistentVolumeClaim:
             claimName: librechat-mongodb-data
+        - name: mongodb-data
+          persistentVolumeClaim:
+            claimName: librechat-mongodb-data-critical

@@ -88,3 +88,94 @@ spec:
   resources:
     requests:
       storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-qbit-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-gluetun-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 256Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-sonarr-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-radarr-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-lidarr-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-prowlarr-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arr-stack-jellyseerr-config-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: ceph-block-critical
+  resources:
+    requests:
+      storage: 4Gi

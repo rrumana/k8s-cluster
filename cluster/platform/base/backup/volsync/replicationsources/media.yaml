@@ -77,7 +77,7 @@ metadata:
   name: arr-stack-gluetun-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-gluetun
+  sourcePVC: arr-stack-gluetun-critical
   trigger:
     schedule: "5 1 * * *"
   restic:
@@ -140,7 +140,7 @@ metadata:
   name: arr-stack-jellyseerr-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-jellyseerr-config
+  sourcePVC: arr-stack-jellyseerr-config-critical
   trigger:
     schedule: "20 1 * * *"
   restic:
@@ -203,7 +203,7 @@ metadata:
   name: arr-stack-lidarr-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-lidarr-config
+  sourcePVC: arr-stack-lidarr-config-critical
   trigger:
     schedule: "35 1 * * *"
   restic:
@@ -266,7 +266,7 @@ metadata:
   name: arr-stack-prowlarr-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-prowlarr-config
+  sourcePVC: arr-stack-prowlarr-config-critical
   trigger:
     schedule: "50 1 * * *"
   restic:
@@ -329,7 +329,7 @@ metadata:
   name: arr-stack-qbit-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-qbit-config
+  sourcePVC: arr-stack-qbit-config-critical
   trigger:
     schedule: "5 2 * * *"
   restic:
@@ -392,7 +392,7 @@ metadata:
   name: arr-stack-radarr-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-radarr-config
+  sourcePVC: arr-stack-radarr-config-critical
   trigger:
     schedule: "20 2 * * *"
   restic:
@@ -455,7 +455,7 @@ metadata:
   name: arr-stack-sonarr-config-backup
   namespace: media
 spec:
-  sourcePVC: arr-stack-sonarr-config
+  sourcePVC: arr-stack-sonarr-config-critical
   trigger:
     schedule: "35 2 * * *"
   restic:

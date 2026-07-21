@@ -6,6 +6,8 @@ metadata:
     app: librechat
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -19,6 +21,27 @@ spec:
         app: librechat
     spec:
       serviceAccountName: librechat
+      initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: migration-source
+              mountPath: /source
+              readOnly: true
+            - name: librechat-data
+              mountPath: /target
       containers:
         - name: librechat
           image: harbor.rcrumana.xyz/proxy-ghcr/danny-avila/librechat:v0.8.7-rc1
@@ -73,9 +96,12 @@ spec:
             matchLabels:
               app: librechat
       volumes:
-        - name: librechat-data
+        - name: migration-source
           persistentVolumeClaim:
             claimName: librechat-data
+        - name: librechat-data
+          persistentVolumeClaim:
+            claimName: librechat-data-critical
         - name: librechat-yaml
           configMap:
             name: librechat-yaml
