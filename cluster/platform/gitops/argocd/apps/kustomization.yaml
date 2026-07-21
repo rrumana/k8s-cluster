@@ -74,3 +74,16 @@ resources:
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd
+
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: vault
+    patch: |-
+      - op: add
+        path: /spec/source/helm/parameters
+        value:
+          - name: server.ha.replicas
+            value: "2"
