@@ -71,6 +71,31 @@ spec:
         key: apps/platform/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: valkey-queue-node-0-backup
+  namespace: databases
+spec:
+  sourcePVC: valkey-queue-primary-app-replicated
+  trigger:
+    schedule: "20 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-block-snap
+    repository: valkey-queue-node-0-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -110,3 +135,28 @@ spec:
       remoteRef:
         key: apps/platform/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: valkey-queue-node-1-backup
+  namespace: databases
+spec:
+  sourcePVC: valkey-data-valkey-queue-replicas-0
+  trigger:
+    schedule: "35 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-block-snap
+    repository: valkey-queue-node-1-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
