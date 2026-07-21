@@ -140,7 +140,7 @@ metadata:
   name: nextcloud-appdata-backup
   namespace: productivity
 spec:
-  sourcePVC: nextcloud-appdata
+  sourcePVC: nextcloud-appdata-critical
   trigger:
     schedule: "20 5 * * *"
   restic:

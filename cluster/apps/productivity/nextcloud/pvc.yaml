@@ -10,3 +10,16 @@ spec:
   resources:
     requests:
       storage: 64Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-appdata-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  storageClassName: ceph-block-critical
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 64Gi

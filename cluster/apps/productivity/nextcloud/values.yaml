@@ -11,6 +11,36 @@ nextcloud:
     usernameKey: nextcloud-username
     passwordKey: nextcloud-password
 
+  strategy:
+    type: Recreate
+
+  extraInitContainers:
+    - name: migrate-storage
+      image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+      command:
+        - sh
+        - -c
+        - |
+          set -eux
+          find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+          cp -a /source/. /target/
+          sync
+          du -sk /source /target
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      volumeMounts:
+        - name: migration-source
+          mountPath: /source
+          readOnly: true
+        - name: nextcloud-main
+          mountPath: /target
+
+  extraVolumes:
+    - name: migration-source
+      persistentVolumeClaim:
+        claimName: nextcloud-appdata
+
   phpConfigs:
     zz-uploads.ini: |-
       upload_max_filesize=10G
@@ -55,8 +85,6 @@ phpClientHttpsFix:
   protocol: https
 
 replicaCount: 1
-strategy:
-  type: Recreate
 
 podAnnotations:
   linkerd.io/inject: enabled
@@ -99,7 +127,7 @@ ingress:
 persistence:
   enabled: true
   accessMode: ReadWriteOnce
-  existingClaim: nextcloud-appdata
+  existingClaim: nextcloud-appdata-critical
 
 internalDatabase:
   enabled: false
