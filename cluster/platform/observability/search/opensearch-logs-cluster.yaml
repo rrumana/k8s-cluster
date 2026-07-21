@@ -36,7 +36,7 @@ spec:
   nodePools:
     - component: logs-app-replicated
       replicas: 3
-      diskSize: "200Gi"
+      diskSize: "400Gi"
       persistence:
         pvc:
           storageClass: ceph-block-app-replicated
