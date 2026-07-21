@@ -33,12 +33,19 @@ data:
         esac
       fi
 
-      if curl -fsS -c /tmp/c -b /tmp/c \
-           --data-urlencode "username=${QB_USERNAME}" \
-           --data-urlencode "password=${QB_PASSWORD}" \
-           "http://127.0.0.1:${WEBUI_PORT}/api/v2/auth/login" >/dev/null
-      then
-        prefs="$(curl -fsS -b /tmp/c "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/preferences")"
+      login_response="$(curl -fsS --connect-timeout 3 --max-time 10 \
+        -c /tmp/c -b /tmp/c \
+        --data-urlencode "username=${QB_USERNAME}" \
+        --data-urlencode "password=${QB_PASSWORD}" \
+        "http://127.0.0.1:${WEBUI_PORT}/api/v2/auth/login" 2>/dev/null || true)"
+      if [ "$login_response" = "Ok." ]; then
+        if ! prefs="$(curl -fsS --connect-timeout 3 --max-time 10 \
+          -b /tmp/c "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/preferences")"; then
+          echo "pf-sync(sidecar): preferences request failed"
+          qbit_available=false
+          sleep 5
+          continue
+        fi
         compact_prefs="$(printf '%s' "$prefs" | tr -d ' \n')"
         cur_alternative_webui_enabled="$(printf '%s' "$compact_prefs" | sed -n 's/.*"alternative_webui_enabled":\([^,}]*\).*/\1/p' || true)"
         cur_alternative_webui_path="$(printf '%s' "$compact_prefs" | sed -n 's/.*"alternative_webui_path":"\([^"]*\)".*/\1/p' || true)"
@@ -87,7 +94,7 @@ data:
               "$ALTERNATIVE_WEBUI_ENABLED" "$ALTERNATIVE_WEBUI_PATH")
           fi
 
-          if curl -fsS -b /tmp/c \
+          if curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
                --data-urlencode "json=$json" \
                "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
           then
@@ -105,11 +112,11 @@ data:
           echo "pf-sync(sidecar): refreshing qBittorrent interface binding"
           any_interface='{"current_network_interface": ""}'
           tun_interface='{"current_network_interface": "tun0"}'
-          if curl -fsS -b /tmp/c \
+          if curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
                --data-urlencode "json=$any_interface" \
                "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null \
             && sleep 10 \
-            && curl -fsS -b /tmp/c \
+            && curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
                --data-urlencode "json=$tun_interface" \
                "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
           then

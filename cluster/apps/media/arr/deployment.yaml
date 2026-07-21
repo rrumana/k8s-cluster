@@ -95,6 +95,22 @@ spec:
               else
                 echo "fix-perms: qBittorrent.conf missing"
               fi
+              # These paths contain a PID and pod hostname. An unclean node or
+              # pod shutdown leaves them on the PVC, causing qBittorrent to
+              # treat every replacement pod as a duplicate instance. No app
+              # containers are running during init, so they are always stale.
+              if [ -e /config/qBittorrent/lockfile ]; then
+                echo "fix-perms: removing stale qBittorrent process lock"
+                rm -f /config/qBittorrent/lockfile
+              fi
+              if [ -e /config/qBittorrent/qBittorrent-data.conf.lock ]; then
+                echo "fix-perms: removing stale qBittorrent data lock"
+                rm -f /config/qBittorrent/qBittorrent-data.conf.lock
+              fi
+              if [ -e /config/qBittorrent/ipc-socket ] || [ -S /config/qBittorrent/ipc-socket ]; then
+                echo "fix-perms: removing stale qBittorrent IPC socket"
+                rm -f /config/qBittorrent/ipc-socket
+              fi
               if [ -f /gluetun/servers.json ] && [ ! -s /gluetun/servers.json ]; then
                 echo "fix-perms: removing empty /gluetun/servers.json"
                 rm -f /gluetun/servers.json
@@ -203,6 +219,13 @@ spec:
             - { name: TORRENTING_PORT, value: "6881" }
           ports:
             - { name: webui, containerPort: 8020, protocol: TCP }
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "nc -z 127.0.0.1 8020"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           volumeMounts:
             - { name: qbit-config, mountPath: /config }
             - { name: media,       mountPath: /media }
