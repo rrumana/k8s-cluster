@@ -12,10 +12,10 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v9` is the active online seed. It mounts the
+- `media-library-cephfs-bulk-seed-v10` is the active online seed. It mounts the
   legacy source read-only and deterministically assigns every non-directory
   pathname to one of four whole-file streams by source device and inode, at
-  60 MiB/s per stream. Every name in a hard-link group therefore stays in one
+  64 MiB/s per stream. Every name in a hard-link group therefore stays in one
   rsync file list even when its paths span Downloads and an organized library.
   A serial full-tree convergence restores directory metadata, applies deletes, and
   provides a hard-link correctness boundary after the parallel phase.
@@ -42,7 +42,7 @@ change a live consumer or remove old data.
   roughly 3.25 TiB linked between Downloads and Shows and 589 GiB linked
   between Downloads and Movies. Never parallelize this tree by pathname
   branch: doing so would materialize most of those links as duplicate files.
-  The v9 device-and-inode assignment measured 1.28-1.45 TB of unique data per
+  The v10 device-and-inode assignment measured 1.28-1.45 TB of unique data per
   worker before activation.
 - Plex and Jellyfin are the direct live consumers. ARR is at zero replicas.
   The Ganesha `/media` export had no established external sessions during the
@@ -50,15 +50,16 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed has a 240 MiB/s combined logical cap across four
-  inode-disjoint 60 MiB/s streams. A 256 MiB/s cap reached the requested
+- The resumed concurrent seed has a 256 MiB/s combined logical cap across four
+  inode-disjoint 64 MiB/s streams. This cap previously reached the requested
   aggregate rate while OpenSearch recovery was also active, but OSD.0 then
   recorded 5-7 second BlueStore commit stalls and an actual SMART
-  thermal-management level-2 transition. The clean 224 MiB/s cap that followed
-  sustained only about 227 MiB/s aggregate reads and writes after OpenSearch
-  recovery completed. This intermediate cap uses the newly available headroom
-  to aim for 250 MiB/s in each direction without returning directly to the
-  event rate. It may run alongside
+  thermal-management level-2 transition. A clean 224 MiB/s fallback sustained
+  only about 227 MiB/s aggregate reads and writes. After OpenSearch recovery
+  completed, a clean 240 MiB/s probe still sustained only about 228/233 MiB/s.
+  The target cap was therefore restored with less total concurrent cluster I/O
+  than during the event, while retaining the same immediate material gates. It
+  may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency, SMART critical
   warnings, media-error counters, and actual device throttling remain within

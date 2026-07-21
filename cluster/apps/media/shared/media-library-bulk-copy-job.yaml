@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: media-library-cephfs-bulk-seed-v9
+  name: media-library-cephfs-bulk-seed-v10
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -55,7 +55,7 @@ spec:
               readonly inventory=/tmp/cephfs-bulk-inventory
               readonly file_list_prefix=/tmp/cephfs-bulk-files
               readonly stream_count=4
-              readonly per_stream_bwlimit_kib=61440
+              readonly per_stream_bwlimit_kib=65536
               declare -a child_pids=()
 
               stop_copy() {
