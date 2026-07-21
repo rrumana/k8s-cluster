@@ -16,6 +16,7 @@ resources:
   - cert-manager-app.yaml
   - cert-manager-extras-app.yaml
   - vault-app.yaml
+  - vault-app-replicated-app.yaml
   - external-secrets-app.yaml
   - external-secrets-extras-app.yaml
   - egress-qos-app.yaml

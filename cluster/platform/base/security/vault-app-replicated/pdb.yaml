@@ -1,0 +1,16 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vault-app-replicated
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+    app.kubernetes.io/component: server-migration
+    app.kubernetes.io/managed-by: argocd
+    vault.rcrumana.xyz/generation: app-replicated
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+      vault.rcrumana.xyz/generation: app-replicated
