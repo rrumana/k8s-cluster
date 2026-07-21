@@ -566,31 +566,6 @@ spec:
         key: apps/media/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
-apiVersion: volsync.backube/v1alpha1
-kind: ReplicationSource
-metadata:
-  name: immich-photos-backup
-  namespace: media
-spec:
-  sourcePVC: immich-photos
-  trigger:
-    schedule: "5 3 * * *"
-  restic:
-    copyMethod: Snapshot
-    volumeSnapshotClassName: ceph-block-snap
-    repository: immich-photos-backup-restic
-    cacheCapacity: 64Gi
-    unlock: "2026-06-17-immich-photos-stale-lock"
-    pruneIntervalDays: 14
-    moverSecurityContext:
-      runAsUser: 0
-      runAsGroup: 0
-      fsGroup: 0
-    retain:
-      daily: 7
-      weekly: 4
-      monthly: 3
----
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
