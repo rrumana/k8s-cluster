@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: unifi-os-server
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
   labels:
     app: unifi-os-server
 spec:
@@ -18,41 +20,6 @@ spec:
     spec:
       serviceAccountName: unifi-os-server
       terminationGracePeriodSeconds: 120
-      initContainers:
-        - name: migrate-storage
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-          command:
-            - sh
-            - -c
-            - |
-              set -eux
-              for volume in persistent var-log data srv var-lib-unifi var-lib-mongodb rabbitmq-ssl; do
-                source="/source/${volume}"
-                target="/target/${volume}"
-                find "$target" -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
-                cp -a "$source"/. "$target"/
-                sync
-                du -sk "$source" "$target"
-              done
-          volumeMounts:
-            - { name: persistent-source, mountPath: /source/persistent, readOnly: true }
-            - { name: persistent, mountPath: /target/persistent }
-            - { name: var-log-source, mountPath: /source/var-log, readOnly: true }
-            - { name: var-log, mountPath: /target/var-log }
-            - { name: data-source, mountPath: /source/data, readOnly: true }
-            - { name: data, mountPath: /target/data }
-            - { name: srv-source, mountPath: /source/srv, readOnly: true }
-            - { name: srv, mountPath: /target/srv }
-            - { name: var-lib-unifi-source, mountPath: /source/var-lib-unifi, readOnly: true }
-            - { name: var-lib-unifi, mountPath: /target/var-lib-unifi }
-            - { name: var-lib-mongodb-source, mountPath: /source/var-lib-mongodb, readOnly: true }
-            - { name: var-lib-mongodb, mountPath: /target/var-lib-mongodb }
-            - { name: rabbitmq-ssl-source, mountPath: /source/rabbitmq-ssl, readOnly: true }
-            - { name: rabbitmq-ssl, mountPath: /target/rabbitmq-ssl }
       containers:
         - name: unifi-os-server
           image: harbor.rcrumana.xyz/mirror/lemker/unifi-os-server:2026-03-31
@@ -144,45 +111,24 @@ spec:
             - name: cgroup
               mountPath: /sys/fs/cgroup
       volumes:
-        - name: persistent-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-persistent
         - name: persistent
           persistentVolumeClaim:
             claimName: unifi-os-server-persistent-critical
-        - name: var-log-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-var-log
         - name: var-log
           persistentVolumeClaim:
             claimName: unifi-os-server-var-log-critical
-        - name: data-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-data
         - name: data
           persistentVolumeClaim:
             claimName: unifi-os-server-data-critical
-        - name: srv-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-srv
         - name: srv
           persistentVolumeClaim:
             claimName: unifi-os-server-srv-critical
-        - name: var-lib-unifi-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-var-lib-unifi
         - name: var-lib-unifi
           persistentVolumeClaim:
             claimName: unifi-os-server-var-lib-unifi-critical
-        - name: var-lib-mongodb-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-var-lib-mongodb
         - name: var-lib-mongodb
           persistentVolumeClaim:
             claimName: unifi-os-server-var-lib-mongodb-critical
-        - name: rabbitmq-ssl-source
-          persistentVolumeClaim:
-            claimName: unifi-os-server-rabbitmq-ssl
         - name: rabbitmq-ssl
           persistentVolumeClaim:
             claimName: unifi-os-server-rabbitmq-ssl-critical
