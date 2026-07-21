@@ -21,22 +21,6 @@ extraManifests:
       resources:
         requests:
           storage: 10Gi
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0
-      namespace: monitoring
-      annotations:
-        argocd.argoproj.io/sync-wave: "-20"
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      storageClassName: ceph-block
-      resources:
-        requests:
-          storage: 100Gi
-      volumeMode: Filesystem
-
 defaultRules:
   create: true
   rules:
@@ -156,8 +140,6 @@ prometheusOperator:
       memory: 1Gi
 
 prometheus:
-  annotations:
-    argocd.argoproj.io/sync-wave: "-30"
   prometheusSpec:
     nodeSelector:
       homelab.rcrumana.xyz/node-plane: storage
