@@ -69,12 +69,13 @@ notary:
   enabled: false
 
 trivy:
-  enabled: true
+  # Temporarily disabled while its PVC is copied to ceph-block-critical.
+  enabled: false
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
 
 portal:
-  replicas: 2
+  replicas: 0
   resources:
     requests:
       cpu: 100m
@@ -84,7 +85,7 @@ portal:
       memory: 1Gi
 
 core:
-  replicas: 2
+  replicas: 0
   resources:
     requests:
       cpu: 250m
@@ -94,7 +95,7 @@ core:
       memory: 2Gi
 
 jobservice:
-  replicas: 1
+  replicas: 0
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
   resources:
@@ -106,7 +107,7 @@ jobservice:
       memory: 1Gi
 
 registry:
-  replicas: 1
+  replicas: 0
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
   registry:
@@ -137,6 +138,9 @@ database:
     sslmode: disable
 
 redis:
+  # Temporarily externalized so the chart removes the internal StatefulSet
+  # before the old RWO claim is mounted by the migration job.
+  type: external
   internal:
     resources:
       requests:
@@ -147,7 +151,7 @@ redis:
         memory: 1Gi
 
 exporter:
-  replicas: 1
+  replicas: 0
   resources:
     requests:
       cpu: 50m

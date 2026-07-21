@@ -1,0 +1,199 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: harbor-registry-storage-migration
+  namespace: harbor
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 14400
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: eva-1
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: copy
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: harbor-registry
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: harbor-registry-critical
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: harbor-jobservice-storage-migration
+  namespace: harbor
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: eva-1
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: copy
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: harbor-jobservice
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: harbor-jobservice-critical
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: harbor-redis-storage-migration
+  namespace: harbor
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: eva-1
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: copy
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: data-harbor-redis-0
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: harbor-redis-critical
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: harbor-trivy-storage-migration
+  namespace: harbor
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        kubernetes.io/hostname: eva-1
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: copy
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: data-harbor-trivy-0
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: harbor-trivy-critical
