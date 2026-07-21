@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: media
 
 resources:
-  - media-library-bulk-copy-job.yaml
   - externalsecret.yaml
   - media-library-bulk-pvc.yaml
   - media-library-pv.yaml
