@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: valkey-queue-primary-storage-migration-v3
+  name: valkey-queue-primary-storage-migration-v4
   namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -86,7 +86,7 @@ spec:
 
                 (
                   cd "${root}"
-                  find . -xdev \
+                  find . -mindepth 1 -xdev \
                     -path ./lost+found -prune -o \
                     -path ./.valkey-migration-complete -prune -o \
                     -printf '%y\t%m\t%U\t%G\t%s\t%P\t%l\0' \
@@ -132,13 +132,20 @@ spec:
                 ! -name .valkey-migration-complete \
                 -exec rm -rf -- {} +
 
-              tar \
-                --acls \
-                --xattrs \
-                --exclude=./lost+found \
-                --exclude=./.valkey-migration-complete \
-                -C /source \
-                -cpf - . \
+              (
+                cd /source
+                find . -mindepth 1 -maxdepth 1 \
+                  ! -name lost+found \
+                  ! -name .valkey-migration-complete \
+                  -print0
+              ) \
+                | tar \
+                    --acls \
+                    --xattrs \
+                    -C /source \
+                    --null \
+                    --files-from=- \
+                    -cpf - \
                 | tar \
                     --acls \
                     --xattrs \
