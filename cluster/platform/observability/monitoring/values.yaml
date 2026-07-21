@@ -230,6 +230,7 @@ prometheus:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
+          runAsNonRoot: false
         volumeMounts:
           - name: prometheus-migration-source
             mountPath: /source
