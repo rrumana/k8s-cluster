@@ -5,6 +5,8 @@ metadata:
   labels:
     app: uptime-kuma
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -18,6 +20,26 @@ spec:
     spec:
       serviceAccountName: uptime-kuma
       initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: migration-source
+              mountPath: /source
+              readOnly: true
+            - name: data
+              mountPath: /target
         - name: init-permissions
           image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
           securityContext:
@@ -69,6 +91,9 @@ spec:
             - name: data
               mountPath: /app/data
       volumes:
-        - name: data
+        - name: migration-source
           persistentVolumeClaim:
             claimName: uptime-kuma-data
+        - name: data
+          persistentVolumeClaim:
+            claimName: uptime-kuma-data-critical

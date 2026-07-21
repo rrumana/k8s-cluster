@@ -203,7 +203,7 @@ metadata:
   name: uptime-kuma-data-backup
   namespace: productivity
 spec:
-  sourcePVC: uptime-kuma-data
+  sourcePVC: uptime-kuma-data-critical
   trigger:
     schedule: "35 6 * * *"
   restic:
