@@ -12,8 +12,8 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v2` is the active online seed. It is capped
-  at 96 MiB/s, mounts the legacy source read-only, and writes the target with
+- `media-library-cephfs-bulk-seed-v3` is the active online seed. It is capped
+  at 192 MiB/s, mounts the legacy source read-only, and writes the target with
   resumable protected partials. Do not activate another target writer while
   it or one of its pods exists.
 - The live Kubernetes mount inventory found only Plex, Jellyfin, and the seed
@@ -38,7 +38,7 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed is capped at 96 MiB/s. It may run alongside
+- The resumed concurrent seed is capped at 192 MiB/s. It may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency and temperature stay
   within the monitored gates. Replace the Job with a newly named resumable
