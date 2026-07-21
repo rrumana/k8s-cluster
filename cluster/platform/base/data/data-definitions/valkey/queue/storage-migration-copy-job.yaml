@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: valkey-queue-primary-storage-migration-v2
+  name: valkey-queue-primary-storage-migration-v3
   namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -76,7 +76,7 @@ spec:
 
                 (
                   cd "${root}"
-                  find . -xdev \
+                  find . -mindepth 1 -xdev \
                     -path ./lost+found -prune -o \
                     -path ./.valkey-migration-complete -prune -o \
                     -type f -print0 \
@@ -143,6 +143,7 @@ spec:
                     --acls \
                     --xattrs \
                     --no-same-owner \
+                    --no-overwrite-dir \
                     -C /target \
                     -xpf -
 
@@ -169,8 +170,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-              add:
-                - FOWNER
             readOnlyRootFilesystem: true
           volumeMounts:
             - name: source
