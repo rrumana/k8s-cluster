@@ -21,27 +21,6 @@ spec:
         app: elasticsearch
     spec:
       serviceAccountName: elasticsearch
-      initContainers:
-        - name: migrate-storage
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          command:
-            - sh
-            - -c
-            - |
-              set -eux
-              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
-              cp -a /source/. /target/
-              sync
-              du -sk /source /target
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-          volumeMounts:
-            - name: migration-source
-              mountPath: /source
-              readOnly: true
-            - name: data
-              mountPath: /target
       containers:
         - name: elasticsearch
           image: harbor.rcrumana.xyz/mirror/elasticsearch/elasticsearch:9.3.2
@@ -89,9 +68,6 @@ spec:
               cpu: "24"
               memory: "4Gi"
       volumes:
-        - name: migration-source
-          persistentVolumeClaim:
-            claimName: elasticsearch-data
         - name: data
           persistentVolumeClaim:
             claimName: elasticsearch-data-critical
