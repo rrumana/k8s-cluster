@@ -1,0 +1,145 @@
+# INERT: this fail-closed cutover fence is intentionally absent from
+# kustomization. Add it and flip spec.suspend only after Plex/Jellyfin/ARR and
+# every known external NFS client are quiesced.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ceph-nfs-bulk-media-export-fence-v1
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app.kubernetes.io/name: ceph-nfs-bulk
+    app.kubernetes.io/component: media-export-migration
+spec:
+  suspend: true
+  podReplacementPolicy: Failed
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ceph-nfs-bulk
+        app.kubernetes.io/component: media-export-migration
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fence-export
+          # Pin the digest currently running in the rook-ceph-tools pod; it
+          # contains the Ceph 20.2.2 CLI, jq, bash, and coreutils used below.
+          image: harbor.rcrumana.xyz/mirror/rook/ceph@sha256:afb615fc5482db55218f95950d8ce80fb386e480aff17bb7b466d6ae072ebf05
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -Eeuo pipefail
+
+              readonly cluster=ceph-nfs-bulk
+              readonly pseudo=/media
+              readonly old_fs=ceph-filesystem
+              readonly old_path=/volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5
+
+              MON_HOST="$(printf '%s' "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')"
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${MON_HOST}
+              EOF
+              install -m 0600 /etc/ceph-admin/keyring \
+                /etc/ceph/ceph.client.admin.keyring
+
+              test "$(ceph health --format json | jq -r .status)" = HEALTH_OK
+
+              if ! current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                  --format json 2>/tmp/export-info-error)"; then
+                ceph nfs export ls "${cluster}" --format json \
+                  | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
+                echo 'The /media export is already absent; the NFS fence is in place'
+                exit 0
+              fi
+
+              printf '%s\n' "${current}" | jq -e \
+                --arg cluster "${cluster}" \
+                --arg pseudo "${pseudo}" \
+                --arg fs "${old_fs}" \
+                --arg path "${old_path}" '
+                  .cluster_id == $cluster and
+                  .pseudo == $pseudo and
+                  .path == $path and
+                  .fsal.name == "CEPH" and
+                  .fsal.fs_name == $fs and
+                  .fsal.cmount_path == "/" and
+                  .access_type == "RW" and
+                  .squash == "no_root_squash" and
+                  (.sectype | sort) == ["sys"] and
+                  (.protocols | sort) == [3, 4] and
+                  (.transports | sort) == ["TCP"] and
+                  .security_label == true and
+                  (.clients | length) == 0
+                ' >/dev/null
+
+              old_clients="$(ceph tell "mds.${old_fs}:0" client ls --format json)"
+              source_clients="$(printf '%s\n' "${old_clients}" | jq \
+                --arg root "${old_path}" '
+                  [.[] | select((.client_metadata.root // "") == $root)]
+                ')"
+              if [[ "$(printf '%s\n' "${source_clients}" | jq length)" != 0 ]]; then
+                echo 'Refusing to remove the export while direct source mounts remain:' >&2
+                printf '%s\n' "${source_clients}" | jq . >&2
+                exit 71
+              fi
+
+              echo 'Validated the exact legacy export; removing /media to fence NFS'
+              printf '%s\n' "${current}" | jq .
+              ceph nfs export rm "${cluster}" "${pseudo}"
+
+              if ceph nfs export info "${cluster}" "${pseudo}" \
+                  --format json >/tmp/unexpected-export 2>&1; then
+                echo 'The /media export still exists after the fence operation' >&2
+                cat /tmp/unexpected-export >&2
+                exit 72
+              fi
+              ceph nfs export ls "${cluster}" --format json \
+                | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
+              echo 'NFS /media export fenced successfully'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
+        - name: tmp
+          emptyDir: {}

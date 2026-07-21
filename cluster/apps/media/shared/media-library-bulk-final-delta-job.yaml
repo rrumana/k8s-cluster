@@ -1,0 +1,198 @@
+# INERT: do not add this file to kustomization until every source writer and
+# reader is quiesced, the old NFS export is fenced, and the online seed Job has
+# been removed. Flip spec.suspend to false only in the activation commit.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: media-library-cephfs-bulk-final-v1
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app.kubernetes.io/name: media-library
+    app.kubernetes.io/component: storage-migration
+    app.kubernetes.io/part-of: media-shared
+spec:
+  suspend: true
+  # A replacement pod must never overlap a terminating rsync writer on the
+  # RWX target after an eviction or node failure.
+  podReplacementPolicy: Failed
+  backoffLimit: 3
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: media-library
+        app.kubernetes.io/component: storage-migration
+        app.kubernetes.io/part-of: media-shared
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 120
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: copy-and-verify
+          # Authenticated in Harbor; rsync 3.2.5 has ACL/xattr support.
+          image: harbor.rcrumana.xyz/mirror/backube/volsync@sha256:644b261e35442a5320c2d295f4d84302839dc32ff6225a103ea512845042ff58
+          imagePullPolicy: IfNotPresent
+          command:
+            - /usr/bin/bash
+            - -c
+            - |
+              set -Eeuo pipefail
+
+              readonly identity=/target/.cephfs-bulk-migration-target
+              readonly state=/target/.cephfs-bulk-migration-state
+              readonly seed_success=/target/.cephfs-bulk-migration-seed-complete
+              readonly final_success=/target/.cephfs-bulk-migration-final-v1-complete
+              readonly expected_identity=media-library-bulk:v1
+              readonly expected_seed_phase=seed:v1
+              readonly expected_final_phase=final:v1
+              readonly verification=/tmp/rsync-verification
+              child_pid=""
+
+              stop_copy() {
+                printf 'final_v1_interrupted_at=%s\n' \
+                  "$(date --iso-8601=seconds)" > "${state}"
+                if [[ -n "${child_pid}" ]]; then
+                  kill -TERM "${child_pid}" 2>/dev/null || true
+                  wait "${child_pid}" 2>/dev/null || true
+                fi
+                exit 143
+              }
+              trap stop_copy TERM INT
+
+              test -d /source
+              test -d /target
+              test -f "${identity}"
+              test "$(cat "${identity}")" = "${expected_identity}"
+              test -f "${seed_success}"
+              grep -Fxq "phase=${expected_seed_phase}" "${seed_success}"
+
+              if [[ -f "${final_success}" ]]; then
+                grep -Fxq "phase=${expected_final_phase}" "${final_success}"
+                echo 'This final-delta phase already completed; refusing to replay it'
+                cat "${final_success}"
+                exit 0
+              fi
+
+              printf 'final_v1_running_at=%s\n' \
+                "$(date --iso-8601=seconds)" > "${state}"
+
+              rsync \
+                --archive \
+                --hard-links \
+                --acls \
+                --xattrs \
+                --sparse \
+                --one-file-system \
+                --no-whole-file \
+                --numeric-ids \
+                --delete-delay \
+                --partial \
+                --partial-dir=.rsync-partial \
+                --bwlimit=98304 \
+                --human-readable \
+                --info=flist1,progress2,stats2,name0 \
+                --exclude=/.cephfs-bulk-migration-target \
+                --exclude=/.cephfs-bulk-migration-state \
+                --exclude=/.cephfs-bulk-migration-seed-complete \
+                --exclude=/.cephfs-bulk-migration-final-v1-complete \
+                --exclude=/.rsync-partial/ \
+                /source/ /target/ &
+              child_pid=$!
+
+              set +e
+              wait "${child_pid}"
+              copy_status=$?
+              set -e
+              child_pid=""
+              if (( copy_status != 0 )); then
+                printf 'final_v1_failed_status=%s at=%s\n' \
+                  "${copy_status}" "$(date --iso-8601=seconds)" > "${state}"
+                exit "${copy_status}"
+              fi
+
+              sync -f /target
+
+              rsync \
+                --archive \
+                --hard-links \
+                --acls \
+                --xattrs \
+                --sparse \
+                --one-file-system \
+                --numeric-ids \
+                --delete \
+                --dry-run \
+                --itemize-changes \
+                --omit-dir-times \
+                --exclude=/.cephfs-bulk-migration-target \
+                --exclude=/.cephfs-bulk-migration-state \
+                --exclude=/.cephfs-bulk-migration-seed-complete \
+                --exclude=/.cephfs-bulk-migration-final-v1-complete \
+                --exclude=/.rsync-partial/ \
+                /source/ /target/ > "${verification}"
+              if [[ -s "${verification}" ]]; then
+                echo 'Final metadata verification found differences:' >&2
+                sed -n '1,200p' "${verification}" >&2
+                exit 43
+              fi
+
+              success_tmp="${final_success}.tmp.$$"
+              printf 'phase=%s\ncompleted_at=%s\nsource_bytes=%s\ntarget_bytes=%s\n' \
+                "${expected_final_phase}" \
+                "$(date --iso-8601=seconds)" \
+                "$(du -sx --block-size=1 /source | awk '{print $1}')" \
+                "$(du -sx --block-size=1 /target | awk '{print $1}')" \
+                > "${success_tmp}"
+              sync "${success_tmp}"
+              mv "${success_tmp}" "${final_success}"
+              printf 'final_v1_completed_at=%s\n' \
+                "$(date --iso-8601=seconds)" > "${state}"
+              sync -f /target
+              cat "${final_success}"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - FOWNER
+                - FSETID
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: media-library
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: media-library-bulk
+        - name: tmp
+          emptyDir: {}

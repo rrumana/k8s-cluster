@@ -1,0 +1,177 @@
+# INERT: this fail-closed target export is intentionally absent from
+# kustomization. Add it and flip spec.suspend only after the final-delta Job is
+# removed and its final:v1 marker has been validated on media-library-bulk.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ceph-nfs-bulk-media-export-cephfs-v1
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app.kubernetes.io/name: ceph-nfs-bulk
+    app.kubernetes.io/component: media-export-migration
+spec:
+  suspend: true
+  podReplacementPolicy: Failed
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ceph-nfs-bulk
+        app.kubernetes.io/component: media-export-migration
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: create-target-export
+          # Pin the digest currently running in the rook-ceph-tools pod; it
+          # contains the Ceph 20.2.2 CLI, jq, bash, and coreutils used below.
+          image: harbor.rcrumana.xyz/mirror/rook/ceph@sha256:afb615fc5482db55218f95950d8ce80fb386e480aff17bb7b466d6ae072ebf05
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -Eeuo pipefail
+
+              readonly cluster=ceph-nfs-bulk
+              readonly pseudo=/media
+              readonly target_fs=cephfs
+              readonly target_pool=cephfs-bulk
+              readonly target_subvolume=csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1
+              readonly target_group=csi
+              readonly target_path=/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec
+              readonly target_quota=7696581394432
+
+              MON_HOST="$(printf '%s' "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')"
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${MON_HOST}
+              EOF
+              install -m 0600 /etc/ceph-admin/keyring \
+                /etc/ceph/ceph.client.admin.keyring
+
+              export_matches_target() {
+                jq -e \
+                  --arg cluster "${cluster}" \
+                  --arg pseudo "${pseudo}" \
+                  --arg fs "${target_fs}" \
+                  --arg path "${target_path}" '
+                    .cluster_id == $cluster and
+                    .pseudo == $pseudo and
+                    .path == $path and
+                    .fsal.name == "CEPH" and
+                    .fsal.fs_name == $fs and
+                    .fsal.cmount_path == "/" and
+                    .access_type == "RW" and
+                    .squash == "no_root_squash" and
+                    (.sectype | sort) == ["sys"] and
+                    (.protocols | sort) == [3, 4] and
+                    (.transports | sort) == ["TCP"] and
+                    .security_label == true and
+                    (.clients | length) == 0
+                  ' >/dev/null
+              }
+
+              test "$(ceph health --format json | jq -r .status)" = HEALTH_OK
+
+              subvolume_info="$(ceph fs subvolume info \
+                "${target_fs}" "${target_subvolume}" "${target_group}" \
+                --format json)"
+              printf '%s\n' "${subvolume_info}" | jq -e \
+                --arg path "${target_path}" \
+                --arg pool "${target_pool}" \
+                --argjson quota "${target_quota}" '
+                  .path == $path and
+                  .data_pool == $pool and
+                  .state == "complete" and
+                  .bytes_quota == $quota
+                ' >/dev/null
+
+              if current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                  --format json 2>/tmp/export-info-error)"; then
+                if printf '%s\n' "${current}" | export_matches_target; then
+                  echo 'The exact target /media export already exists; no-op'
+                  printf '%s\n' "${current}" | jq .
+                  exit 0
+                fi
+                echo 'Refusing to replace an existing non-target /media export' >&2
+                printf '%s\n' "${current}" | jq . >&2
+                exit 73
+              fi
+              ceph nfs export ls "${cluster}" --format json \
+                | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
+
+              set +e
+              create_output="$(ceph nfs export create cephfs \
+                "${cluster}" "${pseudo}" "${target_fs}" "${target_path}" \
+                --squash no_root_squash --sectype sys 2>&1)"
+              create_status=$?
+              set -e
+              printf '%s\n' "${create_output}"
+
+              current=""
+              for _ in {1..12}; do
+                if current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                    --format json 2>/tmp/export-info-error)"; then
+                  break
+                fi
+                sleep 2
+              done
+
+              if [[ -n "${current}" ]] && \
+                  printf '%s\n' "${current}" | export_matches_target; then
+                echo 'Created and validated the target /media export'
+                printf '%s\n' "${current}" | jq .
+                exit 0
+              fi
+
+              echo "Target export creation failed validation (status=${create_status})" >&2
+              if [[ -n "${current}" ]]; then
+                printf '%s\n' "${current}" | jq . >&2
+                echo 'Removing the invalid export to fail closed' >&2
+                ceph nfs export rm "${cluster}" "${pseudo}"
+              fi
+              exit 74
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
+        - name: tmp
+          emptyDir: {}
