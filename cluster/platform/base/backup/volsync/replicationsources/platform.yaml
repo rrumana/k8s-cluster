@@ -77,11 +77,13 @@ metadata:
   name: valkey-queue-node-0-backup
   namespace: databases
 spec:
-  sourcePVC: valkey-data-valkey-queue-primary-0
+  sourcePVC: valkey-queue-primary-app-replicated
   trigger:
     schedule: "20 4 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
     volumeSnapshotClassName: ceph-block-snap
     repository: valkey-queue-node-0-backup-restic
     pruneIntervalDays: 14
@@ -145,6 +147,8 @@ spec:
     schedule: "35 4 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
     volumeSnapshotClassName: ceph-block-snap
     repository: valkey-queue-node-1-backup-restic
     pruneIntervalDays: 14
