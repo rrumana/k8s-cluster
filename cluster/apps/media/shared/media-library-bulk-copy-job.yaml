@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: media-library-cephfs-bulk-seed
+  name: media-library-cephfs-bulk-seed-v2
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: media-library
     app.kubernetes.io/component: storage-migration
 spec:
-  suspend: true
+  suspend: false
   # Never let a replacement rsync writer overlap a terminating predecessor on
   # the RWX target after an eviction or node failure.
   podReplacementPolicy: Failed
@@ -101,7 +101,7 @@ spec:
                 --delete-delay \
                 --partial \
                 --partial-dir=.rsync-partial \
-                --bwlimit=65536 \
+                --bwlimit=98304 \
                 --human-readable \
                 --info=flist1,progress2,stats2,name0 \
                 --exclude=/.cephfs-bulk-migration-target \

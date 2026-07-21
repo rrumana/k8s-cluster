@@ -17,7 +17,7 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The initial concurrent seed is capped at 64 MiB/s. It may run alongside
+- The resumed concurrent seed is capped at 96 MiB/s. It may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency and temperature stay
   within the monitored gates. Replace the Job with a newly named resumable
