@@ -17,6 +17,8 @@ data:
     SEND_BUFFER_LOW_WATERMARK="${QB_SEND_BUFFER_LOW_WATERMARK:?missing QB_SEND_BUFFER_LOW_WATERMARK}"
     SEND_BUFFER_WATERMARK="${QB_SEND_BUFFER_WATERMARK:?missing QB_SEND_BUFFER_WATERMARK}"
     SEND_BUFFER_WATERMARK_FACTOR="${QB_SEND_BUFFER_WATERMARK_FACTOR:?missing QB_SEND_BUFFER_WATERMARK_FACTOR}"
+    ALTERNATIVE_WEBUI_ENABLED="${QB_ALTERNATIVE_WEBUI_ENABLED:?missing QB_ALTERNATIVE_WEBUI_ENABLED}"
+    ALTERNATIVE_WEBUI_PATH="${QB_ALTERNATIVE_WEBUI_PATH:?missing QB_ALTERNATIVE_WEBUI_PATH}"
     echo "pf-sync(sidecar): watching $PF_FILE for qB WebUI :$WEBUI_PORT"
 
     qbit_available=false
@@ -42,6 +44,8 @@ data:
               cur_send_low="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_low_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
               cur_send_high="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
               cur_send_factor="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark_factor":\([-0-9][0-9]*\).*/\1/p' || true)"
+              cur_alternative_webui_enabled="$(printf '%s' "$compact_prefs" | sed -n 's/.*"alternative_webui_enabled":\([^,}]*\).*/\1/p' || true)"
+              cur_alternative_webui_path="$(printf '%s' "$compact_prefs" | sed -n 's/.*"alternative_webui_path":"\([^"]*\)".*/\1/p' || true)"
 
               if [ "$cur_port" != "$p" ] \
                 || [ "$cur_global_slots" != "$GLOBAL_UPLOAD_SLOTS" ] \
@@ -51,12 +55,15 @@ data:
                 || [ "$cur_hashing_threads" != "$HASHING_THREADS" ] \
                 || [ "$cur_send_low" != "$SEND_BUFFER_LOW_WATERMARK" ] \
                 || [ "$cur_send_high" != "$SEND_BUFFER_WATERMARK" ] \
-                || [ "$cur_send_factor" != "$SEND_BUFFER_WATERMARK_FACTOR" ]; then
+                || [ "$cur_send_factor" != "$SEND_BUFFER_WATERMARK_FACTOR" ] \
+                || [ "$cur_alternative_webui_enabled" != "$ALTERNATIVE_WEBUI_ENABLED" ] \
+                || [ "$cur_alternative_webui_path" != "$ALTERNATIVE_WEBUI_PATH" ]; then
                 echo "pf-sync(sidecar): reconciling qBittorrent port and performance preferences"
-                json=$(printf '{"listen_port": %s, "random_port": false, "upnp": false, "natpmp": false, "listen_on_ipv6": false, "max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s}' \
+                json=$(printf '{"listen_port": %s, "random_port": false, "upnp": false, "natpmp": false, "listen_on_ipv6": false, "max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s, "alternative_webui_enabled": %s, "alternative_webui_path": "%s"}' \
                   "$p" "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
                   "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
-                  "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" "$SEND_BUFFER_WATERMARK_FACTOR")
+                  "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" "$SEND_BUFFER_WATERMARK_FACTOR" \
+                  "$ALTERNATIVE_WEBUI_ENABLED" "$ALTERNATIVE_WEBUI_PATH")
                 if curl -fsS -b /tmp/c \
                      --data-urlencode "json=$json" \
                      "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null

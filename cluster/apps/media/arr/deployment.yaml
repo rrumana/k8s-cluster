@@ -146,6 +146,8 @@ spec:
             - { name: QB_SEND_BUFFER_LOW_WATERMARK, value: "16384" }
             - { name: QB_SEND_BUFFER_WATERMARK, value: "131072" }
             - { name: QB_SEND_BUFFER_WATERMARK_FACTOR, value: "250" }
+            - { name: QB_ALTERNATIVE_WEBUI_ENABLED, value: "true" }
+            - { name: QB_ALTERNATIVE_WEBUI_PATH, value: "/vuetorrent" }
             - { name: QB_USERNAME, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: username } } }
             - { name: QB_PASSWORD, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: password } } }
           volumeMounts:
