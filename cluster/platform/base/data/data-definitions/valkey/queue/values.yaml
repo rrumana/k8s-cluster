@@ -35,6 +35,7 @@ pdb:
   maxUnavailable: 1
 
 primary:
+  replicaCount: 0
   persistence:
     enabled: true
     storageClass: ceph-block
