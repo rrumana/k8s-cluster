@@ -12,12 +12,13 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v4` is the active online seed. It is capped
-  at 240 MiB/s, mounts the legacy source read-only, and uses whole-file
-  sequential transfer. Completed files remain valid across a restart, while
-  an interrupted current file is retransmitted rather than delta-scanned
-  against an EC partial. Do not activate another target writer while it or one
-  of its pods exists.
+- `media-library-cephfs-bulk-seed-v5` is the active online seed. It mounts the
+  legacy source read-only and runs two non-overlapping whole-file streams at
+  160 MiB/s each. The primary owns everything except `Torrent/Shows`; the
+  secondary owns exactly `Torrent/Shows`. Completed files remain valid across
+  a restart, while interrupted current files are retransmitted rather than
+  delta-scanned against EC partials. Do not activate another target writer
+  while it or one of its pods exists.
 - The live Kubernetes mount inventory found only Plex, Jellyfin, and the seed
   pod mounted on the canonical old claim. ARR remains at zero replicas and its
   Deployment template still names `media-library-torrent-eva-3`.
@@ -40,7 +41,8 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed is capped at 240 MiB/s. It may run alongside
+- The resumed concurrent seed has a 320 MiB/s combined logical cap across two
+  explicitly disjoint 160 MiB/s streams. It may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency, SMART critical
   warnings, media-error counters, and actual device throttling remain within

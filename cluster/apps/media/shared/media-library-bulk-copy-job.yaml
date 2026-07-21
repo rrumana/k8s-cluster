@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: media-library-cephfs-bulk-seed-v4
+  name: media-library-cephfs-bulk-seed-v5
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -52,20 +52,23 @@ spec:
               readonly expected_identity=media-library-bulk:v1
               readonly expected_phase=seed:v1
               readonly verification=/tmp/rsync-verification
-              child_pid=""
+              declare -a child_pids=()
 
               stop_copy() {
                 printf 'interrupted_at=%s\n' "$(date --iso-8601=seconds)" > "${state}"
-                if [[ -n "${child_pid}" ]]; then
+                for child_pid in "${child_pids[@]}"; do
                   kill -TERM "${child_pid}" 2>/dev/null || true
+                done
+                for child_pid in "${child_pids[@]}"; do
                   wait "${child_pid}" 2>/dev/null || true
-                fi
+                done
                 exit 143
               }
               trap stop_copy TERM INT
 
               test -d /source
               test -d /target
+              test -d /source/Torrent/Shows
 
               if [[ -f "${success}" ]]; then
                 test -f "${identity}"
@@ -88,7 +91,12 @@ spec:
               fi
 
               printf 'running_at=%s\n' "$(date --iso-8601=seconds)" > "${state}"
+              mkdir -p /target/Torrent
 
+              # Run two disjoint sequential streams. The primary owns the
+              # entire tree except Torrent/Shows; the secondary owns exactly
+              # Torrent/Shows. Never remove the primary exclusion while both
+              # processes can exist.
               rsync \
                 --archive \
                 --hard-links \
@@ -101,21 +109,46 @@ spec:
                 --delete-delay \
                 --partial \
                 --partial-dir=.rsync-partial \
-                --bwlimit=245760 \
+                --bwlimit=163840 \
                 --human-readable \
                 --info=flist1,progress2,stats2,name0 \
+                '--exclude=/Torrent/Shows/***' \
                 --exclude=/.cephfs-bulk-migration-target \
                 --exclude=/.cephfs-bulk-migration-state \
                 --exclude=/.cephfs-bulk-migration-seed-complete \
                 --exclude=/.rsync-partial/ \
                 /source/ /target/ &
-              child_pid=$!
+              child_pids+=("$!")
 
-              set +e
-              wait "${child_pid}"
-              copy_status=$?
-              set -e
-              child_pid=""
+              rsync \
+                --archive \
+                --hard-links \
+                --acls \
+                --xattrs \
+                --sparse \
+                --one-file-system \
+                --whole-file \
+                --numeric-ids \
+                --partial \
+                --partial-dir=.rsync-partial \
+                --bwlimit=163840 \
+                --human-readable \
+                --info=flist1,progress2,stats2,name0 \
+                --exclude=/.rsync-partial/ \
+                /source/Torrent/Shows /target/Torrent/ &
+              child_pids+=("$!")
+
+              copy_status=0
+              for child_pid in "${child_pids[@]}"; do
+                set +e
+                wait "${child_pid}"
+                child_status=$?
+                set -e
+                if (( child_status != 0 && copy_status == 0 )); then
+                  copy_status=${child_status}
+                fi
+              done
+              child_pids=()
               if (( copy_status != 0 )); then
                 printf 'failed_status=%s at=%s\n' \
                   "${copy_status}" "$(date --iso-8601=seconds)" > "${state}"
@@ -161,11 +194,11 @@ spec:
               cat "${success}"
           resources:
             requests:
-              cpu: 250m
+              cpu: 500m
               memory: 512Mi
             limits:
-              cpu: "2"
-              memory: 2Gi
+              cpu: "4"
+              memory: 4Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
