@@ -31,27 +31,6 @@ spec:
                 matchLabels:
                   app: jellyfin
               topologyKey: kubernetes.io/hostname
-      initContainers:
-        - name: migrate-storage
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          command:
-            - sh
-            - -c
-            - |
-              set -eux
-              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
-              cp -a /source/. /target/
-              sync
-              du -sk /source /target
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-          volumeMounts:
-            - name: migration-source
-              mountPath: /source
-              readOnly: true
-            - name: config
-              mountPath: /target
       containers:
         - name: plex
           image: harbor.rcrumana.xyz/mirror/linuxserver/plex:1.42.2.10156-f737b826c-ls287
@@ -90,9 +69,6 @@ spec:
               memory: "8Gi"
               cpu: "24"
       volumes:
-        - name: migration-source
-          persistentVolumeClaim:
-            claimName: plex-config
         - name: config
           persistentVolumeClaim:
             claimName: plex-config-critical

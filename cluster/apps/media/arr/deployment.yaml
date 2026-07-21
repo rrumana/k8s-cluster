@@ -35,45 +35,24 @@ spec:
       volumes:
         - name: dev-net-tun
           hostPath: { path: /dev/net/tun, type: CharDevice }
-        - name: gluetun-source
-          persistentVolumeClaim:
-            claimName: arr-stack-gluetun
         - name: gluetun
           persistentVolumeClaim:
             claimName: arr-stack-gluetun-critical
-        - name: qbit-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-qbit-config
         - name: qbit-config
           persistentVolumeClaim:
             claimName: arr-stack-qbit-config-critical
-        - name: sonarr-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-sonarr-config
         - name: sonarr-config
           persistentVolumeClaim:
             claimName: arr-stack-sonarr-config-critical
-        - name: radarr-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-radarr-config
         - name: radarr-config
           persistentVolumeClaim:
             claimName: arr-stack-radarr-config-critical
-        - name: lidarr-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-lidarr-config
         - name: lidarr-config
           persistentVolumeClaim:
             claimName: arr-stack-lidarr-config-critical
-        - name: prowlarr-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-prowlarr-config
         - name: prowlarr-config
           persistentVolumeClaim:
             claimName: arr-stack-prowlarr-config-critical
-        - name: jellyseerr-config-source
-          persistentVolumeClaim:
-            claimName: arr-stack-jellyseerr-config
         - name: jellyseerr-config
           persistentVolumeClaim:
             claimName: arr-stack-jellyseerr-config-critical
@@ -100,39 +79,6 @@ spec:
             sysctl -w net.ipv4.conf.default.rp_filter=0
             sysctl -w net.ipv4.conf.tun0.rp_filter=0 || true
             EOS]
-        - name: migrate-storage
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          command:
-            - sh
-            - -c
-            - |
-              set -eux
-              for volume in gluetun qbit-config sonarr-config radarr-config lidarr-config prowlarr-config jellyseerr-config; do
-                source="/source/${volume}"
-                target="/target/${volume}"
-                find "$target" -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
-                cp -a "$source"/. "$target"/
-                sync
-                du -sk "$source" "$target"
-              done
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-          volumeMounts:
-            - { name: gluetun-source, mountPath: /source/gluetun, readOnly: true }
-            - { name: gluetun, mountPath: /target/gluetun }
-            - { name: qbit-config-source, mountPath: /source/qbit-config, readOnly: true }
-            - { name: qbit-config, mountPath: /target/qbit-config }
-            - { name: sonarr-config-source, mountPath: /source/sonarr-config, readOnly: true }
-            - { name: sonarr-config, mountPath: /target/sonarr-config }
-            - { name: radarr-config-source, mountPath: /source/radarr-config, readOnly: true }
-            - { name: radarr-config, mountPath: /target/radarr-config }
-            - { name: lidarr-config-source, mountPath: /source/lidarr-config, readOnly: true }
-            - { name: lidarr-config, mountPath: /target/lidarr-config }
-            - { name: prowlarr-config-source, mountPath: /source/prowlarr-config, readOnly: true }
-            - { name: prowlarr-config, mountPath: /target/prowlarr-config }
-            - { name: jellyseerr-config-source, mountPath: /source/jellyseerr-config, readOnly: true }
-            - { name: jellyseerr-config, mountPath: /target/jellyseerr-config }
         - name: fix-perms
           image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
           securityContext:
