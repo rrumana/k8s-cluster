@@ -188,53 +188,6 @@ prometheus:
             requests:
               storage: 100Gi
           storageClassName: ceph-block-critical
-    volumes:
-      - name: prometheus-migration-source
-        persistentVolumeClaim:
-          claimName: prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0
-          readOnly: true
-    initContainers:
-      - name: migrate-prometheus-storage
-        # Do not make storage recovery depend on the in-cluster Harbor service.
-        image: docker.io/library/python:3.13-alpine
-        command:
-          - sh
-          - -c
-          - |
-            set -euxo pipefail
-            test -d /source/prometheus-db
-            test -d /source/prometheus-db/wal
-            rm -rf /target/prometheus-db
-            tar -C /source -cf - prometheus-db \
-              | python -c '
-            import sys
-            import time
-
-            rate = 64 * 1024 * 1024
-            chunk = 1024 * 1024
-
-            while data := sys.stdin.buffer.read(chunk):
-                chunk_started = time.monotonic()
-                sys.stdout.buffer.write(data)
-                sys.stdout.buffer.flush()
-                delay = len(data) / rate - (time.monotonic() - chunk_started)
-                if delay > 0:
-                    time.sleep(delay)
-            ' \
-              | tar -C /target -xpf -
-            sync
-            ls -ldn /source/prometheus-db /target/prometheus-db
-            du -sk /source/prometheus-db /target/prometheus-db
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          runAsNonRoot: false
-        volumeMounts:
-          - name: prometheus-migration-source
-            mountPath: /source
-            readOnly: true
-          - name: prometheus-db-critical
-            mountPath: /target
     resources:
       requests:
         cpu: 500m
