@@ -55,4 +55,5 @@ spec:
           - labelSelector:
               matchLabels:
                 app: rook-ceph-mds
+                rook_file_system: ceph-filesystem
             topologyKey: kubernetes.io/hostname
