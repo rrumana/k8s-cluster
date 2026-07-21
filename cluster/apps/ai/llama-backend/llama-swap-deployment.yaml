@@ -187,4 +187,4 @@ spec:
             name: llama-swap-config
         - name: model-cache
           persistentVolumeClaim:
-            claimName: llama-models-cache
+            claimName: llama-models-cache-bulk

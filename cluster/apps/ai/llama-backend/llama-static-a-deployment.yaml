@@ -175,4 +175,4 @@ spec:
       volumes:
         - name: model-cache
           persistentVolumeClaim:
-            claimName: llama-models-cache
+            claimName: llama-models-cache-bulk
