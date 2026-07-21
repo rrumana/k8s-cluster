@@ -646,7 +646,7 @@ metadata:
   name: jellyfin-config-backup
   namespace: media
 spec:
-  sourcePVC: jellyfin-config
+  sourcePVC: jellyfin-config-critical
   trigger:
     schedule: "35 3 * * *"
   restic:
@@ -710,7 +710,7 @@ metadata:
   name: plex-config-backup
   namespace: media
 spec:
-  sourcePVC: plex-config
+  sourcePVC: plex-config-critical
   trigger:
     schedule: "50 3 * * *"
   restic:

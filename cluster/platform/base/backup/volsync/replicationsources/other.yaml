@@ -37,7 +37,7 @@ metadata:
   name: headscale-data-backup
   namespace: other
 spec:
-  sourcePVC: headscale-data
+  sourcePVC: headscale-data-critical
   trigger:
     schedule: "5 4 * * *"
   restic:

@@ -6,6 +6,8 @@ metadata:
     app: headscale
     component: api
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -20,6 +22,27 @@ spec:
         component: api
     spec:
       serviceAccountName: headscale
+      initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: migration-source
+              mountPath: /source
+              readOnly: true
+            - name: data
+              mountPath: /target
       containers:
         - name: headscale
           image: harbor.rcrumana.xyz/mirror/headscale/headscale:v0.28.0
@@ -95,8 +118,11 @@ spec:
         - name: config
           configMap:
             name: headscale-config
-        - name: data
+        - name: migration-source
           persistentVolumeClaim:
             claimName: headscale-data
+        - name: data
+          persistentVolumeClaim:
+            claimName: headscale-data-critical
         - name: run
           emptyDir: {}

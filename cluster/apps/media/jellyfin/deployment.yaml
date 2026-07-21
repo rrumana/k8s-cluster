@@ -35,6 +35,27 @@ spec:
         supplementalGroups:
           - 989
           - 985
+      initContainers:
+        - name: migrate-storage
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+              cp -a /source/. /target/
+              sync
+              du -sk /source /target
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: migration-source
+              mountPath: /source
+              readOnly: true
+            - name: config
+              mountPath: /target
       containers:
         - name: jellyfin
           image: harbor.rcrumana.xyz/mirror/linuxserver/jellyfin:10.11.3ubu2404-ls9
@@ -86,9 +107,12 @@ spec:
               memory: "12Gi"
               cpu: "24"
       volumes:
-        - name: config
+        - name: migration-source
           persistentVolumeClaim:
             claimName: jellyfin-config
+        - name: config
+          persistentVolumeClaim:
+            claimName: jellyfin-config-critical
         - name: cache
           emptyDir: {}
         - name: media-library
