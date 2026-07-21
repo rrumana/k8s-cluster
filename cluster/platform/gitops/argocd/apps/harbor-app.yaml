@@ -78,6 +78,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
     managedNamespaceMetadata:
       labels:
         app.kubernetes.io/name: harbor
