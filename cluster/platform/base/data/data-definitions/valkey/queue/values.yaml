@@ -35,10 +35,11 @@ pdb:
   maxUnavailable: 1
 
 primary:
-  replicaCount: 0
+  replicaCount: 1
   persistence:
     enabled: true
-    storageClass: ceph-block
+    storageClass: ceph-block-app-replicated
+    existingClaim: valkey-queue-primary-app-replicated
     size: 20Gi
   resources:
     requests:
