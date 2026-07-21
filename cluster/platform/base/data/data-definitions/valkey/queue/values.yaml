@@ -51,29 +51,6 @@ primary:
 
 replica:
   replicaCount: 2
-  # Keep replicas available for the brief, planned primary cutover. These
-  # temporary probes validate each local Valkey process without requiring the
-  # upstream primary to be reachable.
-  customLivenessProbe:
-    exec:
-      command:
-        - /usr/bin/bash
-        - -ec
-        - /health/ping_liveness_local.sh 5
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 6
-    failureThreshold: 5
-  customReadinessProbe:
-    exec:
-      command:
-        - /usr/bin/bash
-        - -ec
-        - /health/ping_readiness_local.sh 1
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 2
-    failureThreshold: 5
   persistence:
     enabled: true
     storageClass: ceph-block-app-replicated
