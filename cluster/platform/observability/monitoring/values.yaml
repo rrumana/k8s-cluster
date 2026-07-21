@@ -93,6 +93,7 @@ grafana:
   envFromSecret: opensearch-admin-credentials
   deploymentStrategy:
     type: Recreate
+    rollingUpdate: null
   persistence:
     enabled: true
     type: pvc

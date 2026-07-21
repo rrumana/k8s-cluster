@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: plex
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
   labels:
     app: plex
 spec:
