@@ -20,6 +20,7 @@ spec:
     metadata:
       annotations:
         linkerd.io/inject: enabled
+        storage-migration.rcrumana.xyz/script-version: "2"
       labels:
         app: immich
         component: machine-learning

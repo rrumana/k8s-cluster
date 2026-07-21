@@ -134,15 +134,22 @@ data:
                     kind = f"other:{item.st_rdev}"
                     logical_size = 0
 
+                # BusyBox tar restores regular-file timestamps and hard-link
+                # relationships, but creating children necessarily changes
+                # directory mtimes and their link counts are derived from the
+                # extracted tree. Verify those fields only for regular files.
+                logical_nlink = item.st_nlink if stat.S_ISREG(item.st_mode) else 0
+                logical_mtime = int(item.st_mtime) if stat.S_ISREG(item.st_mode) else 0
+
                 record = (
                     os.fsencode(item_relative),
                     kind.encode(errors="surrogateescape"),
                     str(stat.S_IMODE(item.st_mode)).encode(),
                     str(item.st_uid).encode(),
                     str(item.st_gid).encode(),
-                    str(item.st_nlink).encode(),
+                    str(logical_nlink).encode(),
                     str(logical_size).encode(),
-                    str(int(item.st_mtime)).encode(),
+                    str(logical_mtime).encode(),
                 )
                 for field in record:
                     metadata.update(len(field).to_bytes(8, "big"))

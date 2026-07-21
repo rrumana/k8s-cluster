@@ -21,6 +21,7 @@ spec:
       annotations:
         linkerd.io/inject: enabled
         config.linkerd.io/skip-outbound-ports: "6379"
+        storage-migration.rcrumana.xyz/script-version: "2"
       labels:
         app: immich
         component: server
