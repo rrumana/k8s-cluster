@@ -10,6 +10,8 @@ spec:
     matchLabels: { app: arr-stack }
   template:
     metadata:
+      annotations:
+        media.rcrumana.xyz/pf-sync-config-version: "2"
       labels:
         app: arr-stack
         traffic-tier: bulk-seed

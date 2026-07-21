@@ -33,12 +33,13 @@ data:
         esac
       fi
 
-      login_response="$(curl -fsS --connect-timeout 3 --max-time 10 \
+      login_status="$(curl -sS --connect-timeout 3 --max-time 10 \
+        -o /dev/null -w '%{http_code}' \
         -c /tmp/c -b /tmp/c \
         --data-urlencode "username=${QB_USERNAME}" \
         --data-urlencode "password=${QB_PASSWORD}" \
         "http://127.0.0.1:${WEBUI_PORT}/api/v2/auth/login" 2>/dev/null || true)"
-      if [ "$login_response" = "Ok." ]; then
+      if [ "$login_status" = "200" ] || [ "$login_status" = "204" ]; then
         if ! prefs="$(curl -fsS --connect-timeout 3 --max-time 10 \
           -b /tmp/c "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/preferences")"; then
           echo "pf-sync(sidecar): preferences request failed"
