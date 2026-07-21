@@ -5,4 +5,3 @@ resources:
   - certificate.yaml
   - externalsecret.yaml
   - storage-migration-pvcs.yaml
-  - storage-migration-jobs.yaml

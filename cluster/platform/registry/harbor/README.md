@@ -11,5 +11,5 @@ Notes:
 - Harbor uses shared platform PostgreSQL at `pg-platform-rw.databases.svc.cluster.local`.
 - Harbor currently uses chart-managed internal Redis because the upstream Harbor Helm chart's external Redis secret handling is broken under Argo/Helm rendering.
 - You must create a `harbor` database and `harbor` role in `pg-platform` using the same password stored at `apps/harbor/database`.
-- Persistence uses Ceph RBD (`ceph-block`) with `Recreate` update strategy because Harbor's persistent components use RWO volumes.
+- Persistence uses the critical Ceph RBD pool (`ceph-block-critical`) with `Recreate` update strategy because Harbor's persistent components use RWO volumes.
 - ChartMuseum is disabled; OCI artifacts are the intended path for charts and images.

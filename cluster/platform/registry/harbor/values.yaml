@@ -43,22 +43,30 @@ persistence:
   resourcePolicy: keep
   persistentVolumeClaim:
     registry:
-      storageClass: ceph-block
+      existingClaim: harbor-registry-critical
+      storageClass: ceph-block-critical
       accessMode: ReadWriteOnce
       size: 500Gi
     chartmuseum:
-      storageClass: ceph-block
+      storageClass: ceph-block-critical
       accessMode: ReadWriteOnce
       size: 5Gi
     jobservice:
       jobLog:
-        storageClass: ceph-block
+        existingClaim: harbor-jobservice-critical
+        storageClass: ceph-block-critical
         accessMode: ReadWriteOnce
         size: 5Gi
     trivy:
-      storageClass: ceph-block
+      existingClaim: harbor-trivy-critical
+      storageClass: ceph-block-critical
       accessMode: ReadWriteOnce
       size: 20Gi
+    database:
+      storageClass: ceph-block-critical
+    redis:
+      existingClaim: harbor-redis-critical
+      storageClass: ceph-block-critical
     imageChartStorage:
       type: filesystem
 
@@ -69,13 +77,12 @@ notary:
   enabled: false
 
 trivy:
-  # Temporarily disabled while its PVC is copied to ceph-block-critical.
-  enabled: false
+  enabled: true
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
 
 portal:
-  replicas: 0
+  replicas: 2
   resources:
     requests:
       cpu: 100m
@@ -85,7 +92,7 @@ portal:
       memory: 1Gi
 
 core:
-  replicas: 0
+  replicas: 2
   resources:
     requests:
       cpu: 250m
@@ -95,7 +102,7 @@ core:
       memory: 2Gi
 
 jobservice:
-  replicas: 0
+  replicas: 1
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
   resources:
@@ -107,7 +114,7 @@ jobservice:
       memory: 1Gi
 
 registry:
-  replicas: 0
+  replicas: 1
   nodeSelector: *storageNodeSelector
   tolerations: *storageTolerations
   registry:
@@ -138,9 +145,7 @@ database:
     sslmode: disable
 
 redis:
-  # Temporarily externalized so the chart removes the internal StatefulSet
-  # before the old RWO claim is mounted by the migration job.
-  type: external
+  type: internal
   internal:
     resources:
       requests:
@@ -151,7 +156,7 @@ redis:
         memory: 1Gi
 
 exporter:
-  replicas: 0
+  replicas: 1
   resources:
     requests:
       cpu: 50m
