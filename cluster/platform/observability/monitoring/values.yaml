@@ -210,7 +210,7 @@ prometheus:
             import sys
             import time
 
-            rate = 16 * 1024 * 1024
+            rate = 64 * 1024 * 1024
             chunk = 1024 * 1024
 
             while data := sys.stdin.buffer.read(chunk):
