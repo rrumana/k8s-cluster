@@ -210,16 +210,14 @@ prometheus:
             import sys
             import time
 
-            rate = 64 * 1024 * 1024
+            rate = 40 * 1024 * 1024
             chunk = 1024 * 1024
-            started = time.monotonic()
-            transferred = 0
 
             while data := sys.stdin.buffer.read(chunk):
+                chunk_started = time.monotonic()
                 sys.stdout.buffer.write(data)
                 sys.stdout.buffer.flush()
-                transferred += len(data)
-                delay = transferred / rate - (time.monotonic() - started)
+                delay = len(data) / rate - (time.monotonic() - chunk_started)
                 if delay > 0:
                     time.sleep(delay)
             ' \
