@@ -82,6 +82,8 @@ spec:
     schedule: "5 7 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: librechat-data-backup-restic
     pruneIntervalDays: 14
@@ -145,6 +147,8 @@ spec:
     schedule: "20 7 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: librechat-mongodb-data-backup-restic
     pruneIntervalDays: 14
@@ -208,6 +212,8 @@ spec:
     schedule: "35 7 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: librechat-meilisearch-data-backup-restic
     pruneIntervalDays: 14

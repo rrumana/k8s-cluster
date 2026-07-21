@@ -42,6 +42,8 @@ spec:
     schedule: "5 4 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: volsync-object-store
     pruneIntervalDays: 14

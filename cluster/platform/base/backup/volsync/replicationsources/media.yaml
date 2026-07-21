@@ -82,6 +82,8 @@ spec:
     schedule: "5 1 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-gluetun-backup-restic
     pruneIntervalDays: 14
@@ -145,6 +147,8 @@ spec:
     schedule: "20 1 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-jellyseerr-config-backup-restic
     pruneIntervalDays: 14
@@ -208,6 +212,8 @@ spec:
     schedule: "35 1 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-lidarr-config-backup-restic
     pruneIntervalDays: 14
@@ -271,6 +277,8 @@ spec:
     schedule: "50 1 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-prowlarr-config-backup-restic
     pruneIntervalDays: 14
@@ -334,6 +342,8 @@ spec:
     schedule: "5 2 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-qbit-config-backup-restic
     pruneIntervalDays: 14
@@ -397,6 +407,8 @@ spec:
     schedule: "20 2 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-radarr-config-backup-restic
     pruneIntervalDays: 14
@@ -460,6 +472,8 @@ spec:
     schedule: "35 2 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: arr-stack-sonarr-config-backup-restic
     pruneIntervalDays: 14
@@ -651,6 +665,8 @@ spec:
     schedule: "35 3 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: jellyfin-config-backup-restic
     cacheCapacity: 32Gi
@@ -715,6 +731,8 @@ spec:
     schedule: "50 3 * * *"
   restic:
     copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
     volumeSnapshotClassName: ceph-block-snap
     repository: plex-config-backup-restic
     cacheCapacity: 16Gi
