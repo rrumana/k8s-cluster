@@ -10,6 +10,9 @@ metadata:
     vault.rcrumana.xyz/generation: app-replicated
 spec:
   maxUnavailable: 1
+  # Keep the safe default explicit and force the PDB controller to recompute
+  # status after the final one-at-a-time target pod recreation.
+  unhealthyPodEvictionPolicy: IfHealthyBudget
   selector:
     matchLabels:
       app.kubernetes.io/name: vault
