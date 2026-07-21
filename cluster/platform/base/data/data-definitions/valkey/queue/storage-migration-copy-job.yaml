@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: valkey-queue-primary-storage-migration
+  name: valkey-queue-primary-storage-migration-v2
   namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -169,6 +169,8 @@ spec:
             capabilities:
               drop:
                 - ALL
+              add:
+                - FOWNER
             readOnlyRootFilesystem: true
           volumeMounts:
             - name: source
