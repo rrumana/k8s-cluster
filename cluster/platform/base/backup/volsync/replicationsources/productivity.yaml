@@ -77,7 +77,7 @@ metadata:
   name: elasticsearch-data-backup
   namespace: productivity
 spec:
-  sourcePVC: elasticsearch-data
+  sourcePVC: elasticsearch-data-critical
   trigger:
     schedule: "5 5 * * *"
   restic:
