@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: media-library-cephfs-bulk-seed-v3
+  name: media-library-cephfs-bulk-seed-v4
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -96,12 +96,12 @@ spec:
                 --xattrs \
                 --sparse \
                 --one-file-system \
-                --no-whole-file \
+                --whole-file \
                 --numeric-ids \
                 --delete-delay \
                 --partial \
                 --partial-dir=.rsync-partial \
-                --bwlimit=196608 \
+                --bwlimit=245760 \
                 --human-readable \
                 --info=flist1,progress2,stats2,name0 \
                 --exclude=/.cephfs-bulk-migration-target \

@@ -12,10 +12,12 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v3` is the active online seed. It is capped
-  at 192 MiB/s, mounts the legacy source read-only, and writes the target with
-  resumable protected partials. Do not activate another target writer while
-  it or one of its pods exists.
+- `media-library-cephfs-bulk-seed-v4` is the active online seed. It is capped
+  at 240 MiB/s, mounts the legacy source read-only, and uses whole-file
+  sequential transfer. Completed files remain valid across a restart, while
+  an interrupted current file is retransmitted rather than delta-scanned
+  against an EC partial. Do not activate another target writer while it or one
+  of its pods exists.
 - The live Kubernetes mount inventory found only Plex, Jellyfin, and the seed
   pod mounted on the canonical old claim. ARR remains at zero replicas and its
   Deployment template still names `media-library-torrent-eva-3`.
@@ -38,11 +40,12 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed is capped at 192 MiB/s. It may run alongside
+- The resumed concurrent seed is capped at 240 MiB/s. It may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
-  normal, application health is stable, and OSD latency and temperature stay
-  within the monitored gates. Replace the Job with a newly named resumable
-  phase if a materially different throttle is needed.
+  normal, application health is stable, and OSD latency, SMART critical
+  warnings, media-error counters, and actual device throttling remain within
+  the monitored gates. Temperature alone is informational. Replace the Job
+  with a newly named phase if a materially different throttle is needed.
 
 ## Online-seed GitOps phases
 
@@ -62,10 +65,12 @@ change a live consumer or remove old data.
    cached on a storage node; require Harbor healthy before first launch.
 5. Monitor Ceph health, slow requests, per-OSD latency, OSD.4 temperature and
    utilization, client throughput, and target growth from the first minute.
-   Suspend through GitOps if latency or temperature materially deteriorates,
-   if any OSD approaches near-full, or if Ceph stops being clean. Rsync uses
-   `--no-whole-file` so protected partial files are valid resume bases even
-   though both endpoints are local mounts.
+   Suspend through GitOps if latency materially deteriorates, if any OSD
+   approaches near-full, or if Ceph stops being clean. Rsync deliberately uses
+   `--whole-file`: these are large reconstructable media objects, and
+   sequentially retransmitting the interrupted current file is substantially
+   faster than delta-scanning an EC-backed partial. Completed files are still
+   skipped on restart.
 6. After the online seed completes, quiesce every writer and reader through
    separate GitOps commits, explicitly disable or unmount every known external
    NFS client, fence the `/media` export, and run the phase-specific final
