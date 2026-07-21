@@ -21,6 +21,21 @@ extraManifests:
       resources:
         requests:
           storage: 10Gi
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0
+      namespace: monitoring
+      annotations:
+        argocd.argoproj.io/sync-wave: "-20"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ceph-block
+      resources:
+        requests:
+          storage: 100Gi
+      volumeMode: Filesystem
 
 defaultRules:
   create: true
@@ -66,7 +81,7 @@ alertmanager:
           resources:
             requests:
               storage: 2Gi
-          storageClassName: ceph-block
+          storageClassName: ceph-block-critical
     resources:
       requests:
         cpu: 100m
@@ -141,6 +156,8 @@ prometheusOperator:
       memory: 1Gi
 
 prometheus:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
   prometheusSpec:
     nodeSelector:
       homelab.rcrumana.xyz/node-plane: storage
@@ -162,13 +179,63 @@ prometheus:
     podMonitorNamespaceSelector: {}
     storageSpec:
       volumeClaimTemplate:
+        metadata:
+          name: prometheus-db-critical
         spec:
           accessModes:
             - ReadWriteOnce
           resources:
             requests:
               storage: 100Gi
-          storageClassName: ceph-block
+          storageClassName: ceph-block-critical
+    volumes:
+      - name: prometheus-migration-source
+        persistentVolumeClaim:
+          claimName: prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0
+          readOnly: true
+    initContainers:
+      - name: migrate-prometheus-storage
+        # Do not make storage recovery depend on the in-cluster Harbor service.
+        image: docker.io/library/python:3.13-alpine
+        command:
+          - sh
+          - -c
+          - |
+            set -euxo pipefail
+            test -d /source/prometheus-db
+            test -d /source/prometheus-db/wal
+            rm -rf /target/prometheus-db
+            tar -C /source -cf - prometheus-db \
+              | python -c '
+            import sys
+            import time
+
+            rate = 64 * 1024 * 1024
+            chunk = 1024 * 1024
+            started = time.monotonic()
+            transferred = 0
+
+            while data := sys.stdin.buffer.read(chunk):
+                sys.stdout.buffer.write(data)
+                sys.stdout.buffer.flush()
+                transferred += len(data)
+                delay = transferred / rate - (time.monotonic() - started)
+                if delay > 0:
+                    time.sleep(delay)
+            ' \
+              | tar -C /target -xpf -
+            sync
+            ls -ldn /source/prometheus-db /target/prometheus-db
+            du -sk /source/prometheus-db /target/prometheus-db
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+          - name: prometheus-migration-source
+            mountPath: /source
+            readOnly: true
+          - name: prometheus-db-critical
+            mountPath: /target
     resources:
       requests:
         cpu: 500m
