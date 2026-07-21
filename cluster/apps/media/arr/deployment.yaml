@@ -11,6 +11,7 @@ spec:
   template:
     metadata:
       annotations:
+        media.rcrumana.xyz/gluetun-credentials-version: "3"
         media.rcrumana.xyz/pf-sync-config-version: "2"
       labels:
         app: arr-stack
