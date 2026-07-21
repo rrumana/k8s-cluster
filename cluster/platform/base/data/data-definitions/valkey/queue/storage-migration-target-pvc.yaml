@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: valkey-queue-primary-app-replicated
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ceph-block-app-replicated
+  resources:
+    requests:
+      storage: 20Gi
+  volumeMode: Filesystem
