@@ -19,3 +19,4 @@ patches:
       - op: add
         path: /spec/paused
         value: true
+  - path: retire-migrated-replication-sources.yaml
