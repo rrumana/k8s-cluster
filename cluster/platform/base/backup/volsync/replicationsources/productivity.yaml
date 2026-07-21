@@ -266,7 +266,7 @@ metadata:
   name: vaultwarden-data-backup
   namespace: productivity
 spec:
-  sourcePVC: vaultwarden-data
+  sourcePVC: vaultwarden-data-critical
   trigger:
     schedule: "50 6 * * *"
   restic:

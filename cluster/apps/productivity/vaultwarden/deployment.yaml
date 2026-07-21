@@ -22,27 +22,6 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
-      initContainers:
-      - name: migrate-storage
-        image: alpine:3.24
-        command:
-        - sh
-        - -c
-        - >-
-          set -eu;
-          find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +;
-          cp -a /source/. /target/;
-          sync;
-          du -sk /source /target
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-        volumeMounts:
-        - name: migration-source
-          mountPath: /source
-          readOnly: true
-        - name: data
-          mountPath: /target
       containers:
       - name: vaultwarden
         image: harbor.rcrumana.xyz/proxy-dockerhub/vaultwarden/server:1.36.0
@@ -74,9 +53,6 @@ spec:
             drop:
             - ALL
       volumes:
-      - name: migration-source
-        persistentVolumeClaim:
-          claimName: vaultwarden-data
       - name: data
         persistentVolumeClaim:
           claimName: vaultwarden-data-critical

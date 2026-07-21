@@ -12,6 +12,7 @@ resources:
   - litellm-service.yaml
   - litellm-pdb.yaml
   - pvc-llama-models-cache.yaml
+  - model-cache-migration-job.yaml
   - llama-static-a-configmap.yaml
   - llama-static-a-deployment.yaml
   - llama-static-a-service.yaml

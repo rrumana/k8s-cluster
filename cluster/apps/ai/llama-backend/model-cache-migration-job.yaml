@@ -1,0 +1,188 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: llama-models-cache-migration
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: model-cache-migration
+    spec:
+      restartPolicy: OnFailure
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: copy
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/python:3.14-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - python3
+            - -c
+          args:
+            - |
+              import os
+              import pathlib
+              import shutil
+              import stat
+
+              source = pathlib.Path("/source")
+              target = pathlib.Path("/target")
+
+              def remove_path(path):
+                  try:
+                      item = path.lstat()
+                  except FileNotFoundError:
+                      return
+                  if stat.S_ISDIR(item.st_mode) and not stat.S_ISLNK(item.st_mode):
+                      shutil.rmtree(path)
+                  else:
+                      path.unlink()
+
+              def ensure_directory(path):
+                  try:
+                      item = path.lstat()
+                  except FileNotFoundError:
+                      path.mkdir(parents=True)
+                      return
+                  if not stat.S_ISDIR(item.st_mode) or stat.S_ISLNK(item.st_mode):
+                      remove_path(path)
+                      path.mkdir(parents=True)
+
+              def copy_link(src, dst):
+                  link_target = os.readlink(src)
+                  try:
+                      if dst.is_symlink() and os.readlink(dst) == link_target:
+                          return
+                  except FileNotFoundError:
+                      pass
+                  remove_path(dst)
+                  os.symlink(link_target, dst)
+                  print(f"linked {src.relative_to(source)}", flush=True)
+
+              def copy_if_changed(src_name, dst_name):
+                  src = pathlib.Path(src_name)
+                  dst = pathlib.Path(dst_name)
+                  src_stat = src.stat()
+                  try:
+                      dst_stat = dst.stat()
+                  except FileNotFoundError:
+                      dst_stat = None
+                  if (
+                      dst_stat is not None
+                      and stat.S_ISREG(dst_stat.st_mode)
+                      and dst_stat.st_size == src_stat.st_size
+                      and dst_stat.st_mtime_ns == src_stat.st_mtime_ns
+                  ):
+                      return str(dst)
+
+                  if dst.exists() and not dst.is_file():
+                      remove_path(dst)
+                  temporary = dst.with_name(f".{dst.name}.migrating")
+                  remove_path(temporary)
+                  shutil.copyfile(src, temporary)
+                  shutil.copystat(src, temporary)
+                  try:
+                      os.chown(temporary, src_stat.st_uid, src_stat.st_gid)
+                  except PermissionError:
+                      pass
+                  os.replace(temporary, dst)
+                  print(f"copied {src.relative_to(source)}", flush=True)
+                  return str(dst)
+
+              ensure_directory(target)
+              copied_directories = []
+              for root_name, directories, files in os.walk(source, followlinks=False):
+                  root = pathlib.Path(root_name)
+                  relative_root = root.relative_to(source)
+                  target_root = target / relative_root
+                  ensure_directory(target_root)
+                  copied_directories.append((root, target_root))
+
+                  for directory_name in list(directories):
+                      src = root / directory_name
+                      dst = target_root / directory_name
+                      if src.is_symlink():
+                          copy_link(src, dst)
+                          directories.remove(directory_name)
+                      else:
+                          ensure_directory(dst)
+
+                  for file_name in files:
+                      src = root / file_name
+                      dst = target_root / file_name
+                      if src.is_symlink():
+                          copy_link(src, dst)
+                      elif src.is_file():
+                          copy_if_changed(src, dst)
+
+              for src, dst in reversed(copied_directories):
+                  shutil.copystat(src, dst)
+                  src_stat = src.stat()
+                  try:
+                      os.chown(dst, src_stat.st_uid, src_stat.st_gid)
+                  except PermissionError:
+                      pass
+
+              def manifest(root):
+                  entries = {}
+                  for path in root.rglob("*"):
+                      relative = str(path.relative_to(root))
+                      item = path.lstat()
+                      if stat.S_ISREG(item.st_mode):
+                          entries[relative] = ("file", item.st_size, item.st_mtime_ns)
+                      elif stat.S_ISLNK(item.st_mode):
+                          entries[relative] = ("link", os.readlink(path))
+                  return entries
+
+              source_manifest = manifest(source)
+              target_manifest = manifest(target)
+              if source_manifest != target_manifest:
+                  missing = sorted(source_manifest.keys() - target_manifest.keys())
+                  extra = sorted(target_manifest.keys() - source_manifest.keys())
+                  changed = sorted(
+                      key
+                      for key in source_manifest.keys() & target_manifest.keys()
+                      if source_manifest[key] != target_manifest[key]
+                  )
+                  raise RuntimeError(
+                      f"verification failed: missing={missing[:20]} "
+                      f"extra={extra[:20]} changed={changed[:20]}"
+                  )
+              total_bytes = sum(
+                  value[1] for value in source_manifest.values() if value[0] == "file"
+              )
+              print(
+                  f"verified {len(source_manifest)} entries and {total_bytes} bytes",
+                  flush=True,
+              )
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: llama-models-cache
+        - name: target
+          persistentVolumeClaim:
+            claimName: llama-models-cache-bulk

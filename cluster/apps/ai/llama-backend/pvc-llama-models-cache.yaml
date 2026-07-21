@@ -9,3 +9,17 @@ spec:
   resources:
     requests:
       storage: 500Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llama-models-cache-bulk
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  storageClassName: cephfs-bulk
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
