@@ -116,6 +116,7 @@ grafana:
           sync
           du -sk /source /target
       securityContext:
+        runAsNonRoot: false
         runAsUser: 0
         runAsGroup: 0
       volumeMounts:
