@@ -10,6 +10,7 @@ resources:
   - ml-deployment.yaml
   - services.yaml
   - configmap.yaml
+  - storage-migration-configmap.yaml
   - pvc.yaml
   - vpa.yaml
 

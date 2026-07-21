@@ -13,9 +13,37 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: immich-photos-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  storageClassName: ceph-block-critical
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Ti
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: immich-ml-cache
 spec:
   storageClassName: ceph-block
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-ml-cache-critical
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  storageClassName: ceph-block-critical
   accessModes:
     - ReadWriteOnce
   resources:

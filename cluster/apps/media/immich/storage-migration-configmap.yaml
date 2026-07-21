@@ -1,0 +1,156 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: immich-storage-migration
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+data:
+  migrate-storage.sh: |
+    set -euxo pipefail
+
+    marker=/target/.ceph-block-critical-migration-complete
+    in_progress=/target/.ceph-block-critical-migration-in-progress
+    if [ -f "${marker}" ]; then
+      echo "${MIGRATION_NAME}: completed migration marker already exists; skipping copy"
+      exit 0
+    fi
+
+    test -d /source
+    test -d /target
+
+    if [ -f "${in_progress}" ]; then
+      echo "${MIGRATION_NAME}: retrying an interrupted migration"
+      find /target -mindepth 1 -maxdepth 1 \
+        ! -name lost+found \
+        ! -name .ceph-block-critical-migration-in-progress \
+        -exec rm -rf -- {} +
+    elif find /target -mindepth 1 -maxdepth 1 ! -name lost+found -print -quit | grep -q .; then
+      echo "${MIGRATION_NAME}: refusing to erase a nonempty target without an in-progress marker" >&2
+      exit 1
+    fi
+
+    printf '%s migration started at %s\n' "${MIGRATION_NAME}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${in_progress}"
+    sync
+
+    export MIGRATION_RATE_BYTES="$((MIGRATION_RATE_MIB * 1024 * 1024))"
+    tar -C /source \
+      --exclude='./lost+found' \
+      --exclude='./.ceph-block-critical-migration-complete' \
+      --exclude='./.ceph-block-critical-migration-in-progress' \
+      -cf - . \
+      | python /scripts/throttle.py \
+      | tar -C /target -xpf -
+
+    python /scripts/inventory.py /source > /tmp/source-inventory
+    python /scripts/inventory.py /target > /tmp/target-inventory
+    cat /tmp/source-inventory
+    cat /tmp/target-inventory
+    cmp /tmp/source-inventory /tmp/target-inventory
+
+    sync
+    marker_tmp="${marker}.tmp.$$"
+    printf '%s migrated at %s\n' "${MIGRATION_NAME}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${marker_tmp}"
+    mv "${marker_tmp}" "${marker}"
+    rm -f "${in_progress}"
+    sync
+    echo "${MIGRATION_NAME}: migration completed and metadata inventory matched"
+
+  throttle.py: |
+    import os
+    import sys
+    import time
+
+    rate = int(os.environ["MIGRATION_RATE_BYTES"])
+    chunk_size = 1024 * 1024
+    started = time.monotonic()
+    last_report = started
+    transferred = 0
+
+    while data := sys.stdin.buffer.read(chunk_size):
+        chunk_started = time.monotonic()
+        sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
+        transferred += len(data)
+
+        now = time.monotonic()
+        delay = len(data) / rate - (now - chunk_started)
+        if delay > 0:
+            time.sleep(delay)
+
+        now = time.monotonic()
+        if now - last_report >= 30:
+            elapsed = now - started
+            actual_mib = transferred / elapsed / 1024 / 1024
+            print(
+                f"transferred={transferred} bytes average={actual_mib:.1f} MiB/s",
+                file=sys.stderr,
+                flush=True,
+            )
+            last_report = now
+
+  inventory.py: |
+    import hashlib
+    import os
+    import stat
+    import sys
+
+    root = sys.argv[1]
+    dirs = files = links = others = apparent_bytes = 0
+    metadata = hashlib.sha256()
+    stack = [("", root)]
+
+    while stack:
+        relative, current = stack.pop()
+        with os.scandir(current) as scan:
+            entries = sorted(scan, key=lambda entry: os.fsencode(entry.name))
+            child_dirs = []
+
+            for entry in entries:
+                if current == root and entry.name in {
+                    "lost+found",
+                    ".ceph-block-critical-migration-complete",
+                    ".ceph-block-critical-migration-in-progress",
+                }:
+                    continue
+
+                item = entry.stat(follow_symlinks=False)
+                item_relative = os.path.join(relative, entry.name)
+                if stat.S_ISDIR(item.st_mode):
+                    dirs += 1
+                    kind = "directory"
+                    logical_size = 0
+                    child_dirs.append((item_relative, entry.path))
+                elif stat.S_ISREG(item.st_mode):
+                    files += 1
+                    apparent_bytes += item.st_size
+                    kind = "file"
+                    logical_size = item.st_size
+                elif stat.S_ISLNK(item.st_mode):
+                    links += 1
+                    kind = f"symlink:{os.readlink(entry.path)}"
+                    logical_size = 0
+                else:
+                    others += 1
+                    kind = f"other:{item.st_rdev}"
+                    logical_size = 0
+
+                record = (
+                    os.fsencode(item_relative),
+                    kind.encode(errors="surrogateescape"),
+                    str(stat.S_IMODE(item.st_mode)).encode(),
+                    str(item.st_uid).encode(),
+                    str(item.st_gid).encode(),
+                    str(item.st_nlink).encode(),
+                    str(logical_size).encode(),
+                    str(int(item.st_mtime)).encode(),
+                )
+                for field in record:
+                    metadata.update(len(field).to_bytes(8, "big"))
+                    metadata.update(field)
+
+            stack.extend(reversed(child_dirs))
+
+    print(
+        f"dirs={dirs} files={files} links={links} others={others} "
+        f"apparent_bytes={apparent_bytes} metadata_sha256={metadata.hexdigest()}"
+    )
