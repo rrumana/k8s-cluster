@@ -12,12 +12,11 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v11` is suspended after fresh OSD.0
-  BlueStore commit stalls. When active, it mounts the
-  legacy source read-only and deterministically assigns every non-directory
-  pathname to one of five whole-file streams by source device and inode, at
-  52 MiB/s per stream. Every name in a hard-link group therefore stays in one
-  rsync file list even when its paths span Downloads and an organized library.
+- `media-library-cephfs-bulk-seed-v11` is the active five-queue online seed. It
+  mounts the legacy source read-only and deterministically assigns every
+  non-directory pathname to one of five whole-file streams by source device and
+  inode, at 52 MiB/s per stream. Every name in a hard-link group therefore stays
+  in one rsync file list even when its paths span Downloads and an organized library.
   A serial full-tree convergence restores directory metadata, applies deletes, and
   provides a hard-link correctness boundary after the parallel phase.
   Completed files remain valid across a restart, while interrupted current
@@ -51,7 +50,7 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The suspended concurrent seed has a 260 MiB/s combined logical cap across five
+- The active concurrent seed has a 260 MiB/s combined logical cap across five
   inode-disjoint 52 MiB/s streams. A four-stream 256 MiB/s cap previously
   reached the requested
   aggregate rate while OpenSearch recovery was also active, but OSD.0 then
@@ -69,6 +68,10 @@ change a live consumer or remove old data.
   warnings, media-error counters, and actual device throttling remain within
   the monitored gates. Temperature alone is informational. Replace the Job
   with a newly named phase if a materially different throttle is needed.
+- The v11 seed keeps its current placement for this in-flight run. Future bulk
+  movers, including any newly activated final-delta Job, require an explicit
+  migration-client placement decision and hostname spreading as documented in
+  `docs/workload-placement-plan.md`; do not rely on the default scheduler.
 
 ## Online-seed GitOps phases
 

@@ -1,7 +1,7 @@
 # Workload Placement Plan
 
-Current as of 2026-07-08, after the Eva storage-node migration and the
-NAS-to-CephFS media migration.
+Current as of 2026-07-21, during the Eva storage-node and CephFS media
+migrations.
 
 This document is the placement contract for steady-state scheduling. It is not a
 record of where pods happen to be today. It states where workloads should land
@@ -92,6 +92,42 @@ spread rules over hard pinning to individual nodes.
 Use hard node placement only when the workload is tied to a specific local
 device or when an operator requires it. For example, OSD pods and mon local data
 are node-specific; general app pods should not be.
+
+### Bulk Migration Clients Need Explicit Placement
+
+The July 2026 media and Immich migrations exposed a placement-policy gap. Their
+bulk movers had no node affinity or storage-taint toleration, so the Eva nodes
+were ineligible and Kubernetes placed both clients on `melchior-1`. The CSI
+volumes themselves had no node affinity; this was default scheduler behavior,
+not a storage-topology requirement. Older Llama and Harbor migration Jobs had
+explicit storage placement, making the newer manifests an inconsistent
+regression.
+
+Do not infer that every migration client should run on an OSD host. While the
+cluster uses a shared 2.5 Gb network, an Eva-hosted client competes with Ceph
+OSD replication and EC traffic on the same NIC, and only part of its client IO
+is served by a local primary. The right client pool depends on the active
+network topology, link headroom, and Ceph load. After the 10 Gb storage fabric
+is available, migration clients should normally use that fabric without being
+coupled unnecessarily to OSD ownership.
+
+For future high-volume RBD or CephFS moves:
+
+- Make the mover a standalone, restart-safe or checkpointed Job. Do not embed a
+  non-resumable migration in a steady-state Deployment init container.
+- Select an explicit migration-client node pool after checking link speeds,
+  current per-node traffic, OSD health, and the source and target data paths.
+- Use required node affinity for that pool and hostname anti-affinity or
+  topology spreading so concurrent movers cannot silently share one node NIC.
+- Add the Eva storage-taint toleration only when an operator deliberately
+  chooses the storage nodes for that migration.
+- Keep migration placement separate from the steady-state application policy,
+  and record the placement decision in the migration runbook before activation.
+
+The active media v11 seed will not be moved mid-flight. This incident is being
+documented for the next migration phase rather than corrected through another
+disruptive restart. Its future final-delta Job must receive an explicit
+migration-client placement review before activation.
 
 ### Non-PVC Workloads Stay Control
 
