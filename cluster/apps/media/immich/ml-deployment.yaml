@@ -20,46 +20,12 @@ spec:
     metadata:
       annotations:
         linkerd.io/inject: enabled
-        storage-migration.rcrumana.xyz/script-version: "2"
       labels:
         app: immich
         component: machine-learning
     spec:
       serviceAccountName: immich-machine-learning
       terminationGracePeriodSeconds: 120
-      initContainers:
-        - name: migrate-ceph-block-storage
-          image: docker.io/library/python:3.13-alpine@sha256:399babc8b49529dabfd9c922f2b5eea81d611e4512e3ed250d75bd2e7683f4b0
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/sh
-            - /scripts/migrate-storage.sh
-          env:
-            - name: MIGRATION_NAME
-              value: immich-ml-cache
-            - name: MIGRATION_RATE_MIB
-              value: "24"
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-            runAsNonRoot: false
-            allowPrivilegeEscalation: false
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: "1"
-              memory: 512Mi
-          volumeMounts:
-            - name: migration-source
-              mountPath: /source
-              readOnly: true
-            - name: model-cache
-              mountPath: /target
-            - name: migration-scripts
-              mountPath: /scripts
-              readOnly: true
       containers:
         - name: immich-machine-learning
           image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v3.0.3
@@ -94,14 +60,6 @@ spec:
               memory: "48Gi"
               cpu: "24"
       volumes:
-        - name: migration-source
-          persistentVolumeClaim:
-            claimName: immich-ml-cache
-            readOnly: true
         - name: model-cache
           persistentVolumeClaim:
             claimName: immich-ml-cache-critical
-        - name: migration-scripts
-          configMap:
-            name: immich-storage-migration
-            defaultMode: 0555
