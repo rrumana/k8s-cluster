@@ -34,10 +34,10 @@ spec:
       securityConfigSecret:
         name: opensearch-security-config
   nodePools:
-    # Temporary source pool. Hold one node until replica recovery is green,
-    # then drain the final node and remove this pool.
+    # Temporary source pool. Remove after the final node is empty and the
+    # app-replicated pool remains green by itself.
     - component: logs
-      replicas: 1
+      replicas: 0
       diskSize: "200Gi"
       jvm: "-Xms2g -Xmx2g"
       nodeSelector:
