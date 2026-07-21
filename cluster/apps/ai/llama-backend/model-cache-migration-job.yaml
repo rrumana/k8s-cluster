@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
     argocd.argoproj.io/sync-options: Replace=true
 spec:
-  suspend: false
+  suspend: true
   backoffLimit: 2
   template:
     metadata:
