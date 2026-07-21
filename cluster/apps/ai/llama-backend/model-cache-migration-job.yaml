@@ -4,6 +4,7 @@ metadata:
   name: llama-models-cache-migration
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   backoffLimit: 2
   template:
@@ -11,6 +12,7 @@ spec:
       labels:
         app.kubernetes.io/component: model-cache-migration
     spec:
+      serviceAccountName: llama-static-a
       restartPolicy: OnFailure
       nodeSelector:
         homelab.rcrumana.xyz/node-plane: storage
