@@ -17,10 +17,11 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The seed is capped at 16 MiB/s. Do not start it while another bulk copy,
-  recovery, backfill, or scrub load is materially affecting latency or
-  temperature. In particular, Prometheus's migration must be complete and
-  Prometheus healthy first.
+- The initial concurrent seed is capped at 64 MiB/s. It may run alongside
+  other migrations while Ceph remains healthy and clean, MDS health remains
+  normal, application health is stable, and OSD latency and temperature stay
+  within the monitored gates. Replace the Job with a newly named resumable
+  phase if a materially different throttle is needed.
 
 ## GitOps phases
 
@@ -33,10 +34,10 @@ change a live consumer or remove old data.
    `Retain`. Record that path for the consumer and NFS cutover.
 3. Commit `media-library-bulk-copy-job.yaml` while it remains excluded from
    kustomization. This is the inert review phase represented by this tree.
-4. After the cluster is green and no other bulk migration is running, add the
-   Job to kustomization with `suspend: true`. A separate commit may then change
-   only `suspend` to `false`. The pinned image is authenticated in Harbor and
-   supplies rsync 3.2.5 with ACL/xattr support, but is not guaranteed to be
+4. Add the Job to kustomization and activate it only after the target claim is
+   Bound and its PV has been verified as `fsName: cephfs`, `pool: cephfs-bulk`,
+   with reclaim policy `Retain`. The pinned image is authenticated in Harbor
+   and supplies rsync 3.2.5 with ACL/xattr support, but is not guaranteed to be
    cached on a storage node; require Harbor healthy before first launch.
 5. Monitor Ceph health, slow requests, per-OSD latency, OSD.4 temperature and
    utilization, client throughput, and target growth from the first minute.

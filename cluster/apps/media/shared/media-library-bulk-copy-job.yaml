@@ -9,9 +9,7 @@ metadata:
     app.kubernetes.io/name: media-library
     app.kubernetes.io/component: storage-migration
 spec:
-  # This manifest is also intentionally excluded from kustomization. Keeping
-  # it suspended provides a second guard when it is first added.
-  suspend: true
+  suspend: false
   # Never let a replacement rsync writer overlap a terminating predecessor on
   # the RWX target after an eviction or node failure.
   podReplacementPolicy: Failed
@@ -103,7 +101,7 @@ spec:
                 --delete-delay \
                 --partial \
                 --partial-dir=.rsync-partial \
-                --bwlimit=16384 \
+                --bwlimit=65536 \
                 --human-readable \
                 --info=flist1,progress2,stats2,name0 \
                 --exclude=/.cephfs-bulk-migration-target \

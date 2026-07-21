@@ -5,6 +5,7 @@ namespace: media
 
 resources:
   - externalsecret.yaml
+  - media-library-bulk-copy-job.yaml
   - media-library-bulk-pvc.yaml
   - media-library-pv.yaml
   - media-library-torrent-eva-1-pv.yaml
@@ -12,9 +13,6 @@ resources:
   - media-library-torrent-eva-3-pv.yaml
   - media-library-torrent-eva-3-canary-pv.yaml
   - serviceaccount.yaml
-
-# Intentionally excluded until its dedicated activation phase:
-#   media-library-bulk-copy-job.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: media-shared
