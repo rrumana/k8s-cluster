@@ -18,5 +18,6 @@ resources:
   - storage-class-ceph-filesystem.yaml
   - storage-class-cephfs-replicated.yaml
   - storage-class-cephfs-bulk.yaml
+  - storage-class-cephfs-bulk-retain.yaml
   - volume-snapshot-class.yaml
   - toolbox.yaml
