@@ -6,6 +6,36 @@ global:
 crds:
   enabled: true
 
+extraManifests:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring
+      annotations:
+        argocd.argoproj.io/sync-wave: "-20"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ceph-block
+      resources:
+        requests:
+          storage: 10Gi
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: kube-prometheus-stack-grafana-critical
+      namespace: monitoring
+      annotations:
+        argocd.argoproj.io/sync-wave: "-20"
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ceph-block-critical
+      resources:
+        requests:
+          storage: 10Gi
+
 defaultRules:
   create: true
   rules:
@@ -61,13 +91,41 @@ alertmanager:
 
 grafana:
   envFromSecret: opensearch-admin-credentials
+  deploymentStrategy:
+    type: Recreate
   persistence:
     enabled: true
     type: pvc
+    existingClaim: kube-prometheus-stack-grafana-critical
     accessModes:
       - ReadWriteOnce
     size: 10Gi
-    storageClassName: ceph-block
+  extraInitContainers:
+    - name: migrate-storage
+      image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
+      command:
+        - sh
+        - -c
+        - |
+          set -eux
+          find /target -mindepth 1 -maxdepth 1 ! -name lost+found -exec rm -rf -- {} +
+          cp -a /source/. /target/
+          sync
+          du -sk /source /target
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      volumeMounts:
+        - name: migration-source
+          mountPath: /source
+          readOnly: true
+        - name: storage
+          mountPath: /target
+  extraContainerVolumes:
+    - name: migration-source
+      persistentVolumeClaim:
+        claimName: kube-prometheus-stack-grafana
+        readOnly: true
   grafana.ini:
     server:
       domain: grafana.rcrumana.xyz
