@@ -123,16 +123,21 @@ Do not add either component label to the StatefulSet selector, generation
 selector, headless Service selector, anti-affinity, or PDB selector.
 
 The StatefulSet uses `OnDelete`, so the Git change does not restart a Vault
-member automatically. Replace one target pod at a time, waiting for its
-existing PVC to reattach, then unseal it and require Ready/healthy Raft state
-before replacing the next. A direct pod deletion is a reconciliation action;
-the persistent desired label must already be present in Git.
+member automatically. After the desired labels are committed and synced,
+patch the same two labels on each already-running target pod one at a time.
+This is a live convergence action to an already-committed desired state, and
+avoids restarting healthy voters merely to change Service membership. Require
+healthy Raft state and correct Service endpoints after every pod label patch.
 
-After all three replacements, inspect canonical API, active, standby, and UI
+After all three label patches, inspect canonical API, active, standby, and UI
 Service endpoints. Require all target pods to be eligible, exactly one healthy
 leader, successful authenticated reads through the stable `vault.security.svc`
 address, and healthy External Secrets. Do not retire an old member until this
 gate passes.
+
+After the source voters are retired, replace the target pods one at a time so
+they adopt the final `OnDelete` controller revision. Unseal and fully gate each
+replacement before moving to the next ordinal.
 
 ## Phase 4: retire old members without dropping below quorum
 

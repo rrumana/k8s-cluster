@@ -24,9 +24,9 @@ spec:
       labels:
         app.kubernetes.io/name: vault
         app.kubernetes.io/instance: vault
-        app.kubernetes.io/component: server-migration
+        app.kubernetes.io/component: server
         app.kubernetes.io/managed-by: argocd
-        component: server-migration
+        component: server
         vault.rcrumana.xyz/generation: app-replicated
     spec:
       affinity:
