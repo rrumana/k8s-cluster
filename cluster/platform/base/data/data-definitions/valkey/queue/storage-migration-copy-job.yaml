@@ -1,0 +1,200 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: valkey-queue-primary-storage-migration
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: valkey
+    app.kubernetes.io/instance: valkey-queue
+    app.kubernetes.io/component: storage-migration
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 600
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: valkey
+        app.kubernetes.io/instance: valkey-queue
+        app.kubernetes.io/component: storage-migration
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: valkey
+                  app.kubernetes.io/instance: valkey-queue
+                  app.kubernetes.io/component: primary
+              topologyKey: kubernetes.io/hostname
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: copy-and-verify
+          image: harbor.rcrumana.xyz/mirror/bitnami/valkey@sha256:ed59f8b1d48be2d6049cae22d3c2b878baa11f42f875160bdf993eb219997372
+          imagePullPolicy: IfNotPresent
+          command:
+            - /usr/bin/bash
+            - -ec
+            - |
+              set -Eeuo pipefail
+
+              readonly marker="/target/.valkey-migration-complete"
+              readonly source_files="/tmp/source-files.sha256"
+              readonly target_files="/tmp/target-files.sha256"
+              readonly source_tree="/tmp/source-tree.txt"
+              readonly target_tree="/tmp/target-tree.txt"
+
+              export VALKEYCLI_AUTH="$(< /secrets/valkey-password)"
+              for primary_host in \
+                valkey-queue-primary.databases.svc.cluster.local \
+                valkey-queue-primary-0.valkey-queue-headless.databases.svc.cluster.local
+              do
+                if timeout 5 valkey-cli -h "${primary_host}" -p 6379 ping >/dev/null 2>&1; then
+                  echo "Refusing to copy while ${primary_host} is live" >&2
+                  exit 42
+                fi
+              done
+              unset VALKEYCLI_AUTH
+
+              make_manifests() {
+                local root="$1"
+                local files="$2"
+                local tree="$3"
+
+                (
+                  cd "${root}"
+                  find . -xdev \
+                    -path ./lost+found -prune -o \
+                    -path ./.valkey-migration-complete -prune -o \
+                    -type f -print0 \
+                    | LC_ALL=C sort -z \
+                    | xargs -0 -r sha256sum
+                ) > "${files}"
+
+                (
+                  cd "${root}"
+                  find . -xdev \
+                    -path ./lost+found -prune -o \
+                    -path ./.valkey-migration-complete -prune -o \
+                    -printf '%y\t%m\t%U\t%G\t%s\t%P\t%l\0' \
+                    | LC_ALL=C sort -z
+                ) > "${tree}"
+              }
+
+              verify_copy() {
+                make_manifests /source "${source_files}" "${source_tree}"
+                make_manifests /target "${target_files}" "${target_tree}"
+
+                source_files_digest="$(sha256sum "${source_files}" | awk '{print $1}')"
+                target_files_digest="$(sha256sum "${target_files}" | awk '{print $1}')"
+                source_tree_digest="$(sha256sum "${source_tree}" | awk '{print $1}')"
+                target_tree_digest="$(sha256sum "${target_tree}" | awk '{print $1}')"
+
+                test "${source_files_digest}" = "${target_files_digest}"
+                test "${source_tree_digest}" = "${target_tree_digest}"
+
+                source_file_count="$(wc -l < "${source_files}")"
+                source_bytes="$(
+                  find /source -xdev \
+                    -path /source/lost+found -prune -o \
+                    -type f -printf '%s\n' \
+                    | awk '{ total += $1 } END { print total + 0 }'
+                )"
+
+                printf 'verified files=%s bytes=%s files_sha256=%s tree_sha256=%s\n' \
+                  "${source_file_count}" \
+                  "${source_bytes}" \
+                  "${source_files_digest}" \
+                  "${source_tree_digest}"
+              }
+
+              if [[ -f "${marker}" ]]; then
+                echo "Completion marker already exists; verifying instead of recopying"
+                verify_copy
+                exit 0
+              fi
+
+              find /target -xdev -mindepth 1 -maxdepth 1 \
+                ! -name lost+found \
+                ! -name .valkey-migration-complete \
+                -exec rm -rf -- {} +
+
+              tar \
+                --acls \
+                --xattrs \
+                --exclude=./lost+found \
+                --exclude=./.valkey-migration-complete \
+                -C /source \
+                -cpf - . \
+                | tar \
+                    --acls \
+                    --xattrs \
+                    --no-same-owner \
+                    -C /target \
+                    -xpf -
+
+              sync -f /target
+              verification="$(verify_copy)"
+              printf '%s\ncompleted_at=%s\n' \
+                "${verification}" \
+                "$(date --iso-8601=seconds)" \
+                > "${marker}.tmp"
+              sync "${marker}.tmp"
+              mv "${marker}.tmp" "${marker}"
+              sync -f /target
+              printf '%s\n' "${verification}"
+              echo "Valkey primary storage copy completed and verified"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: source
+              mountPath: /source
+              readOnly: true
+            - name: target
+              mountPath: /target
+            - name: auth
+              mountPath: /secrets
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: source
+          persistentVolumeClaim:
+            claimName: valkey-data-valkey-queue-primary-0
+            readOnly: true
+        - name: target
+          persistentVolumeClaim:
+            claimName: valkey-queue-primary-app-replicated
+        - name: auth
+          secret:
+            secretName: valkey-queue-auth
+            defaultMode: 0440
+            items:
+              - key: password
+                path: valkey-password
+        - name: tmp
+          emptyDir: {}
