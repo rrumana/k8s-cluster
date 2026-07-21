@@ -20,10 +20,10 @@ spec:
           effect: NoSchedule
       containers:
         - name: copy
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          # Harbor is intentionally offline during this copy. This exact image
-          # is pre-cached on eva-1, so do not attempt registry resolution.
-          imagePullPolicy: Never
+          image: docker.io/library/busybox:1.38
+          # Harbor is intentionally offline during this copy, so this job must
+          # not depend on Harbor's proxy cache.
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -72,8 +72,8 @@ spec:
           effect: NoSchedule
       containers:
         - name: copy
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          imagePullPolicy: Never
+          image: docker.io/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -122,8 +122,8 @@ spec:
           effect: NoSchedule
       containers:
         - name: copy
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          imagePullPolicy: Never
+          image: docker.io/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -172,8 +172,8 @@ spec:
           effect: NoSchedule
       containers:
         - name: copy
-          image: harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38
-          imagePullPolicy: Never
+          image: docker.io/library/busybox:1.38
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
             runAsGroup: 0
