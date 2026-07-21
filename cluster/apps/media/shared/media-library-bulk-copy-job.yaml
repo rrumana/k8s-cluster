@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: media-library
     app.kubernetes.io/component: storage-migration
 spec:
-  suspend: false
+  suspend: true
   # Never let a replacement rsync writer overlap a terminating predecessor on
   # the RWX target after an eviction or node failure.
   podReplacementPolicy: Failed
