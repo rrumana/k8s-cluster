@@ -7,7 +7,8 @@ metadata:
   labels:
     app: elasticsearch
 spec:
-  replicas: 1
+  # Keep the storage-class migration stopped while the Eva storage plane recovers.
+  replicas: 0
   strategy:
     type: Recreate
   selector:
