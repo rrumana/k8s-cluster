@@ -108,6 +108,42 @@ spec:
             - { name: gluetun,     mountPath: /gluetun }
             - { name: temp,        mountPath: /temp }
             - { name: jellyseerr-config, mountPath: /seerr-config }
+        - name: install-vuetorrent
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              version="v2.31.0"
+              expected_sha256="ad213f4479a232ae27b410b082b622ac2d06661cab063c2d240fbd255083ddab"
+              target="/config/vuetorrent-${version}"
+
+              if [ -f "${target}/public/index.html" ]; then
+                echo "install-vuetorrent: ${version} already installed"
+                exit 0
+              fi
+
+              archive="/tmp/vuetorrent.zip"
+              stage="/tmp/vuetorrent-stage"
+              mkdir -p "$stage"
+              curl -fL --retry 5 --retry-delay 2 \
+                "https://github.com/VueTorrent/VueTorrent/releases/download/${version}/vuetorrent.zip" \
+                -o "$archive"
+              printf '%s  %s\n' "$expected_sha256" "$archive" | sha256sum -c -
+              unzip -q "$archive" -d "$stage"
+              test -f "$stage/vuetorrent/public/index.html"
+
+              mkdir -p "$target"
+              cp -a "$stage/vuetorrent/." "$target/"
+              test -f "${target}/public/index.html"
+              chown -R 1000:1000 "$target"
+              echo "install-vuetorrent: installed ${version}"
+          volumeMounts:
+            - { name: qbit-config, mountPath: /config }
 
       containers:
         - name: gluetun
@@ -147,7 +183,7 @@ spec:
             - { name: QB_SEND_BUFFER_WATERMARK, value: "131072" }
             - { name: QB_SEND_BUFFER_WATERMARK_FACTOR, value: "250" }
             - { name: QB_ALTERNATIVE_WEBUI_ENABLED, value: "true" }
-            - { name: QB_ALTERNATIVE_WEBUI_PATH, value: "/vuetorrent" }
+            - { name: QB_ALTERNATIVE_WEBUI_PATH, value: "/config/vuetorrent-v2.31.0" }
             - { name: QB_USERNAME, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: username } } }
             - { name: QB_PASSWORD, valueFrom: { secretKeyRef: { name: qb-webui-creds, key: password } } }
           volumeMounts:
@@ -165,7 +201,6 @@ spec:
             - { name: TZ,   value: "America/Los_Angeles" }
             - { name: WEBUI_PORT, value: "8020" }
             - { name: TORRENTING_PORT, value: "6881" }
-            - { name: DOCKER_MODS, value: "ghcr.io/vuetorrent/vuetorrent-lsio-mod:2.31.0" }
           ports:
             - { name: webui, containerPort: 8020, protocol: TCP }
           volumeMounts:
