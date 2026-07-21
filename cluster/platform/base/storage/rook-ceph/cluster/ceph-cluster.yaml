@@ -110,8 +110,8 @@ spec:
     enabled: true
     metricsDisabled: false
 
-  # Maintenance recovery settings tuned to keep client workloads responsive
-  # while allowing post-migration OSD rebalancing to make steady progress.
+  # Temporary replacement recovery settings. Restore the client-priority
+  # profile after the eva-3 replacement OSD is fully backfilled and clean.
   cephConfig:
     global:
       public_network: "192.168.1.0/24"
@@ -120,11 +120,11 @@ spec:
       # created. Existing pools are unaffected by this default.
       osd_pool_erasure_code_stripe_unit: "16384"
       osd_mclock_override_recovery_settings: "true"
-      osd_mclock_profile: high_client_ops
+      osd_mclock_profile: high_recovery_ops
       osd_max_backfills: "6"
-      osd_recovery_max_active: "6"
+      osd_recovery_max_active: "10"
       osd_recovery_max_single_start: "6"
-      osd_recovery_sleep: "0.2"
+      osd_recovery_sleep: "0"
     client:
       client_readahead_max_periods: "1"
       client_readahead_max_bytes: "4194304"
@@ -153,4 +153,4 @@ spec:
           - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X809383A
           - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0Y209802J
           - name: /dev/disk/by-id/nvme-ADATA_LEGEND_900_4N42210FA46C
-          - name: /dev/disk/by-id/nvme-Sabrent_Rocket_Q_23CD0705089800199528
+          - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W944501L
