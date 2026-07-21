@@ -526,6 +526,31 @@ spec:
         key: apps/media/volsync-object-store
         property: AWS_SECRET_ACCESS_KEY
 ---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: immich-ml-cache-backup
+  namespace: media
+spec:
+  sourcePVC: immich-ml-cache-critical
+  trigger:
+    schedule: "50 2 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-critical
+    cacheStorageClassName: ceph-block-critical
+    volumeSnapshotClassName: ceph-block-snap
+    repository: immich-ml-cache-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
