@@ -92,8 +92,10 @@ alertmanager:
 grafana:
   envFromSecret: opensearch-admin-credentials
   deploymentStrategy:
-    type: Recreate
-    rollingUpdate: null
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   persistence:
     enabled: true
     type: pvc
