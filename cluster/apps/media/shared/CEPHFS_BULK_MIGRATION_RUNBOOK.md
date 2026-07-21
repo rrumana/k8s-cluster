@@ -12,10 +12,11 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v10` is the active online seed. It mounts the
+- `media-library-cephfs-bulk-seed-v11` is staged suspended for the five-queue
+  online seed. When activated, it mounts the
   legacy source read-only and deterministically assigns every non-directory
-  pathname to one of four whole-file streams by source device and inode, at
-  64 MiB/s per stream. Every name in a hard-link group therefore stays in one
+  pathname to one of five whole-file streams by source device and inode, at
+  52 MiB/s per stream. Every name in a hard-link group therefore stays in one
   rsync file list even when its paths span Downloads and an organized library.
   A serial full-tree convergence restores directory metadata, applies deletes, and
   provides a hard-link correctness boundary after the parallel phase.
@@ -42,23 +43,26 @@ change a live consumer or remove old data.
   roughly 3.25 TiB linked between Downloads and Shows and 589 GiB linked
   between Downloads and Movies. Never parallelize this tree by pathname
   branch: doing so would materialize most of those links as duplicate files.
-  The v10 device-and-inode assignment measured 1.28-1.45 TB of unique data per
-  worker before activation.
+  The v11 device-and-inode assignment measured 0.93-1.05 TiB of unique data per
+  worker before activation, with zero hard-link groups crossing workers.
 - Plex and Jellyfin are the direct live consumers. ARR is at zero replicas.
   The Ganesha `/media` export had no established external sessions during the
   inventory, but that must be checked again and then fenced at cutover.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed has a 256 MiB/s combined logical cap across four
-  inode-disjoint 64 MiB/s streams. This cap previously reached the requested
+- The prepared concurrent seed has a 260 MiB/s combined logical cap across five
+  inode-disjoint 52 MiB/s streams. A four-stream 256 MiB/s cap previously
+  reached the requested
   aggregate rate while OpenSearch recovery was also active, but OSD.0 then
   recorded 5-7 second BlueStore commit stalls and an actual SMART
   thermal-management level-2 transition. A clean 224 MiB/s fallback sustained
   only about 227 MiB/s aggregate reads and writes. After OpenSearch recovery
-  completed, a clean 240 MiB/s probe still sustained only about 228/233 MiB/s.
-  The target cap was therefore restored with less total concurrent cluster I/O
-  than during the event, while retaining the same immediate material gates. It
+  completed, a clean 240 MiB/s probe still sustained only about 228/233 MiB/s,
+  and the restored four-stream 256 MiB/s cap remained near 234/234 MiB/s over
+  the multi-minute Prometheus window. The fifth lower-rate stream adds queue
+  depth while increasing the logical cap by only 1.6%; its buckets are balanced
+  within 7.1% of their mean. It retains the same immediate material gates and
   may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency, SMART critical
@@ -101,6 +105,12 @@ change a live consumer or remove old data.
 Job pod templates are immutable. Any throttle, command, or image adjustment
 requires suspending/removing the current Job and creating a newly named Job.
 The protected partial directory makes that replacement resumable.
+Never rename and activate a replacement in one commit: Argo applies the new
+object before pruning the old object and does not serialize them by sync wave.
+First suspend the old Job and prove its active count is zero and its pod,
+runtime process, and CephFS session are absent. Next reconcile the renamed Job
+while it remains suspended and prove the old object is gone. Only then activate
+the new Job in a separate commit and confirm that it is the sole target writer.
 
 The Job refuses a nonempty target unless it contains its expected identity
 marker. It also refuses to replay a phase whose valid completion marker exists.

@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: media-library-cephfs-bulk-seed-v10
+  name: media-library-cephfs-bulk-seed-v11
   namespace: media
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -54,8 +54,8 @@ spec:
               readonly verification=/tmp/rsync-verification
               readonly inventory=/tmp/cephfs-bulk-inventory
               readonly file_list_prefix=/tmp/cephfs-bulk-files
-              readonly stream_count=4
-              readonly per_stream_bwlimit_kib=65536
+              readonly stream_count=5
+              readonly per_stream_bwlimit_kib=53248
               declare -a child_pids=()
 
               stop_copy() {
@@ -116,6 +116,7 @@ spec:
               exec 4> "${file_list_prefix}.1"
               exec 5> "${file_list_prefix}.2"
               exec 6> "${file_list_prefix}.3"
+              exec 7> "${file_list_prefix}.4"
               inventory_count=0
               while IFS= read -r -d '' device \
                   && IFS= read -r -d '' inode \
@@ -130,6 +131,7 @@ spec:
                   1) printf '%s\0' "${relative_path}" >&4 ;;
                   2) printf '%s\0' "${relative_path}" >&5 ;;
                   3) printf '%s\0' "${relative_path}" >&6 ;;
+                  4) printf '%s\0' "${relative_path}" >&7 ;;
                 esac
                 inventory_count=$((inventory_count + 1))
               done < "${inventory}"
@@ -137,6 +139,7 @@ spec:
               exec 4>&-
               exec 5>&-
               exec 6>&-
+              exec 7>&-
 
               bucket_count=0
               for stream_index in $(seq 0 $((stream_count - 1))); do
