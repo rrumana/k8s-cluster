@@ -12,10 +12,10 @@ change a live consumer or remove old data.
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
   The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
   `Retain`.
-- `media-library-cephfs-bulk-seed-v6` is the active online seed. It mounts the
+- `media-library-cephfs-bulk-seed-v7` is the active online seed. It mounts the
   legacy source read-only and deterministically assigns every non-directory
   pathname to one of four whole-file streams by source device and inode, at
-  50 MiB/s per stream. Every name in a hard-link group therefore stays in one
+  64 MiB/s per stream. Every name in a hard-link group therefore stays in one
   rsync file list even when its paths span Downloads and an organized library.
   A serial full-tree convergence restores directory metadata, applies deletes, and
   provides a hard-link correctness boundary after the parallel phase.
@@ -42,7 +42,7 @@ change a live consumer or remove old data.
   roughly 3.25 TiB linked between Downloads and Shows and 589 GiB linked
   between Downloads and Movies. Never parallelize this tree by pathname
   branch: doing so would materialize most of those links as duplicate files.
-  The v6 device-and-inode assignment measured 1.28-1.45 TB of unique data per
+  The v7 device-and-inode assignment measured 1.28-1.45 TB of unique data per
   worker before activation.
 - Plex and Jellyfin are the direct live consumers. ARR is at zero replicas.
   The Ganesha `/media` export had no established external sessions during the
@@ -50,10 +50,11 @@ change a live consumer or remove old data.
 - The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
   to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
   threshold is 85%.
-- The resumed concurrent seed has a 200 MiB/s combined logical cap across four
-  inode-disjoint 50 MiB/s streams. With the current 50-60 MiB/s of background
-  client I/O, this targets roughly 250 MiB/s reads and 250 MiB/s writes
-  independently at the cluster level. It may run alongside
+- The resumed concurrent seed has a 256 MiB/s combined logical cap across four
+  inode-disjoint 64 MiB/s streams. The preceding 200 MiB/s cap settled near
+  205 MiB/s in each direction at the cluster level; the observed worker
+  efficiency plus current background I/O makes this cap target roughly
+  250-275 MiB/s reads and writes independently. It may run alongside
   other migrations while Ceph remains healthy and clean, MDS health remains
   normal, application health is stable, and OSD latency, SMART critical
   warnings, media-error counters, and actual device throttling remain within
