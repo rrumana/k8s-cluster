@@ -166,6 +166,13 @@ been removed from the Raft configuration, its retained data directory is stale
 and must not simply be started beside the live cluster. Reintroducing it
 requires a separately reviewed reset/rejoin or recovery procedure.
 
+After the source StatefulSet reaches zero and all target voters are healthy,
+disable the chart-owned source PDB with
+`server.ha.disruptionBudget.enabled=false`. The promoted target pods otherwise
+match both that broad `maxUnavailable: 0` selector and the generation-scoped
+target PDB. Require the legacy PDB to be absent and the target PDB alone to
+report three healthy pods with one disruption allowed before any node drain.
+
 ## Cleanup gates
 
 This kustomization contains no old-PVC or old-pool deletion mechanism. Cleanup

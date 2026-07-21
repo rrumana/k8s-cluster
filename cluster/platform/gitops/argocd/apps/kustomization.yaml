@@ -87,3 +87,5 @@ patches:
         value:
           - name: server.ha.replicas
             value: "0"
+          - name: server.ha.disruptionBudget.enabled
+            value: "false"
