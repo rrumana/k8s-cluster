@@ -60,7 +60,7 @@ spec:
             claimName: arr-stack-jellyseerr-config-critical
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-bulk
+            claimName: media-library-bulk-torrent-eva-3
         - name: temp
           hostPath: { path: /var/lib/qbit-temp, type: DirectoryOrCreate }
         - name: pf-state
