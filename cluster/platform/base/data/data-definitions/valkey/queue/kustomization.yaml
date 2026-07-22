@@ -5,6 +5,4 @@ namespace: databases
 
 resources:
   - externalsecret.yaml
-  - migration-primary-service.yaml
   - storage-migration-target-pvc.yaml
-  - storage-migration-legacy-pvcs.yaml
