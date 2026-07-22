@@ -32,7 +32,7 @@ spec:
       replicated:
         size: 2
         requireSafeReplicaSize: true
-  preserveFilesystemOnDelete: true
+  preserveFilesystemOnDelete: false
   metadataServer:
     activeCount: 1
     activeStandby: true
