@@ -6,7 +6,6 @@ namespace: rook-ceph
 resources:
   - ceph-cluster.yaml
   - ceph-block-pool.yaml
-  - ceph-filesystem.yaml
   - ceph-filesystem-final.yaml
   - ceph-nfs-bulk.yaml
   - ceph-nfs-bulk-service.yaml
