@@ -243,16 +243,8 @@ spec:
                   --group_name "${old_group}" --format json)"
                 printf '%s\n' "${snapshots}" | jq -e 'length == 0' >/dev/null
 
-                fs_status="$(ceph fs status "${old_fs}" --format json)"
-                standby_entity="$(printf '%s\n' "${fs_status}" | jq -er \
-                  --arg prefix "${old_fs}-" '
-                    [.mdsmap[] | select(
-                      .rank == "0-s" and .state == "standby-replay") | .name]
-                    | if length == 1 and (.[0] | startswith($prefix))
-                      then .[0] | ltrimstr($prefix)
-                      else empty
-                      end
-                  ')"
+                active_manager="$(ceph mgr dump --format json | jq -er \
+                  '.active_name | strings | select(length > 0)')"
                 old_clients="$(ceph tell "mds.${old_fs}:0" client ls \
                   --format json)"
                 source_clients="$(printf '%s\n' "${old_clients}" | jq \
@@ -265,14 +257,16 @@ spec:
                   exit 71
                 fi
 
-                # The authenticated standby-replay MDS appears as a client
-                # rooted at /. It is not a data consumer. Refuse every other
-                # session, including anything spoofing only client metadata.
+                # The active Ceph manager may briefly appear as an authenticated
+                # type-16 management client rooted at /. It is not a data
+                # consumer. Refuse every other session, including anything
+                # spoofing only client metadata.
                 unexpected_clients="$(printf '%s\n' "${old_clients}" | jq \
-                  --arg standby "${standby_entity}" '
+                  --arg manager "${active_manager}" '
                   [.[] | select(
-                    ((.auth_name.id // "") != $standby) or
-                    ((.client_metadata.entity_id // "") != $standby) or
+                    ((.auth_name.type // -1) != 16) or
+                    ((.auth_name.id // "") != $manager) or
+                    ((.client_metadata.entity_id // "") != $manager) or
                     ((.client_metadata.root // "") != "/") or
                     ((.client_metadata.pid // "") != "1")
                   )]
