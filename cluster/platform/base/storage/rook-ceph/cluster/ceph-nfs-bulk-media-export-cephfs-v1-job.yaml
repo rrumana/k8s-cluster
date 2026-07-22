@@ -85,7 +85,40 @@ spec:
                   ' >/dev/null
               }
 
-              test "$(ceph health --format json | jq -r .status)" = HEALTH_OK
+              # BLUESTORE_SLOW_OP_ALERT is latched for 24 hours on this
+              # cluster. Permit that warning alone only when fresh topology,
+              # PG-state, and latency gates all prove the cluster is ready.
+              cluster_status="$(ceph status --format json)"
+              if ! printf '%s\n' "${cluster_status}" | jq -e '
+                  (.health.status == "HEALTH_OK" and
+                    (.health.checks | length) == 0) or
+                  (.health.status == "HEALTH_WARN" and
+                    (.health.checks | keys) == ["BLUESTORE_SLOW_OP_ALERT"])
+                ' >/dev/null; then
+                echo 'Refusing target NFS export with unexpected Ceph health' >&2
+                printf '%s\n' "${cluster_status}" | jq .health >&2
+                exit 75
+              fi
+              printf '%s\n' "${cluster_status}" | jq -e '
+                .osdmap.num_osds > 0 and
+                .osdmap.num_osds == .osdmap.num_up_osds and
+                .osdmap.num_osds == .osdmap.num_in_osds and
+                .osdmap.num_remapped_pgs == 0
+              ' >/dev/null
+              ceph pg stat --format json | jq -e '
+                .pg_ready == true and
+                ([.pg_summary.num_pg_by_state[].num] | add) ==
+                  .pg_summary.num_pgs and
+                all(.pg_summary.num_pg_by_state[];
+                  (.name | split("+") |
+                    (index("active") != null and index("clean") != null)))
+              ' >/dev/null
+              ceph osd perf --format json | jq -e '
+                .pg_ready == true and
+                all(.osdstats.osd_perf_infos[];
+                  .perf_stats.commit_latency_ms < 100 and
+                  .perf_stats.apply_latency_ms < 100)
+              ' >/dev/null
 
               subvolume_info="$(ceph fs subvolume info \
                 "${target_fs}" "${target_subvolume}" "${target_group}" \
@@ -145,6 +178,17 @@ spec:
                 ceph nfs export rm "${cluster}" "${pseudo}"
               fi
               exit 74
+          env:
+            - name: ROOK_CEPH_MON_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: rook-ceph-mon-endpoints
+                  key: data
+            - name: ROOK_CEPH_FSID
+              valueFrom:
+                secretKeyRef:
+                  name: rook-ceph-mon
+                  key: fsid
           resources:
             requests:
               cpu: 100m

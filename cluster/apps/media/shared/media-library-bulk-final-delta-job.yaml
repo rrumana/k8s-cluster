@@ -72,6 +72,10 @@ spec:
 
               test -d /source
               test -d /target
+              if [[ -n "$(find /source -xdev -type d -name .rsync-partial +                  -print -quit)" ]]; then
+                echo 'Refusing to exclude a source .rsync-partial directory' >&2
+                exit 45
+              fi
               test -f "${identity}"
               test "$(cat "${identity}")" = "${expected_identity}"
               test -f "${seed_success}"
@@ -106,7 +110,7 @@ spec:
                 --exclude=/.cephfs-bulk-migration-state \
                 --exclude=/.cephfs-bulk-migration-seed-complete \
                 --exclude=/.cephfs-bulk-migration-final-v1-complete \
-                --exclude=/.rsync-partial/ \
+                --exclude=.rsync-partial/ \
                 /source/ /target/ &
               child_pid=$!
 
@@ -119,6 +123,17 @@ spec:
                 printf 'final_v1_failed_status=%s at=%s\n' \
                   "${copy_status}" "$(date --iso-8601=seconds)" > "${state}"
                 exit "${copy_status}"
+              fi
+
+              # rsync protects its per-directory partial staging directories
+              # from --delete. Once the copy succeeds, remove only those
+              # reserved artifacts so the exact verification can converge.
+              find /target -xdev -type d -name .rsync-partial -prune \
+                -exec rm -rf -- {} +
+              if [[ -n "$(find /target -xdev -type d -name .rsync-partial \
+                  -print -quit)" ]]; then
+                echo 'Failed to remove one or more rsync partial directories' >&2
+                exit 44
               fi
 
               sync -f /target
@@ -139,7 +154,7 @@ spec:
                 --exclude=/.cephfs-bulk-migration-state \
                 --exclude=/.cephfs-bulk-migration-seed-complete \
                 --exclude=/.cephfs-bulk-migration-final-v1-complete \
-                --exclude=/.rsync-partial/ \
+                --exclude=.rsync-partial/ \
                 /source/ /target/ > "${verification}"
               if [[ -s "${verification}" ]]; then
                 echo 'Final metadata verification found differences:' >&2
