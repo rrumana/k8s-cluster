@@ -7,7 +7,7 @@ metadata:
   labels:
     app: plex
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -76,4 +76,4 @@ spec:
             claimName: plex-config-critical
         - name: media-library
           persistentVolumeClaim:
-            claimName: media-library
+            claimName: media-library-bulk
