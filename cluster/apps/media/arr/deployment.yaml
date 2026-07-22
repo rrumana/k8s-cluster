@@ -195,8 +195,8 @@ spec:
           env:
             - { name: PF_FILE, value: "/pf/state/forwarded_port" }
             - { name: QB_WEBUI_PORT, value: "8020" }
-            - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "256" }
-            - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "8" }
+            - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "-1" }
+            - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "-1" }
             - { name: QB_DISK_IO_TYPE, value: "3" }
             - { name: QB_ASYNC_IO_THREADS, value: "3" }
             - { name: QB_HASHING_THREADS, value: "4" }

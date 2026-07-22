@@ -42,7 +42,7 @@ spec:
           dataStorage:
             enabled: true
             size: 10Gi
-            storageClass: ceph-block
+            storageClass: ceph-block-app-replicated
 
         ui:
           enabled: true
