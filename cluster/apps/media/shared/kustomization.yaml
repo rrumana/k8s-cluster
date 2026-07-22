@@ -5,7 +5,6 @@ namespace: media
 
 resources:
   - externalsecret.yaml
-  - media-library-bulk-final-delta-job.yaml
   - media-library-bulk-pvc.yaml
   - media-library-pv.yaml
   - media-library-torrent-eva-1-pv.yaml
