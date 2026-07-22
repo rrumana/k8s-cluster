@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vault-legacy-storage-cleanup-v1
+  name: vault-legacy-storage-cleanup-v2
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/component: legacy-storage-cleanup
@@ -28,6 +28,9 @@ spec:
       restartPolicy: Never
       securityContext:
         runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        fsGroup: 100
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -261,6 +264,7 @@ spec:
               echo 'Legacy Vault controller artifacts, PVCs, and PVs are absent.'
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
