@@ -7,7 +7,7 @@ metadata:
   labels:
     app: jellyfin
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -95,4 +95,4 @@ spec:
           emptyDir: {}
         - name: media-library
           persistentVolumeClaim:
-            claimName: media-library
+            claimName: media-library-bulk
