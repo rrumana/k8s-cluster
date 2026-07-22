@@ -146,8 +146,10 @@ snapshot.
 - Rook deploys a 3-node Ceph cluster with OSDs on two dedicated NVMe devices per node.
 - Ceph public and replication traffic both use the primary LAN `192.168.1.0/24`.
 - The main storage interfaces exposed to Kubernetes are:
-- `ceph-block`: default RBD `StorageClass` for `ReadWriteOnce` PVCs
-- `ceph-filesystem`: CephFS `StorageClass` for RWX PVCs
+- `ceph-block-critical`: 3x RBD for critical, non-replicated application data
+- `ceph-block-app-replicated`: 2x RBD for application-replicated data stores
+- `cephfs-bulk`: EC 2:1 CephFS for reconstructible media and model data
+- `cephfs-replicated`: 3x CephFS for critical shared data
 - The Ceph dashboard is exposed through ingress at `ceph.rcrumana.xyz`.
 
 ### Volume snapshots
@@ -350,7 +352,8 @@ snapshot.
 - Harbor sits in front of more and more runtime image pulls and OCI chart sources.
 - cert-manager issues the TLS material used by HAProxy ingresses and Harbor.
 - MetalLB provides LAN IPs for HAProxy plus the directly exposed media and UniFi services.
-- Rook/Ceph provides almost all persistent storage through `ceph-block` and `ceph-filesystem`.
+- Rook/Ceph provides almost all persistent storage through the critical and
+  app-replicated RBD classes plus the bulk and replicated CephFS classes.
 - Snapshot Controller and VolSync definitions are retained but paused, and CNPG object-store backups are disabled pending a replacement target.
 - The emergency dump workflow gives a second operational recovery path for selected workloads.
 - CNPG provides shared relational storage and Valkey provides shared cache or queue storage.

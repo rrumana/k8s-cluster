@@ -65,7 +65,7 @@ Apps -> Ceph PVCs / CNPG / Valkey
 | TLS | cert-manager + Let's Encrypt DNS-01 | Cloudflare-backed issuers (`letsencrypt-prod`, `letsencrypt-staging`) |
 | Service mesh | Linkerd (CRDs + CNI + control plane + viz) | CNI mode avoids init container `NET_ADMIN` needs in meshed workloads |
 | Secrets | Vault (HA Raft) + External Secrets | Secrets stay in Vault, synced into K8s secrets at runtime |
-| Storage | Rook/Ceph | `ceph-block` default StorageClass, `ceph-filesystem` for RWX workloads |
+| Storage | Rook/Ceph | 3x critical RBD, 2x app-replicated RBD, EC 2:1 bulk CephFS, and 3x replicated CephFS |
 | Snapshots | CSI Snapshot Controller | Default snapshot class `ceph-block-snap` |
 | Backups | VolSync + CNPG native backups | Definitions retained but paused and fail-closed until a replacement object-storage target is selected |
 | Registry / charts | Harbor | Private registry, proxy cache, and OCI chart mirror at `harbor.rcrumana.xyz` |
