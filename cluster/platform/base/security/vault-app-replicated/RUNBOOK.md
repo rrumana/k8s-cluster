@@ -175,10 +175,10 @@ report three healthy pods with one disruption allowed before any node drain.
 
 ## Cleanup gates
 
-Legacy retirement is staged under `legacy-retirement/`. It is deliberately not
-referenced by the parent kustomization until the old Application has first
-reconciled with self-heal and prune disabled. Cleanup requires all of the
-following:
+Legacy retirement completed on 2026-07-22. The permanent shared runtime
+objects adopted from the old chart remain under `legacy-retirement/`; the
+one-shot cleanup Job and its temporary RBAC were removed after successful
+completion. The executed cleanup required all of the following:
 
 - the target has survived the agreed rollback soak, restart/unseal checks, and
   a controlled leader transition;
