@@ -13,6 +13,10 @@ resources:
   - fluent-bit-configmap.yaml
   - fluent-bit-daemonset.yaml
   - fluent-bit-service.yaml
+  - opensearch-retention-stage1-configmap.yaml
+  # opensearch-retention-stage1-job.yaml is deliberately dormant until the
+  # reviewed activation revision: rendering a suspended Job would mark this
+  # Argo CD application Suspended.
 
 commonLabels:
   app.kubernetes.io/part-of: observability-logging

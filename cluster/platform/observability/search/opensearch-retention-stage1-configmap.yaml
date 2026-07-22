@@ -1,0 +1,416 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensearch-retention-stage1-v1
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+data:
+  logs-retention-60d-v1.json: |
+    {
+      "policy": {
+        "description": "Stage 1 hold policy for ordinary cluster logs. The separately gated activation revision will enforce 60-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "60d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["logs-*"],
+          "priority": 100
+        }
+      }
+    }
+  security-audit-retention-90d-v1.json: |
+    {
+      "policy": {
+        "description": "Stage 1 hold policy for OpenSearch security audit logs. The separately gated activation revision will enforce 90-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "90d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["security-auditlog-*"],
+          "priority": 100
+        }
+      }
+    }
+  top-queries-retention-14d-v1.json: |
+    {
+      "policy": {
+        "description": "Stage 1 hold policy for Query Insights top-query indices. The separately gated activation revision will enforce 14-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "14d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["top_queries-*"],
+          "priority": 100
+        }
+      }
+    }
+  bootstrap.py: |
+    import base64
+    import json
+    import os
+    import ssl
+    import sys
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+
+    BASE_URL = os.environ.get(
+        "OPENSEARCH_URL",
+        "https://opensearch-logs.search.svc.cluster.local:9200",
+    ).rstrip("/")
+    CONFIG_DIR = "/config"
+    USERNAME_FILE = "/credentials/username"
+    PASSWORD_FILE = "/credentials/password"
+    CA_FILE = "/tls/ca.crt"
+    VERIFY_TIMEOUT_SECONDS = 240
+    VERIFY_INTERVAL_SECONDS = 5
+
+    POLICIES = (
+        ("logs-retention-60d-v1", "logs-*", "60d", "logs-retention-60d-v1.json"),
+        (
+            "security-audit-retention-90d-v1",
+            "security-auditlog-*",
+            "90d",
+            "security-audit-retention-90d-v1.json",
+        ),
+        (
+            "top-queries-retention-14d-v1",
+            "top_queries-*",
+            "14d",
+            "top-queries-retention-14d-v1.json",
+        ),
+    )
+
+
+    def read_text(path):
+        with open(path, "r", encoding="utf-8") as handle:
+            return handle.read().strip()
+
+
+    username = read_text(USERNAME_FILE)
+    password = read_text(PASSWORD_FILE)
+    authorization = base64.b64encode(
+        f"{username}:{password}".encode("utf-8")
+    ).decode("ascii")
+    tls_context = ssl.create_default_context(cafile=CA_FILE)
+
+
+    def request(method, path, body=None, allowed_statuses=(200, 201)):
+        data = None
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Basic {authorization}",
+        }
+        if body is not None:
+            data = json.dumps(body, separators=(",", ":")).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+
+        req = urllib.request.Request(
+            f"{BASE_URL}{path}",
+            data=data,
+            headers=headers,
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(req, context=tls_context, timeout=75) as response:
+                payload = response.read()
+                status = response.status
+        except urllib.error.HTTPError as error:
+            payload = error.read()
+            status = error.code
+
+        decoded = json.loads(payload) if payload else {}
+        if status not in allowed_statuses:
+            raise RuntimeError(
+                f"{method} {path} returned HTTP {status}: "
+                f"{json.dumps(decoded, sort_keys=True)}"
+            )
+        return status, decoded
+
+
+    def contains_delete_action(value):
+        if isinstance(value, dict):
+            return "delete" in value or any(
+                contains_delete_action(child) for child in value.values()
+            )
+        if isinstance(value, list):
+            return any(contains_delete_action(child) for child in value)
+        return False
+
+
+    def policy_matches(existing, desired):
+        existing_policy = existing.get("policy", {})
+        desired_policy = desired["policy"]
+        fields = (
+            "description",
+            "schema_version",
+            "default_state",
+            "states",
+            "ism_template",
+        )
+        return all(existing_policy.get(field) == desired_policy[field] for field in fields)
+
+
+    def concrete_indices(pattern):
+        escaped_pattern = urllib.parse.quote(pattern, safe="*-_.")
+        _, payload = request(
+            "GET",
+            f"/_cat/indices/{escaped_pattern}?format=json&h=index&expand_wildcards=open",
+        )
+        return sorted(row["index"] for row in payload)
+
+
+    def explain(pattern):
+        escaped_pattern = urllib.parse.quote(pattern, safe="*-_.")
+        _, payload = request("GET", f"/_plugins/_ism/explain/{escaped_pattern}")
+        return payload
+
+
+    def attached_policy(details):
+        return (
+            details.get("policy_id")
+            or details.get("index.plugins.index_state_management.policy_id")
+            or details.get("index.opendistro.index_state_management.policy_id")
+        )
+
+
+    def verify_attachment(policy_id, pattern):
+        deadline = time.monotonic() + VERIFY_TIMEOUT_SECONDS
+        last_problem = "verification has not run"
+        while time.monotonic() < deadline:
+            indices = concrete_indices(pattern)
+            if not indices:
+                raise RuntimeError(f"index pattern {pattern!r} matched no open indices")
+
+            result = explain(pattern)
+            wrong = []
+            failed = []
+            for index in indices:
+                details = result.get(index, {})
+                actual_policy = attached_policy(details)
+                if actual_policy != policy_id:
+                    wrong.append(f"{index}={actual_policy!r}")
+                if details.get("action", {}).get("failed") or details.get(
+                    "retry_info", {}
+                ).get("failed"):
+                    failed.append(index)
+
+            managed_count = result.get("total_managed_indices")
+            if not wrong and not failed and managed_count == len(indices):
+                print(
+                    f"verified policy={policy_id} pattern={pattern} "
+                    f"managed_indices={len(indices)}"
+                )
+                return
+
+            last_problem = (
+                f"wrong_policy={wrong[:5]} failed={failed[:5]} "
+                f"reported_managed={managed_count} expected={len(indices)}"
+            )
+            time.sleep(VERIFY_INTERVAL_SECONDS)
+
+        raise RuntimeError(
+            f"timed out verifying policy {policy_id} on {pattern}: {last_problem}"
+        )
+
+
+    def main():
+        _, health = request(
+            "GET",
+            "/_cluster/health?wait_for_status=green&timeout=60s",
+        )
+        if health.get("timed_out") or health.get("status") != "green":
+            raise RuntimeError(f"OpenSearch is not green: {json.dumps(health)}")
+
+        desired_policies = []
+        for policy_id, pattern, retention_age, filename in POLICIES:
+            desired = json.loads(read_text(f"{CONFIG_DIR}/{filename}"))
+            if contains_delete_action(desired):
+                raise RuntimeError(
+                    f"refusing stage 1 policy {policy_id}: delete action is present"
+                )
+            expected_states = [
+                {
+                    "name": "retained",
+                    "actions": [],
+                    "transitions": [
+                        {
+                            "state_name": "eligible_for_deletion",
+                            "conditions": {"min_index_age": retention_age},
+                        }
+                    ],
+                },
+                {
+                    "name": "eligible_for_deletion",
+                    "actions": [],
+                    "transitions": [],
+                },
+            ]
+            if desired["policy"].get("states") != expected_states:
+                raise RuntimeError(
+                    f"refusing stage 1 policy {policy_id}: "
+                    "policy is not the expected non-deleting observation policy"
+                )
+            if desired["policy"].get("ism_template", {}).get(
+                "index_patterns"
+            ) != [pattern]:
+                raise RuntimeError(
+                    f"refusing stage 1 policy {policy_id}: index pattern mismatch"
+                )
+            desired_policies.append((policy_id, pattern, desired))
+
+        # Create only absent policies. A partial rerun accepts an exact policy but
+        # never overwrites a policy that has drifted or was created independently.
+        for policy_id, _, desired in desired_policies:
+            escaped_policy = urllib.parse.quote(policy_id, safe="-_.")
+            status, existing = request(
+                "GET",
+                f"/_plugins/_ism/policies/{escaped_policy}",
+                allowed_statuses=(200, 404),
+            )
+            if status == 404:
+                request(
+                    "PUT",
+                    f"/_plugins/_ism/policies/{escaped_policy}",
+                    desired,
+                )
+                print(f"created inert policy={policy_id}")
+            elif not policy_matches(existing, desired):
+                raise RuntimeError(
+                    f"policy {policy_id} already exists with unexpected content; "
+                    "refusing to overwrite it"
+                )
+            else:
+                print(f"policy={policy_id} already has the expected inert content")
+
+        # Preflight every family before attaching any index. Correct attachments are
+        # skipped, unmanaged concrete indices are queued, and a different policy is
+        # a hard failure. This makes retries and partial runs idempotent without
+        # relying on the Add Policy API's no-op behavior for managed indices.
+        attachment_plan = []
+        for policy_id, pattern, _ in desired_policies:
+            indices = concrete_indices(pattern)
+            if not indices:
+                raise RuntimeError(f"index pattern {pattern!r} matched no open indices")
+
+            result = explain(pattern)
+            unmanaged = []
+            conflicts = []
+            for index in indices:
+                actual_policy = attached_policy(result.get(index, {}))
+                if actual_policy is None:
+                    unmanaged.append(index)
+                elif actual_policy != policy_id:
+                    conflicts.append(f"{index}={actual_policy!r}")
+
+            if conflicts:
+                raise RuntimeError(
+                    f"refusing to attach {policy_id}; indices already managed by "
+                    f"a different policy: {conflicts[:10]}"
+                )
+            print(
+                f"preflight policy={policy_id} pattern={pattern} "
+                f"already_managed={len(indices) - len(unmanaged)} "
+                f"unmanaged={len(unmanaged)}"
+            )
+            attachment_plan.append((policy_id, pattern, unmanaged))
+
+        # The ISM template covers indices created after the policy exists. Attach
+        # only the exact unmanaged index names observed above; never send a wildcard
+        # to the mutating Add Policy API.
+        for policy_id, pattern, unmanaged in attachment_plan:
+            attached = 0
+            for index in unmanaged:
+                escaped_index = urllib.parse.quote(index, safe="-_.")
+                _, added = request(
+                    "POST",
+                    f"/_plugins/_ism/add/{escaped_index}",
+                    {"policy_id": policy_id},
+                )
+                if added.get("failures") or added.get("failed_indices"):
+                    # A concurrent template attachment to the same policy is safe.
+                    # Any other result is an actionable conflict.
+                    current = explain(index).get(index, {})
+                    if attached_policy(current) != policy_id:
+                        raise RuntimeError(
+                            f"failed to attach {policy_id} to {index}: "
+                            f"{json.dumps(added, sort_keys=True)}"
+                        )
+                attached += 1
+            print(
+                f"attached policy={policy_id} pattern={pattern} "
+                f"newly_managed={attached}"
+            )
+
+        for policy_id, pattern, _ in desired_policies:
+            verify_attachment(policy_id, pattern)
+
+        print(
+            "stage 1 complete: all matching indices are managed by inert policies; "
+            "no retention deletion has been activated"
+        )
+
+
+    if __name__ == "__main__":
+        try:
+            main()
+        except Exception as error:
+            print(f"ERROR: {error}", file=sys.stderr)
+            raise
