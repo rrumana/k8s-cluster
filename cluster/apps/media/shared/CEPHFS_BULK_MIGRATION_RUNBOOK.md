@@ -1,281 +1,214 @@
-# Media library CephFS bulk migration
+# Media library CephFS bulk migration record
 
-This stages the migration of the shared media library from the old replicated
-`ceph-filesystem` filesystem to the EC 2:1 `cephfs` filesystem. It does not
-change a live consumer or remove old data.
+The shared media library was migrated in July 2026 from the replicated
+`ceph-filesystem` filesystem to the EC 2:1 bulk data pool on the `cephfs`
+filesystem. The data migration and consumer cutover are complete. The guarded
+source purge and removal of the old filesystem and its four pools are also
+complete.
 
-## Current recorded phase (2026-07-21)
+This document preserves the identities, validation evidence, and lessons that
+matter for recovery or a future large CephFS migration. It is no longer an
+activation runbook for the removed copy and cutover Jobs.
 
-- The retained target claim is `media/media-library-bulk`, PV
-  `pvc-3c9d41ae-9801-449c-9c74-7aee4e1e04cb`, subvolume
+## Final storage contract
+
+- The authoritative Kubernetes claim is `media/media-library-bulk`, backed by
+  retained PV `pvc-3c9d41ae-9801-449c-9c74-7aee4e1e04cb`.
+- Its CephFS subvolume is
   `csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1` in group `csi`, at
   `/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec`.
-  The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
-  `Retain`.
-- `media-library-cephfs-bulk-seed-v11` is the active five-queue online seed. It
-  mounts the legacy source read-only and deterministically assigns every
-  non-directory pathname to one of five whole-file streams by source device and
-  inode, at 52 MiB/s per stream. Every name in a hard-link group therefore stays
-  in one rsync file list even when its paths span Downloads and an organized library.
-  A serial full-tree convergence restores directory metadata, applies deletes, and
-  provides a hard-link correctness boundary after the parallel phase.
-  Completed files remain valid across a restart, while interrupted current
-  files are retransmitted rather than delta-scanned against EC partials. Do
-  not activate another target writer while it or one of its pods exists.
-- The live Kubernetes mount inventory found only Plex, Jellyfin, and the seed
-  pod mounted on the canonical old claim. ARR remains at zero replicas and its
-  Deployment template still names `media-library-torrent-eva-3`.
-- The NFS export remains RW on the legacy source. Ganesha's client manager
-  reported only its loopback bookkeeping client, with every NFS protocol flag
-  false; export I/O counters and established TCP/2049 sessions were both zero.
-  This is only a point-in-time observation and is not a substitute for fencing
-  the export at cutover.
+- The PV reports `fsName: cephfs`, `pool: cephfs-bulk`, and reclaim policy
+  `Retain`. The claim and source quota are 7 TiB.
+- Plex and Jellyfin mount `media-library-bulk` directly.
+- ARR mounts the same subvolume through the static
+  `media-library-bulk-torrent-eva-3` alias. That alias is node-affine to
+  `eva-3` and preserves the qBittorrent-specific mount contract:
+  `noatime` and `rasize=131072`.
+- The ARR alias deliberately omits the old replicated-filesystem
+  `read_from_replica=localize` and `crush_location` options. An EC 2:1 stripe
+  has no complete local replica to select, so those options are inapplicable.
+- The stable Ganesha export remains `/media`, but now publishes the exact
+  target path on `cephfs`. It remains RW, NFS 3+4 over TCP, with
+  `no_root_squash`, `sectype=sys`, and `security_label=true`.
 
-## Known state and safety limits
+Do not replace ARR's tuned alias with the canonical claim merely because both
+reach the same subvolume. The canonical dynamically provisioned PV has generic
+mount options. On the alias, 128 KiB readahead coalesces qBittorrent's otherwise
+tiny reads without allowing much larger speculative reads, while `noatime`
+avoids read-driven metadata writes.
 
-- The source is the `media/media-library` claim, backed by
-  `ceph-filesystem:/volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5`
-  in `ceph-filesystem-bulk`.
-- The source holds 5,520,405,814,767 bytes (5.02 TiB) and about 1.32 million
-  objects. Its quota and the target claim size are 7 TiB.
-- The source has 2,709 hard-link groups spanning top-level branches, including
-  roughly 3.25 TiB linked between Downloads and Shows and 589 GiB linked
-  between Downloads and Movies. Never parallelize this tree by pathname
-  branch: doing so would materialize most of those links as duplicate files.
-  The v11 device-and-inode assignment measured 0.93-1.05 TiB of unique data per
-  worker before activation, with zero hard-link groups crossing workers.
-- Plex and Jellyfin are the direct live consumers. ARR is at zero replicas.
-  The Ganesha `/media` export had no established external sessions during the
-  inventory, but that must be checked again and then fenced at cutover.
-- The new EC pool had about 8.2 TiB maximum available. Coexistence is projected
-  to put the cluster at 66-67% raw usage and OSD.4 near 80%; the near-full
-  threshold is 85%.
-- The active concurrent seed has a 260 MiB/s combined logical cap across five
-  inode-disjoint 52 MiB/s streams. A four-stream 256 MiB/s cap previously
-  reached the requested
-  aggregate rate while OpenSearch recovery was also active, but OSD.0 then
-  recorded 5-7 second BlueStore commit stalls and an actual SMART
-  thermal-management level-2 transition. A clean 224 MiB/s fallback sustained
-  only about 227 MiB/s aggregate reads and writes. After OpenSearch recovery
-  completed, a clean 240 MiB/s probe still sustained only about 228/233 MiB/s,
-  and the restored four-stream 256 MiB/s cap remained near 234/234 MiB/s over
-  the multi-minute Prometheus window. The fifth lower-rate stream adds queue
-  depth while increasing the logical cap by only 1.6%; its buckets are balanced
-  within 7.1% of their mean. It retains the same immediate material gates and
-  may run alongside
-  other migrations while Ceph remains healthy and clean, MDS health remains
-  normal, application health is stable, and OSD latency, SMART critical
-  warnings, media-error counters, and actual device throttling remain within
-  the monitored gates. Temperature alone is informational. Replace the Job
-  with a newly named phase if a materially different throttle is needed.
-- The v11 seed keeps its current placement for this in-flight run. Future bulk
-  movers, including any newly activated final-delta Job, require an explicit
-  migration-client placement decision and hostname spreading as documented in
-  `docs/workload-placement-plan.md`; do not rely on the default scheduler.
+The mount is only half of the ARR anti-amplification contract. The `pf-sync`
+sidecar continuously reconciles these qBittorrent/libtorrent settings from the
+Deployment, including after a port-forward update:
 
-## Online-seed GitOps phases
+| Setting | Desired value |
+| --- | ---: |
+| Disk I/O type | Simple pread/pwrite (`3`) |
+| Asynchronous I/O threads | `3` |
+| Hashing threads | `4` |
+| Global upload slots | `256` |
+| Upload slots per torrent | `8` |
+| Send-buffer low watermark | `16384` bytes |
+| Send-buffer watermark | `131072` bytes |
+| Send-buffer watermark factor | `250` percent |
 
-1. Add only `storage-class-cephfs-bulk-retain.yaml` to the Rook cluster
-   kustomization. Wait for that Application to be Synced/Healthy and confirm
-   its provisioner, filesystem, pool, and `Retain` policy.
-2. Add `media-library-bulk-pvc.yaml` to the media-shared kustomization. Wait for
-   the claim to bind. Confirm its PV reports `fsName: cephfs`,
-   `pool: cephfs-bulk`, a nonempty `subvolumePath`, and reclaim policy
-   `Retain`. Record that path for the consumer and NFS cutover.
-3. Commit `media-library-bulk-copy-job.yaml` while it remains excluded from
-   kustomization for inert review.
-4. Add the Job to kustomization and activate it only after the target claim is
-   Bound and its PV has been verified as `fsName: cephfs`, `pool: cephfs-bulk`,
-   with reclaim policy `Retain`. The pinned image is authenticated in Harbor
-   and supplies rsync 3.2.5 with ACL/xattr support, but is not guaranteed to be
-   cached on a storage node; require Harbor healthy before first launch.
-5. Monitor Ceph health, slow requests, per-OSD latency, OSD.4 temperature and
-   utilization, client throughput, and target growth from the first minute.
-   Suspend through GitOps if latency materially deteriorates, if any OSD
-   approaches near-full, or if Ceph stops being clean. Rsync deliberately uses
-   `--whole-file`: these are large reconstructable media objects, and
-   sequentially retransmitting the interrupted current file is substantially
-   faster than delta-scanning an EC-backed partial. Completed files are still
-   skipped on restart.
-6. After the online seed completes, quiesce every writer and reader through
-   separate GitOps commits, explicitly disable or unmount every known external
-   NFS client, fence the `/media` export, and run the phase-specific final
-   delta Job. Do not rely on changing a completed Job in place.
-7. As soon as a pass completes, suspend or remove its Job from desired state
-   before any writer resumes. The phase marker makes an Argo self-heal replay
-   a no-op, but removal is still the lifecycle boundary.
+ARR's incomplete/temp path remains local at `/var/lib/qbit-temp`; high-churn
+temporary writes do not enter Ceph. The ARR alias, Plex, Jellyfin, and NFS all
+reach the same target subvolume, so imports and seeding retain inode-level hard
+links rather than creating copies across filesystems.
 
-Job pod templates are immutable. Any throttle, command, or image adjustment
-requires suspending/removing the current Job and creating a newly named Job.
-The protected partial directory makes that replacement resumable.
-Never rename and activate a replacement in one commit: Argo applies the new
-object before pruning the old object and does not serialize them by sync wave.
-First suspend the old Job and prove its active count is zero and its pod,
-runtime process, and CephFS session are absent. Next reconcile the renamed Job
-while it remains suspended and prove the old object is gone. Only then activate
-the new Job in a separate commit and confirm that it is the sole target writer.
+## Retired source identity
 
-The Job refuses a nonempty target unless it contains its expected identity
-marker. It also refuses to replay a phase whose valid completion marker exists.
-It preserves ownership, modes, hard links, ACLs, xattrs, sparse files, and
-filesystem boundaries. Before launch, confirm the source has no device nodes or
-privileged `security.capability` xattrs; the deliberately minimal container
-capabilities make rsync fail safely rather than recreate those. After each
-successful pass it performs an rsync metadata dry run and atomically writes a
-completion record. Ceph checksums and rsync's transfer checks protect the data
-path; a full 5 TiB checksum reread is not part of the online seed because it
-would double thermal and I/O exposure.
+The source was the `media/media-library` claim, backed by:
 
-## Prepared inert cutover artifacts
-
-These files are intentionally absent from every kustomization and have
-`spec.suspend: true`. An activation commit must both reference the selected
-file and flip it to `false`.
-
-- `media-library-bulk-final-delta-job.yaml` requires the exact target identity
-  and the successful `seed:v1` marker before it can write. It uses the unique
-  `.cephfs-bulk-migration-final-v1-complete` marker, preserves the seed marker,
-  retains the 96 MiB/s thermal limit, performs a metadata dry-run after the
-  copy, and is safe to retry only while every consumer remains quiesced.
-- `ceph-nfs-bulk-media-export-fence-v1-job.yaml` validates the full legacy
-  export definition and refuses to proceed while a CephFS CSI session is still
-  rooted at the old media subvolume. It then removes `/media` and proves that
-  the export is absent. This closes the reconnect race that a momentary socket
-  check cannot close.
-- `ceph-nfs-bulk-media-export-cephfs-v1-job.yaml` requires `/media` to be
-  absent, validates the exact target subvolume, pool, path, state, and 7 TiB
-  quota, then creates and validates the RW target export. If creation produces
-  a mismatched export, it removes it and fails closed. It never silently
-  overwrites or rolls back to an existing legacy export.
-
-The live Ceph 20.2.2 CLI does not expose `nfs export apply`; changing the
-filesystem/path therefore requires the supported remove/create operations.
-The separate fence and target Jobs make that non-atomic transition explicit
-and keep the export absent throughout the final delta.
-
-## Exact cutover order and gates
-
-Every item below is its own commit unless it explicitly says that two commits
-may be pushed back-to-back. Do not use cross-Application sync waves as an
-ordering mechanism.
-
-1. Require the online seed Job to be `Complete`, verify the `seed:v1` marker,
-   and require an empty rsync metadata dry-run. Recheck the target PV identity,
-   `HEALTH_OK`, all PGs active+clean, both filesystems healthy, no slow ops, and
-   acceptable OSD latency, temperature, and utilization.
-2. In media-shared, remove the online seed Job from kustomization. Wait for its
-   Job and pod to disappear. The old-source CephFS client from its node must
-   disappear before proceeding.
-3. Quiesce direct consumers. Commit Plex replicas to zero and require its pod
-   absent; commit Jellyfin replicas to zero and require its pod absent. Confirm
-   ARR is still zero with no pod. Disabling known external NFS clients can run
-   in parallel with these scale-downs, but each client owner must explicitly
-   confirm its mount is disabled or unmounted.
-4. Repeat both NFS observations. `ShowClients` must contain no external client
-   with an active NFS protocol, and the Ganesha host must have zero established
-   TCP/2049 sessions. Then, in the Rook Application, replace the legacy export
-   Job resource with the suspended fence-v1 file and flip only that file to
-   `suspend: false`. Require the fence Job to succeed and `ceph nfs export info
-   ceph-nfs-bulk /media` to report no export. Do not remove the stable NFS CR
-   or LoadBalancer Service.
-5. Require zero CephFS clients rooted at the old media path. In media-shared,
-   add the suspended final-delta file and flip it to `false`. Require the Job to
-   complete, its dry-run verification to be empty, and its `final:v1` marker to
-   contain sensible source/target byte counts. Keep all consumers fenced.
-6. Immediately remove the final-delta Job from kustomization and require its
-   pod to disappear. Recheck Ceph/MDS/OSD health. No writer may resume before
-   this lifecycle boundary.
-7. Cut Plex to `media-library-bulk` and restore one replica in its own commit.
-   Cut Jellyfin identically in a second commit. These commits may be pushed
-   back-to-back after the final marker because both consumers are normally
-   readers, but gate them independently: the rendered/live pod claim must be
-   the target, the rollout must be healthy, the CephFS session root must be the
-   target path, and a representative media stat/read must succeed.
-8. In the Rook Application, replace fence-v1 with the suspended target-export
-   v1 file and flip it to `false`. Require the Job to succeed and inspect the
-   full export JSON: `fs_name: cephfs`, the exact target path, RW, NFS 3+4,
-   TCP, `no_root_squash`, `sectype: sys`, and `security_label: true`. Remove the
-   completed target-export Job from kustomization in the next commit; the
-   export persists. Perform a read-only NFS mount and representative read
-   before allowing external clients to reconnect.
-9. While ARR remains at zero, change its Deployment from
-   `media-library-torrent-eva-3` to the canonical `media-library-bulk` claim in
-   a dedicated commit. Require the live Deployment template to name only the
-   target. Restore one ARR replica in the next commit; require every container
-   ready, qBittorrent and Servarr APIs healthy, and representative reads and a
-   controlled write/rename on the target.
-10. After all gates pass, confirm no workload references any of the four
-    torrent aliases and no client remains on the old media path. Leave the old
-    canonical claim, all five static PV bindings, old export definition, and
-    old subvolume available for a rollback soak; retire them only in the later
-    cleanup phase.
-
-Useful point-in-time session checks are:
-
-```sh
-NFS_POD=$(kubectl -n rook-ceph get pod \
-  -l app=rook-ceph-nfs,ceph_nfs=ceph-nfs-bulk \
-  -o jsonpath='{.items[0].metadata.name}')
-kubectl -n rook-ceph exec "$NFS_POD" -c nfs-ganesha -- \
-  busctl --system call org.ganesha.nfsd \
-  /org/ganesha/nfsd/ClientMgr org.ganesha.nfsd.clientmgr ShowClients
-NFS_NODE=$(kubectl -n rook-ceph get pod "$NFS_POD" \
-  -o jsonpath='{.spec.nodeName}')
-ssh "rcrumana@${NFS_NODE}" \
-  'sudo -n ss -Htn state established "( sport = :2049 )"'
+```text
+filesystem: ceph-filesystem
+group:      bulk
+subvolume:  media
+pool:       ceph-filesystem-bulk
+path:       /volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5
+quota:      7696581394432 bytes (7 TiB)
 ```
 
-An empty socket/client result cannot detect an offline client. The explicit
-client shutdown plus the export fence are both required.
+The pre-copy inventory measured 5,520,405,814,767 bytes (5.02 TiB) and about
+1.32 million objects. It found 2,709 hard-link groups spanning top-level
+branches, including roughly 3.25 TiB linked between Downloads and Shows and
+589 GiB linked between Downloads and Movies. A pathname-based split would have
+materialized many of those names as separate files and nearly doubled some
+content, so it was explicitly prohibited.
 
-## Cutover requirements
+## Copy design and convergence
 
-The dynamically provisioned target PV exposes `subvolumeName` and
-`subvolumePath`. The four torrent aliases existed to use
-`read_from_replica=localize` on replicated storage. EC 2:1 has no complete
-local replica, so do not recreate those aliases on the EC pool. Point ARR at
-the canonical RWX `media-library-bulk` claim during cutover and retire all four
-old aliases only after validation.
+The online seed used whole-file rsync streams and deterministically assigned
+every non-directory pathname by source device and inode. Every name belonging
+to one hard-link group therefore remained in the same worker's file list even
+when its paths crossed Downloads and an organized library. The five buckets
+contained 0.93-1.05 TiB of unique data each, with zero hard-link groups crossing
+workers.
 
-The current Ganesha export is `/media` on filesystem `ceph-filesystem` and the
-old source path. Its access configuration is read-write, NFS protocols 3 and 4,
-TCP, `no_root_squash`, `sectype=sys`, and `security_label=true`. The existing
-completed export Job uses create-if-absent behavior and cannot update it.
-Cutover therefore uses separately reviewed, versioned GitOps Jobs to fence the
-legacy export and create `/media` on filesystem `cephfs` at the target
-`subvolumePath`, while preserving those settings and the stable LoadBalancer
-Service.
+The active v11 phase ran five inode-disjoint streams capped at 52 MiB/s each,
+for a 260 MiB/s logical ceiling. Completed files remained restart-safe, while
+an interrupted current file was retransmitted with `--whole-file` instead of
+delta-scanning an EC partial. A serial full-tree convergence then restored
+directory metadata, applied deletes, and provided the final hard-link boundary.
 
-An empty export `clients` list describes access rules, not active sessions, and
-an instantaneous socket check cannot detect an offline client that reconnects.
-Explicitly disable or unmount every known external NFS client before the final
-delta and export swap, then verify export information and a read-only NFS mount
-before allowing clients to reconnect.
+The v11 copy reached data convergence but exited because four empty nested
+`.rsync-partial` directories remained. The v12 convergence pass transferred no
+file data, removed those reserved directories, produced an empty exact dry run,
+and wrote the `seed:v1` completion marker. This distinction is useful: an rsync
+exit caused solely by protected empty work directories did not justify
+recopying 5 TiB.
 
-Plex, Jellyfin, ARR, NFS, and media-shared are separate Argo Applications, so
-resource sync-wave annotations cannot order the cutover across them. Switch
-each through a separate commit and health gate. Keep all old claims, PVs, the
-old export details, and the old subvolume intact for rollback until the new
-mounts and representative media reads have been verified.
+After all consumers and the NFS export were fenced, the final-delta pass also
+transferred and deleted zero files. Its exact dry run was empty and it wrote the
+`final:v1` marker with these byte counts:
 
-## Deferred cleanup gates
+```text
+source_bytes=5520406966272
+target_bytes=5520406967296
+```
 
-No destructive cleanup is represented in this phase.
+The 1,024-byte target excess was migration marker metadata, not duplicated
+media. Rsync preserved ownership, modes, hard links, ACLs, xattrs, sparse files,
+and filesystem boundaries. Ceph checksums and rsync transfer checks protected
+the copy path; a second full 5 TiB checksum reread was intentionally avoided
+because it would have doubled I/O and thermal exposure without a proportional
+recovery benefit.
 
-- The media subvolume currently has no CephFS snapshots. Remove its five old
-  static claim/PV bindings through GitOps only after every direct, torrent, and
-  NFS client has moved and Ceph reports no old-filesystem clients.
-- The old data0 pool still contains the orphaned subvolume
-  `csi-vol-088b88c5-e3a9-4efd-ba2a-105e6d2a8c3e` and retained snapshot
-  `csi-snap-ab6c8947-7eb5-4e29-a887-2f7775c11d07`. There are no matching
-  Kubernetes VolumeSnapshot/VolumeSnapshotContent objects or pending clones.
-  Snapshot removal must precede orphan-subvolume and old-filesystem removal.
-- Before deleting either old filesystem or pool, repeat the Kubernetes PV/PVC,
-  CephFS client, subvolume, snapshot, pending-clone, and pool-usage inventories
-  and require zero unexplained references.
+## Cutover and validation evidence
 
-Until those gates pass, rollback is a GitOps switch back to the retained old
-claims and old NFS export only if no writer has been allowed onto the target.
-After NFS or ARR writes to the target, a direct switch back can discard or
-fork new data: quiesce every target writer and run a reviewed reverse delta (or
-explicitly accept the loss) before restoring the old claims/export.
+The cutover used separate GitOps commits and health gates because Plex,
+Jellyfin, ARR, NFS, media-shared, and Rook are separate Argo CD Applications.
+Cross-Application sync waves were not treated as an ordering mechanism.
+
+The completed sequence was:
+
+1. Converge the online seed and remove its Job and source session.
+2. Quiesce Plex, Jellyfin, and ARR; explicitly check external NFS activity.
+3. Remove the legacy `/media` export so an offline client could not reconnect
+   to the source during the final delta.
+4. Run the exact final delta with every consumer fenced, then remove its Job.
+5. Move Plex and Jellyfin to `media-library-bulk` and validate representative
+   media stats and reads.
+6. Create `/media` on the target path, inspect its complete export definition,
+   and validate a representative read through an independent read-only NFSv4.1
+   mount.
+7. Move ARR to the target, restore one replica, validate all nine containers
+   and the qBittorrent/Servarr APIs, and perform a controlled target
+   create/rename/read/delete test.
+8. Correct ARR's first generic target mount by introducing the retained tuned
+   static alias. The live node mount was then verified as `noatime` with
+   `rasize=131072` before legacy storage cleanup proceeded.
+9. Remove the old canonical binding and all four old torrent aliases after
+   cluster-wide workload, PVC, PV, CephFS-session, and path-reference scans
+   found no remaining source consumer.
+
+The NFS fence exposed one Ceph CLI behavior worth retaining: an absent export
+can be returned as `{}` with exit status zero. Absence checks must inspect the
+export inventory or parsed object content; command success alone is not proof
+that an export exists.
+
+## Throughput and placement lessons
+
+- The media tree could sustain approximately 230-250 MiB/s of simultaneous
+  logical reads and writes when the OSDs and competing recovery were healthy.
+  Adding more rsync processes beyond the balanced inode buckets mostly added
+  queue depth rather than bandwidth.
+- A high-throughput run coincided with 5-7 second BlueStore commit stalls on
+  OSD.0 and an actual SMART thermal-management transition. Temperature by
+  itself was informational; latency, device throttling, media errors, Ceph
+  health, and application health were the material gates.
+- Bulk movers need an explicit placement decision. The early seed used default
+  scheduling on a control node; the final-delta Job was deliberately placed on
+  the storage plane. Future movers must select a client pool after checking
+  link headroom and must spread concurrent clients by hostname.
+- Job pod templates are immutable. A materially changed throttle or script must
+  use a newly named, initially suspended Job. Remove or suspend the prior Job
+  and prove its pod, process, and CephFS session are absent before activating a
+  replacement; Argo CD can apply a replacement before pruning its predecessor.
+
+## Source retirement
+
+The old five PV/PVC bindings and obsolete seed/cutover Jobs have been removed
+from desired state. The destructive cleanup Jobs failed closed unless all of
+these remained true:
+
+- every OSD is up and in and all PGs are active+clean;
+- the target identity, pool, quota, minimum byte count, and NFS export exactly
+  match the final contract;
+- the old filesystem contains only the exact source subvolume and has no
+  snapshots, pending deletions, unexpected groups, or unexpected clients;
+- the target is at least as large as the source; and
+- the old pool still has its expected 2x layout.
+
+The v1 Job scheduled `ceph fs subvolume rm` and waited for the namespace to be
+absent, pending deletion count to reach zero, and the old bulk pool to fall to
+at most 2 GiB of filesystem residuals. The source purge reclaimed about
+5.52 TB logical / 11.04 TB raw and left zero objects. While that happened, the
+PG autoscaler merged the emptying pool from 128 PGs to 32. v1 reached its final
+health assertion during one merge handoff and failed rather than reporting a
+false success. A separately staged v2 verifier waited for the stable 32-PG
+state and completed with the cluster at 529/529 active+clean.
+
+After the cleanup Jobs were pruned, GitOps first changed
+`preserveFilesystemOnDelete` to `false` and waited for the live
+CephFilesystem's observed generation to catch up. A separate revision then
+removed the old CR. Rook deleted `ceph-filesystem`, both MDS deployments and
+auth identities, and pools `ceph-filesystem-metadata` (3),
+`ceph-filesystem-data0` (4), `ceph-filesystem-replicated` (16), and
+`ceph-filesystem-bulk` (17). The final cluster has only the retained `cephfs`
+filesystem and 417/417 PGs active+clean.
+
+## Recovery posture
+
+Before the final cutover, rollback could have switched consumers to the
+retained old claims while no target writer existed. That is no longer safe:
+ARR and NFS have been allowed to write to the target, the old bindings are
+gone, and the source filesystem has been deleted.
+
+Recover the current dataset from the retained target, an explicitly selected
+backup recovery point, or a deliberate reverse migration. Never recreate an
+old claim and blindly switch writers to it; doing so can discard or fork all
+changes made after cutover. Any reverse migration must quiesce target writers,
+inventory hard links again, run a reviewed delta, and pass the same exact
+identity and consumer gates used here.

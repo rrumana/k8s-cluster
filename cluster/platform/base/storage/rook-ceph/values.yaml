@@ -56,7 +56,8 @@ csi:
 
   enableRbdDriver: true
 
-  # Enable CephFS CSI so RWX StorageClasses (e.g. ceph-filesystem) can provision.
+  # Enable CephFS CSI so RWX classes on the retained cephfs filesystem
+  # (for example, cephfs-bulk and cephfs-replicated) can provision.
   enableCephfsDriver: true
 
 # The operator is a controller, not a storage data-path workload. Keep it on the

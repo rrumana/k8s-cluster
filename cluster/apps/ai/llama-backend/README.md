@@ -28,6 +28,11 @@ Shared secret dependency:
 
 Model storage:
 
-- All workers share one RWX claim `llama-models-cache` for modular model pinning/switching.
-- Ensure your cluster has an RWX StorageClass named `ceph-filesystem`, or update
-  `pvc-llama-models-cache.yaml` accordingly.
+- All workers share the RWX claim `llama-models-cache-bulk` for modular model
+  pinning and switching.
+- The claim uses `cephfs-bulk`, the EC 2:1 data pool on the retained `cephfs`
+  filesystem. Model files are immutable/reconstructable bulk data and do not
+  belong on the replicated CephFS pool.
+- The models were migrated off the retired legacy `ceph-filesystem-data0`
+  surface. Do not reintroduce that filesystem or the old claim name when adding
+  a worker; mount `llama-models-cache-bulk` instead.

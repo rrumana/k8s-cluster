@@ -1,6 +1,6 @@
 # Workload Placement Plan
 
-Current as of 2026-07-21, during the Eva storage-node and CephFS media
+Current as of 2026-07-22, after the Ceph storage-shape and CephFS media
 migrations.
 
 This document is the placement contract for steady-state scheduling. It is not a
@@ -124,10 +124,10 @@ For future high-volume RBD or CephFS moves:
 - Keep migration placement separate from the steady-state application policy,
   and record the placement decision in the migration runbook before activation.
 
-The active media v11 seed will not be moved mid-flight. This incident is being
-documented for the next migration phase rather than corrected through another
-disruptive restart. Its future final-delta Job must receive an explicit
-migration-client placement review before activation.
+The media v11 seed was not moved mid-flight. Its later final-delta Job received
+an explicit storage-plane placement and completed there. Preserve this lesson
+for future migrations instead of relying on whichever node the default
+scheduler happens to select.
 
 ### Non-PVC Workloads Stay Control
 
@@ -146,10 +146,16 @@ Examples:
 Cluster workloads should consume CephFS directly through CSI. NFS is for
 non-cluster clients or compatibility endpoints.
 
-The media migration showed that qBittorrent seeding can trigger large CephFS
-read amplification when kernel readahead is too aggressive. Torrent workloads
-therefore use the dedicated `media-library-torrent` PVC with `rasize=0`.
-Sequential media consumers use the normal `media-library` PVC.
+The media migration showed that qBittorrent seeding and verification can
+trigger large CephFS read amplification when request sizing and I/O concurrency
+are mismatched. ARR therefore uses the dedicated
+`media-library-bulk-torrent-eva-3` static alias with `noatime` and bounded
+`rasize=131072`. Sequential media consumers use the canonical
+`media-library-bulk` PVC.
+
+The tuned alias reaches the same EC 2:1 subvolume as the canonical claim. It
+does not use the old replicated-filesystem `read_from_replica=localize` or
+`crush_location` options because an EC stripe has no complete local replica.
 
 ### Local Scratch Is Not Ceph
 
@@ -297,7 +303,7 @@ that toleration.
 | `rook-ceph/rook-ceph-mon-*` | storage | one mon per Eva | Monitor quorum should live with the dedicated Ceph hosts. Three mons across three storage nodes gives host-failure tolerance without involving control nodes. |
 | `rook-ceph/rook-ceph-mgr-*` | storage | active and standby on different Evas | Manager services, dashboard, and orchestration should remain with the Ceph control plane. |
 | `rook-ceph/rook-ceph-osd-*` | storage | OSDs fixed to their owning Eva | OSDs are tied to local disks. |
-| `rook-ceph/rook-ceph-mds-ceph-filesystem-*` | storage | active and standby on different Evas | CephFS metadata service is storage data path. Keeping it on Eva reduces storage fabric hops for CephFS-heavy media/model use. |
+| `rook-ceph/rook-ceph-mds-cephfs-*` | storage | active and standby on different Evas | The retained CephFS metadata service is on the storage data path. Keeping it on Eva reduces storage fabric hops for CephFS-heavy media/model use. |
 | `rook-ceph/rook-ceph-nfs-ceph-nfs-bulk-*` | storage | prefer at least two instances across Evas if configured | NFS is an external storage gateway. It should be near CephFS and not contend with control-node networking. |
 | `rook-ceph/rook-ceph-crashcollector-*` | storage | one per Eva | Follows Ceph daemons and local crash/log paths. |
 | `rook-ceph/rook-ceph-tools` | storage | single replica, any Eva | Operational toolbox should have direct storage-plane placement. |
@@ -352,12 +358,12 @@ run on Eva.
 
 | Workload | Target | Exact preferred node | Spread | Justification |
 | --- | --- | --- | --- | --- |
-| `media/arr-stack` | storage | `eva-3` for current thermal balancing | sole active qBittorrent | Main qBittorrent/Servarr stack is sustained network and CephFS IO. Use the host-localized `media-library-torrent-eva-3` mount with 128 KiB readahead and keep `/temp` local. |
+| `media/arr-stack` | storage | `eva-3` for current thermal balancing | sole active qBittorrent | Main qBittorrent/Servarr stack is sustained network and CephFS IO. Use the node-affine `media-library-bulk-torrent-eva-3` mount with `noatime` and 128 KiB readahead, and keep `/temp` local. |
 | `media/plex` | storage | `eva-2` preferred | anti-affined from Jellyfin | Plex reads large media files from CephFS. Direct-play workloads benefit from storage proximity. Keep transcode on local scratch. If transcoding load proves Radeon 610 is insufficient, move Plex to a control GPU node and accept the storage hop. |
-| `media/jellyfin` | storage | `eva-3` preferred | anti-affined from Plex | Same media-read reasoning as Plex. Jellyfin should use local cache/transcode and normal `media-library`, not the torrent PVC. |
+| `media/jellyfin` | storage | `eva-3` preferred | anti-affined from Plex | Same media-read reasoning as Plex. Jellyfin should use local cache/transcode and canonical `media-library-bulk`, not the torrent alias. |
 | `media/immich-server` | control | spread/any control node | control preferred | Immich is compute/GPU and app-latency oriented. Its photo PVC is important but not the same high-throughput immutable media path. The HX370/890M nodes are better suited for video/photo processing. |
 | `media/immich-machine-learning` | control | spread/any control node | control preferred | ML inference/cache workload. Better CPU/GPU/memory posture on the control nodes. |
-| `media/media-library` PVC consumers | depends on consumer | n/a | n/a | Sequential readers use normal `media-library`; torrent seeders use `media-library-torrent`. |
+| `media/media-library-bulk` PVC consumers | depends on consumer | n/a | n/a | Sequential readers use canonical `media-library-bulk`; ARR uses the tuned `media-library-bulk-torrent-eva-3` alias to the same subvolume. |
 
 The current media placement is:
 
@@ -366,11 +372,12 @@ The current media placement is:
 - `jellyfin` preferred on `eva-3`
 
 The qBittorrent placement on eva-3 is an interim thermal decision while cooling
-and network placement are being improved. The optimized eva-1 and eva-2 static
-mounts remain available so a future rebalance only requires changing the
-workload's node selector and claim together. If streaming suffers during high
-seeding, move Plex/Jellyfin or qBittorrent to the least busy Eva rather than
-starting a duplicate seeding client.
+and network placement are being improved. The old eva-1/eva-2 aliases were
+retired with the replicated media filesystem. A future rebalance must add a
+reviewed static alias with matching node affinity and the same `noatime` and
+`rasize=131072` options, then change the workload's selector and claim together.
+If streaming suffers during high seeding, move Plex/Jellyfin or qBittorrent to
+the least busy Eva rather than starting a duplicate seeding client.
 
 ### AI
 
@@ -385,8 +392,8 @@ starting a duplicate seeding client.
 | `ai/librechat-mongodb` | control | single stateful pod, control preferred | Singleton app database. It has PVC storage, but no evidence that storage throughput dominates. Keep near LibreChat unless it becomes IO-bound. |
 | `ai/librechat-meilisearch` | control | single stateful pod, control preferred | Search index service for LibreChat. Keep on control unless index IO becomes a proven bottleneck. |
 
-Model cache storage should eventually live under the bulk CephFS model layout,
-but the model-serving pods should stay on control nodes.
+Model cache storage now uses the `llama-models-cache-bulk` claim on
+`cephfs-bulk`, while the model-serving pods stay on control nodes.
 
 ### Search And Logs
 
@@ -452,11 +459,11 @@ it on control.
 
 | Surface | Placement impact |
 | --- | --- |
-| `ceph-block` / `ceph-block-critical` | Consuming a PVC does not automatically justify Eva placement. Use Eva for IO-heavy RBD consumers, not for every RBD user. |
-| `ceph-block-db` | Best fit for CNPG clusters after restore testing. CNPG pods should run on Eva when moved to this class. |
+| `ceph-block-critical` | 3x RBD for data whose application does not provide sufficient replication. Consuming it does not automatically justify Eva placement; use Eva for IO-heavy RBD consumers, not every RBD user. |
+| `ceph-block-app-replicated` | 2x RBD for CNPG and other application-replicated data stores. Storage-heavy members should run on Eva and spread by hostname. |
 | `cephfs-bulk` | Storage-heavy consumers should run on Eva; compute-heavy consumers can run on control. |
-| `media-library` | Normal media readers such as Plex/Jellyfin. Use normal readahead. |
-| `media-library-torrent` | qBittorrent/Servarr stacks only. Uses `rasize=0` to avoid CephFS read amplification while seeding. |
+| `media-library-bulk` | Canonical EC-backed claim for sequential media readers such as Plex/Jellyfin and the NFS export. |
+| `media-library-bulk-torrent-eva-3` | ARR only. Static alias to `media-library-bulk`, node-affine to eva-3, with `noatime` and `rasize=131072`; EC locality options do not apply. |
 | local scratch | Always local to the pod node. Required for qBittorrent temp and media transcode. |
 | NFS export | External clients only. Cluster workloads should prefer CSI. |
 
@@ -514,8 +521,9 @@ These checks decide whether any target should be adjusted:
 - Plex/Jellyfin transcoding: if Radeon 610 transcode quality or throughput is
   insufficient, move the affected media server to a control GPU node and keep
   the CephFS mount over the network.
-- qBittorrent after final 10 Gb move: confirm RX/TX symmetry remains acceptable
-  with `rasize=0`.
+- qBittorrent after the final 10 Gb move: confirm RX/TX symmetry remains
+  acceptable with `noatime` and `rasize=131072`, and remeasure before changing
+  the tuned alias.
 - PostgreSQL after Eva placement: confirm query latency does not regress for
   control-plane apps and that RBD write latency improves.
 - Harbor after Eva placement: confirm image pulls to control nodes are not worse

@@ -5,6 +5,13 @@ plan, not authorization to change the live logging stack. No OpenSearch index,
 PVC, RBD image, collector, retention policy, or Ceph setting was changed during
 the audit.
 
+Post-migration status (2026-07-22): the block and CephFS migrations are
+complete, the old `ceph-block` pool and legacy `ceph-filesystem` have been
+deleted, and the retained cluster is active+clean. The remediation remains
+deferred because the pre-existing `osd.0` BlueStore warning is still present
+and the point-in-time usage, index, and collector measurements below must be
+refreshed before any logging change.
+
 Do not begin the remediation phases until the active CephFS media and Immich
 transfers have completed, their verification and cutover gates have passed, and
 Ceph is healthy without the current `osd.0` BlueStore slow-operation warning.

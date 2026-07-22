@@ -2,6 +2,17 @@
 
 Date: 2026-07-10
 
+Post-migration note (2026-07-22): this report records tests against the retired
+size-2 replicated media pool. Production ARR now reaches the EC 2:1
+`cephfs-bulk` subvolume through `media-library-bulk-torrent-eva-3`. The static
+alias retains `noatime` and `rasize=131072`, but intentionally omits
+`read_from_replica=localize` and `crush_location` because an EC stripe has no
+complete local replica. The Deployment now reconciles three asynchronous I/O
+threads, 256 global upload slots, eight slots per torrent, four hashing threads,
+and the same 16/128 KiB send-buffer bounds. The old host-localized replicated
+aliases were retired. Historical observations below remain useful, but their
+replica-locality recommendations do not apply to the EC pool.
+
 ## Scope
 
 `arr-lts2` on `eva-3` was used as the only canary. The test kept libtorrent
