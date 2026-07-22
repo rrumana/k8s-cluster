@@ -6,7 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-30"
   labels: { app: arr-stack }
 spec:
-  replicas: 0
+  replicas: 1
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: arr-stack }
