@@ -15,7 +15,6 @@ resources:
   - rook-ceph-shared-app.yaml
   - cert-manager-app.yaml
   - cert-manager-extras-app.yaml
-  - vault-app.yaml
   - vault-app-replicated-app.yaml
   - external-secrets-app.yaml
   - external-secrets-extras-app.yaml
@@ -74,27 +73,3 @@ resources:
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd
-
-patches:
-  - target:
-      group: argoproj.io
-      version: v1alpha1
-      kind: Application
-      name: vault
-    patch: |-
-      - op: add
-        path: /spec/source/helm/parameters
-        value:
-          - name: server.ha.replicas
-            value: "0"
-          - name: server.ha.disruptionBudget.enabled
-            value: "false"
-      # Phase 1 of the legacy Vault retirement: stop the chart Application
-      # from reclaiming shared objects after the replacement Application
-      # adopts them. Keep the Application itself until adoption is proven.
-      - op: replace
-        path: /spec/syncPolicy/automated/prune
-        value: false
-      - op: replace
-        path: /spec/syncPolicy/automated/selfHeal
-        value: false
