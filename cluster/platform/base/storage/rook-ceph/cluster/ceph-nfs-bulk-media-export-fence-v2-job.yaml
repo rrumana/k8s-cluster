@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/name: ceph-nfs-bulk
     app.kubernetes.io/component: media-export-migration
 spec:
-  suspend: true
+  suspend: false
   podReplacementPolicy: Failed
   backoffLimit: 0
   completions: 1
