@@ -1,18 +1,6 @@
 apiVersion: ceph.rook.io/v1
 kind: CephBlockPool
 metadata:
-  name: ceph-block
-  namespace: rook-ceph
-spec:
-  failureDomain: host
-  parameters:
-    pg_autoscale_mode: "on"
-  replicated:
-    size: 3
----
-apiVersion: ceph.rook.io/v1
-kind: CephBlockPool
-metadata:
   name: ceph-block-critical
   namespace: rook-ceph
 spec:
