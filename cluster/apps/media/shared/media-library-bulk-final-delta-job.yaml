@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/component: storage-migration
     app.kubernetes.io/part-of: media-shared
 spec:
-  suspend: true
+  suspend: false
   # A replacement pod must never overlap a terminating rsync writer on the
   # RWX target after an eviction or node failure.
   podReplacementPolicy: Failed
