@@ -72,7 +72,8 @@ spec:
 
               test -d /source
               test -d /target
-              if [[ -n "$(find /source -xdev -type d -name .rsync-partial +                  -print -quit)" ]]; then
+              if [[ -n "$(find /source -xdev -type d \
+                  -name .rsync-partial -print -quit)" ]]; then
                 echo 'Refusing to exclude a source .rsync-partial directory' >&2
                 exit 45
               fi
