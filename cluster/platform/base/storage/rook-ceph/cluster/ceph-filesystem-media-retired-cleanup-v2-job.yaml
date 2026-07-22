@@ -1,12 +1,12 @@
-# INERT: one-shot removal of the retired replicated media source. Keep this
-# Job suspended and outside kustomization until every Kubernetes/NFS consumer
-# has been proven on the final EC target and all five old static bindings are
-# absent. Activate only in a separate GitOps commit after a zero-pod staging
-# reconciliation.
+# STAGED: idempotent completion verifier for the retired replicated media
+# source. v1 scheduled the purge, then hit its fail-closed health gate during
+# an autoscaler PG merge. Keep v2 suspended until the old pool reaches its
+# 32-PG target and the cluster is active+clean; activate only in a separate
+# GitOps commit after a zero-pod staging reconciliation.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ceph-filesystem-media-retired-cleanup-v1
+  name: ceph-filesystem-media-retired-cleanup-v2
   namespace: rook-ceph
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/name: ceph-filesystem
     app.kubernetes.io/component: retired-data-cleanup
 spec:
-  suspend: false
+  suspend: true
   podReplacementPolicy: Failed
   backoffLimit: 0
   completions: 1
@@ -135,7 +135,7 @@ spec:
                   .pool == $pool and
                   .size == 2 and
                   .min_size == 1 and
-                  .pg_num == 128 and
+                  .pg_num == 32 and
                   .crush_rule == $pool
                 ' >/dev/null
 
@@ -309,9 +309,13 @@ spec:
                     --format json | jq -er '.pending_subvolume_deletions | numbers')"
                   if (( pending_deletions == 0 && \
                         stored_bytes <= residual_pool_threshold_bytes )); then
-                    validate_cluster_clean
-                    echo "Retired media source purged; pool stores ${stored_bytes} bytes"
-                    exit 0
+                    if validate_cluster_clean; then
+                      echo "Retired media source purged; pool stores ${stored_bytes} bytes"
+                      exit 0
+                    fi
+                    if (( attempt % 6 == 0 )); then
+                      echo 'Purge is complete; waiting for Ceph to return active+clean'
+                    fi
                   fi
                   if (( attempt % 6 == 0 )); then
                     echo "Waiting for asynchronous media purge: ${stored_bytes} bytes remain, ${pending_deletions} queued deletion(s)"
