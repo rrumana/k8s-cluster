@@ -212,3 +212,19 @@ spec:
             claimName: media-library-bulk
         - name: tmp
           emptyDir: {}
+      # Keep this newly launched mover on the storage plane so both CephFS
+      # mounts avoid the constrained control-to-storage network path.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: homelab.rcrumana.xyz/node-plane
+                    operator: In
+                    values:
+                      - storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
