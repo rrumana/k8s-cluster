@@ -175,8 +175,10 @@ report three healthy pods with one disruption allowed before any node drain.
 
 ## Cleanup gates
 
-This kustomization contains no old-PVC or old-pool deletion mechanism. Cleanup
-is a separate destructive GitOps phase and requires all of the following:
+Legacy retirement is staged under `legacy-retirement/`. It is deliberately not
+referenced by the parent kustomization until the old Application has first
+reconciled with self-heal and prune disabled. Cleanup requires all of the
+following:
 
 - the target has survived the agreed rollback soak, restart/unseal checks, and
   a controlled leader transition;
@@ -191,5 +193,89 @@ is a separate destructive GitOps phase and requires all of the following:
   removed;
 - Ceph reports that the legacy pool no longer supports live data.
 
-Only then should a reviewed GitOps cleanup job remove retained source claims
-and RBD images, followed by the separately gated legacy pool deletion.
+The checked-in UIDs in the cleanup job are deliberate destructive-operation
+preconditions, not documentation. If any named object has been recreated, the
+job must fail closed; inspect the replacement and review a new manifest rather
+than updating a UID reflexively.
+
+### Retirement phase 1: freeze the old controller
+
+Commit only the root kustomization patch that sets the old `vault` Application's
+automated `selfHeal` and `prune` flags to `false`. Keep the Application and all
+of its resources present. Wait for the root Application to sync, then require:
+
+```sh
+kubectl -n argocd get application vault \
+  -o jsonpath='{.spec.syncPolicy.automated.selfHeal}{" "}{.spec.syncPolicy.automated.prune}{"\n"}'
+kubectl -n security get statefulset vault vault-app-replicated
+kubectl -n security get endpoints vault vault-active vault-standby
+```
+
+The first command must print `false false`; the source StatefulSet must remain
+at zero; the target must remain `3/3`; and the canonical endpoints must still
+contain exactly the three target pod addresses.
+
+### Retirement phase 2: adopt shared runtime objects
+
+In a separate commit, add `legacy-retirement` to this directory's parent
+`kustomization.yaml`. The nested kustomization adopts the chart-created
+ServiceAccount, discovery Role and RoleBinding, `vault-server-binding`
+ClusterRoleBinding, and the four canonical Services. It also creates the
+cleanup Job and its narrow RBAC, but the Job remains suspended.
+
+Before and after the sync, capture and compare the ServiceAccount, RBAC, and
+Service UIDs. Adoption is an in-place apply: none may be recreated, and the
+four Services must retain their ClusterIPs, selectors, ports, and endpoint
+membership. Require every adopted object's tracking annotation to start with
+`vault-app-replicated:` and require both Argo Applications to have no active
+operation. Verify an authenticated Vault read and External Secrets health.
+
+The adoption baseline recorded on 2026-07-21 is:
+
+| Object | UID |
+| --- | --- |
+| `ServiceAccount/security/vault` | `a28fd277-fd8c-4b26-af3e-746bf4c7e1d0` |
+| `Role/security/vault-discovery-role` | `a17a10df-920f-4a63-acd1-b7c93c79fd93` |
+| `RoleBinding/security/vault-discovery-rolebinding` | `aaf8668d-ae00-4242-b556-0026b0ce5ef2` |
+| `ClusterRoleBinding/vault-server-binding` | `35a0ee11-a579-4acd-afde-17b3619a689d` |
+| `Service/security/vault` | `75a72fc6-b468-4d5e-b0cf-b786b6dfa682` |
+| `Service/security/vault-active` | `9655f115-f51e-4d71-a775-38649b2be376` |
+| `Service/security/vault-standby` | `755c0543-a77b-42ac-951e-55df307a65d1` |
+| `Service/security/vault-ui` | `31206c21-033f-4502-a6fa-8b4b3f95e71e` |
+
+### Retirement phase 3: remove the old Application only
+
+Only after phase 2 is proven, verify that `Application/vault` still has no
+finalizer. Then, in its own commit, remove both `vault-app.yaml` from the root
+Application's resources and the now-inapplicable `name: vault` patch block.
+The old Application currently has no resources finalizer, so deleting its
+custom resource leaves its children in place. Stop if a finalizer has appeared;
+do not let this phase become a cascading deletion. The shared children are
+already owned by `vault-app-replicated`; the old-only StatefulSet, internal
+Service, ConfigMap, and PVCs remain deliberately orphaned until the guarded
+cleanup phase.
+
+Wait for `Application/vault` to be absent. Re-run all phase-2 identity,
+endpoint, Vault, and External Secrets checks. The unrelated historical
+storage-class edit in `vault-app.yaml` is not part of this handoff and must not
+be committed as a migration mechanism.
+
+### Retirement phase 4: execute the guarded cleanup
+
+Reconfirm the cleanup gates, including direct `rbd status` and `rbd snap ls`
+checks for all three source images. Then change only
+`spec.suspend: true -> false` on `vault-legacy-storage-cleanup-v1` in Git.
+
+The one-shot job validates the exact proven target StatefulSet and target PVC
+UIDs; the exact zero-replica source StatefulSet UID; the old PVC, PV, pool,
+reclaim-policy, and claim identities; and the absence of pod,
+VolumeAttachment, VolumeSnapshot, and VolumeSnapshotContent references. Every
+DELETE carries a Kubernetes UID precondition. It removes the old StatefulSet,
+`vault-internal`, `vault-config`, and the three old PVCs, then waits for all
+three `Delete`-policy PVs to disappear.
+
+Require the Job to complete once. Verify the old RBD images are absent, the
+target remains healthy, and Ceph remains stable. Finally remove the completed
+Job and its cleanup-only RBAC from the nested kustomization; retain
+`shared-resources.yaml` permanently. Deletion of the whole `ceph-block` pool is
+a separate cluster-wide gate after every other legacy claimant is gone.

@@ -89,3 +89,12 @@ patches:
             value: "0"
           - name: server.ha.disruptionBudget.enabled
             value: "false"
+      # Phase 1 of the legacy Vault retirement: stop the chart Application
+      # from reclaiming shared objects after the replacement Application
+      # adopts them. Keep the Application itself until adoption is proven.
+      - op: replace
+        path: /spec/syncPolicy/automated/prune
+        value: false
+      - op: replace
+        path: /spec/syncPolicy/automated/selfHeal
+        value: false

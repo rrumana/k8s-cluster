@@ -1,0 +1,272 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-legacy-storage-cleanup-v1
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: legacy-storage-cleanup
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  # This is a destructive one-shot operation. Keep it suspended through shared
+  # resource adoption and legacy Application removal. Unsuspending is its own
+  # reviewed GitOps phase after every RUNBOOK gate passes.
+  suspend: true
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault
+        app.kubernetes.io/component: legacy-storage-cleanup
+    spec:
+      serviceAccountName: vault-legacy-storage-cleanup
+      automountServiceAccountToken: true
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cleanup
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.21.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              token_file=/var/run/secrets/kubernetes.io/serviceaccount/token
+              ca_file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              api="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}"
+              work=/work
+
+              fail() {
+                echo "FATAL: $*" >&2
+                exit 1
+              }
+
+              request() {
+                method="$1"
+                path="$2"
+                output="$3"
+                body="${4:-}"
+                if [ -n "$body" ]; then
+                  curl --silent --show-error \
+                    --request "$method" \
+                    --cacert "$ca_file" \
+                    --header "Authorization: Bearer $(cat "$token_file")" \
+                    --header 'Content-Type: application/json' \
+                    --data-binary "$body" \
+                    --output "$output" \
+                    --write-out '%{http_code}' \
+                    "$api$path"
+                else
+                  curl --silent --show-error \
+                    --request "$method" \
+                    --cacert "$ca_file" \
+                    --header "Authorization: Bearer $(cat "$token_file")" \
+                    --output "$output" \
+                    --write-out '%{http_code}' \
+                    "$api$path"
+                fi
+              }
+
+              get_required() {
+                path="$1"
+                expected_uid="$2"
+                label="$3"
+                output="$work/get.json"
+                code="$(request GET "$path" "$output")"
+                [ "$code" = 200 ] || fail "$label GET returned HTTP $code: $(cat "$output")"
+                grep -Fq "\"uid\":\"$expected_uid\"" "$output" || \
+                  fail "$label exists with an unexpected UID"
+              }
+
+              require_fragment() {
+                fragment="$1"
+                label="$2"
+                grep -Fq "$fragment" "$work/get.json" || \
+                  fail "$label did not contain required fragment $fragment"
+              }
+
+              get_collection() {
+                path="$1"
+                output="$2"
+                label="$3"
+                code="$(request GET "$path" "$output")"
+                [ "$code" = 200 ] || fail "$label GET returned HTTP $code: $(cat "$output")"
+              }
+
+              delete_exact() {
+                path="$1"
+                expected_uid="$2"
+                label="$3"
+                output="$work/delete.json"
+                body="{\"apiVersion\":\"v1\",\"kind\":\"DeleteOptions\",\"preconditions\":{\"uid\":\"$expected_uid\"},\"propagationPolicy\":\"Foreground\"}"
+                code="$(request DELETE "$path" "$output" "$body")"
+                case "$code" in
+                  200|202)
+                    echo "Deletion accepted for $label with pinned UID $expected_uid"
+                    ;;
+                  404)
+                    echo "$label is already absent"
+                    ;;
+                  *)
+                    fail "$label UID-guarded DELETE returned HTTP $code: $(cat "$output")"
+                    ;;
+                esac
+              }
+
+              wait_absent() {
+                path="$1"
+                label="$2"
+                i=0
+                while [ "$i" -lt 180 ]; do
+                  code="$(request GET "$path" "$work/wait.json")"
+                  [ "$code" = 404 ] && return 0
+                  [ "$code" = 200 ] || fail "$label wait GET returned HTTP $code: $(cat "$work/wait.json")"
+                  i=$((i + 1))
+                  sleep 5
+                done
+                fail "$label still exists after 15 minutes"
+              }
+
+              # The permanent three-member target must be the exact proven
+              # StatefulSet and all three exact target claims must be Bound.
+              get_required \
+                /apis/apps/v1/namespaces/security/statefulsets/vault-app-replicated \
+                fc9d0958-4dcf-4b00-8543-dd36a68dffd7 \
+                vault-app-replicated
+              require_fragment '"replicas":3' vault-app-replicated
+              require_fragment '"readyReplicas":3' vault-app-replicated
+              require_fragment '"availableReplicas":3' vault-app-replicated
+
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-app-replicated-0 \
+                8f783e38-7b9b-48fc-b9f1-de115e46a890 target-pvc-0
+              require_fragment '"storageClassName":"ceph-block-app-replicated"' target-pvc-0
+              require_fragment '"phase":"Bound"' target-pvc-0
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-app-replicated-1 \
+                d0978b78-e52e-48a8-a18c-f8a4cc21e7c8 target-pvc-1
+              require_fragment '"storageClassName":"ceph-block-app-replicated"' target-pvc-1
+              require_fragment '"phase":"Bound"' target-pvc-1
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-app-replicated-2 \
+                81b1ee6b-0d55-418c-9ea7-78456ed70550 target-pvc-2
+              require_fragment '"storageClassName":"ceph-block-app-replicated"' target-pvc-2
+              require_fragment '"phase":"Bound"' target-pvc-2
+
+              # The source controller must still be the exact retired object
+              # and must remain at zero before any source storage is touched.
+              get_required /apis/apps/v1/namespaces/security/statefulsets/vault \
+                0b5e404b-0cd2-4643-997d-c4a025993e5a legacy-statefulset
+              require_fragment '"replicas":0' legacy-statefulset
+
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-0 \
+                f31558b2-cdfc-4aea-ab5c-bcb9feec0483 legacy-pvc-0
+              require_fragment '"volumeName":"pvc-f31558b2-cdfc-4aea-ab5c-bcb9feec0483"' legacy-pvc-0
+              require_fragment '"storageClassName":"ceph-block"' legacy-pvc-0
+              require_fragment '"phase":"Bound"' legacy-pvc-0
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-1 \
+                7073640e-1c4f-4f21-9dd0-1aadd17aace3 legacy-pvc-1
+              require_fragment '"volumeName":"pvc-7073640e-1c4f-4f21-9dd0-1aadd17aace3"' legacy-pvc-1
+              require_fragment '"storageClassName":"ceph-block"' legacy-pvc-1
+              require_fragment '"phase":"Bound"' legacy-pvc-1
+              get_required /api/v1/namespaces/security/persistentvolumeclaims/data-vault-2 \
+                a6065555-583c-4878-96a7-98d97f65806b legacy-pvc-2
+              require_fragment '"volumeName":"pvc-a6065555-583c-4878-96a7-98d97f65806b"' legacy-pvc-2
+              require_fragment '"storageClassName":"ceph-block"' legacy-pvc-2
+              require_fragment '"phase":"Bound"' legacy-pvc-2
+
+              get_required /api/v1/persistentvolumes/pvc-f31558b2-cdfc-4aea-ab5c-bcb9feec0483 \
+                e04151c2-3997-4383-aadf-bf77c949f7dd legacy-pv-0
+              require_fragment '"persistentVolumeReclaimPolicy":"Delete"' legacy-pv-0
+              require_fragment '"pool":"ceph-block"' legacy-pv-0
+              require_fragment '"uid":"f31558b2-cdfc-4aea-ab5c-bcb9feec0483"' legacy-pv-0-claim
+              get_required /api/v1/persistentvolumes/pvc-7073640e-1c4f-4f21-9dd0-1aadd17aace3 \
+                6775d342-fd21-47d9-b2d2-4d215513a9e5 legacy-pv-1
+              require_fragment '"persistentVolumeReclaimPolicy":"Delete"' legacy-pv-1
+              require_fragment '"pool":"ceph-block"' legacy-pv-1
+              require_fragment '"uid":"7073640e-1c4f-4f21-9dd0-1aadd17aace3"' legacy-pv-1-claim
+              get_required /api/v1/persistentvolumes/pvc-a6065555-583c-4878-96a7-98d97f65806b \
+                84878119-7d49-40ee-9139-37584fb0efbf legacy-pv-2
+              require_fragment '"persistentVolumeReclaimPolicy":"Delete"' legacy-pv-2
+              require_fragment '"pool":"ceph-block"' legacy-pv-2
+              require_fragment '"uid":"a6065555-583c-4878-96a7-98d97f65806b"' legacy-pv-2-claim
+
+              # Refuse deletion while any pod, VolumeAttachment, or Kubernetes
+              # snapshot object still refers to a legacy claim/image.
+              get_collection /api/v1/namespaces/security/pods "$work/pods.json" security-pods
+              for claim in data-vault-0 data-vault-1 data-vault-2; do
+                if grep -Fq "\"claimName\":\"$claim\"" "$work/pods.json"; then
+                  fail "a live security Pod still references $claim"
+                fi
+              done
+
+              get_collection /apis/storage.k8s.io/v1/volumeattachments \
+                "$work/attachments.json" volumeattachments
+              for pv in \
+                pvc-f31558b2-cdfc-4aea-ab5c-bcb9feec0483 \
+                pvc-7073640e-1c4f-4f21-9dd0-1aadd17aace3 \
+                pvc-a6065555-583c-4878-96a7-98d97f65806b; do
+                if grep -Fq "\"persistentVolumeName\":\"$pv\"" "$work/attachments.json"; then
+                  fail "a VolumeAttachment still references $pv"
+                fi
+              done
+
+              get_collection /apis/snapshot.storage.k8s.io/v1/volumesnapshots \
+                "$work/snapshots.json" volumesnapshots
+              for claim in data-vault-0 data-vault-1 data-vault-2; do
+                if grep -Fq "\"persistentVolumeClaimName\":\"$claim\"" "$work/snapshots.json"; then
+                  fail "a VolumeSnapshot still references $claim"
+                fi
+              done
+
+              get_collection /apis/snapshot.storage.k8s.io/v1/volumesnapshotcontents \
+                "$work/snapshotcontents.json" volumesnapshotcontents
+              for handle in \
+                0001-0009-rook-ceph-0000000000000001-1230c31c-ea82-4863-9f68-9dfd5022bfc9 \
+                0001-0009-rook-ceph-0000000000000001-9d650483-ec8e-4e8a-91c1-2941c1e453f8 \
+                0001-0009-rook-ceph-0000000000000001-f767ebc1-9dae-4284-be6d-98b31b27ee27; do
+                if grep -Fq "\"volumeHandle\":\"$handle\"" "$work/snapshotcontents.json"; then
+                  fail "a VolumeSnapshotContent still references $handle"
+                fi
+              done
+
+              # Remove only old-generation controller/discovery artifacts. The
+              # canonical Services and shared RBAC are now owned by this app.
+              delete_exact /apis/apps/v1/namespaces/security/statefulsets/vault \
+                0b5e404b-0cd2-4643-997d-c4a025993e5a legacy-statefulset
+              delete_exact /api/v1/namespaces/security/services/vault-internal \
+                fc04fe7b-4bc7-4474-82ca-da5ff0615fa2 legacy-internal-service
+              delete_exact /api/v1/namespaces/security/configmaps/vault-config \
+                f778d607-7331-44a2-a385-612e126eaeb6 legacy-configmap
+
+              delete_exact /api/v1/namespaces/security/persistentvolumeclaims/data-vault-0 \
+                f31558b2-cdfc-4aea-ab5c-bcb9feec0483 legacy-pvc-0
+              delete_exact /api/v1/namespaces/security/persistentvolumeclaims/data-vault-1 \
+                7073640e-1c4f-4f21-9dd0-1aadd17aace3 legacy-pvc-1
+              delete_exact /api/v1/namespaces/security/persistentvolumeclaims/data-vault-2 \
+                a6065555-583c-4878-96a7-98d97f65806b legacy-pvc-2
+
+              wait_absent /api/v1/namespaces/security/persistentvolumeclaims/data-vault-0 legacy-pvc-0
+              wait_absent /api/v1/namespaces/security/persistentvolumeclaims/data-vault-1 legacy-pvc-1
+              wait_absent /api/v1/namespaces/security/persistentvolumeclaims/data-vault-2 legacy-pvc-2
+              wait_absent /api/v1/persistentvolumes/pvc-f31558b2-cdfc-4aea-ab5c-bcb9feec0483 legacy-pv-0
+              wait_absent /api/v1/persistentvolumes/pvc-7073640e-1c4f-4f21-9dd0-1aadd17aace3 legacy-pv-1
+              wait_absent /api/v1/persistentvolumes/pvc-a6065555-583c-4878-96a7-98d97f65806b legacy-pv-2
+
+              echo 'Legacy Vault controller artifacts, PVCs, and PVs are absent.'
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: work
+              mountPath: /work
+      volumes:
+        - name: work
+          emptyDir: {}
