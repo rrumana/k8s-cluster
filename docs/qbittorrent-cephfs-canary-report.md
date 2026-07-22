@@ -311,3 +311,82 @@ so the `traffic-tier=bulk-seed` pod on tainted `eva-3` was not being classified.
 The DaemonSet now tolerates the storage taint and uses a kubectl client matching
 the Kubernetes 1.36 cluster. Its 700 Mbit/s bulk rate remains a guarantee; the
 class can borrow up to the 2.5 Gbit/s link ceiling when bandwidth is available.
+
+## 2026-07-22 switch-path root cause and retrospective
+
+The throughput regression was ultimately isolated to the physical switch path,
+not Ceph, qBittorrent, or the WireGuard MTU. The affected topology placed all
+cluster and edge devices on a Nicgiga S25-0802P unmanaged switch:
+
+| Switch port | Connected device | Connection |
+| --- | --- | --- |
+| SFP+ 1 | Workstation | 10Gtek 10GBase-T transceiver |
+| SFP+ 2 | OPNsense LAN | 10Gtek 10GBase-T transceiver |
+| 2.5 GbE 1 | UniFi U6 Pro | Native RJ45 |
+| 2.5 GbE 2 | Work laptop | Native RJ45 |
+| 2.5 GbE 3 | `melchior-1` | Native RJ45 |
+| 2.5 GbE 4 | `balthasar-2` | Native RJ45 |
+| 2.5 GbE 5 | `casper-3` | Native RJ45 |
+| 2.5 GbE 6 | `eva-1` | Native RJ45 |
+| 2.5 GbE 7 | `eva-2` | Native RJ45 |
+| 2.5 GbE 8 | `eva-3` | Native RJ45 |
+
+The OPNsense LAN link negotiated at 1 Gbit/s because the apartment's in-wall
+cabling remains the limiting segment. Despite that lower negotiated rate, the
+router had previously supported line-rate seeding without harming interactive
+traffic.
+
+Diagnostics initially made the fault look like congestion or a VPN/storage
+regression:
+
+- qBittorrent plateaued around 65-85 MiB/s and websites experienced DNS,
+  connection, and TLS timeouts during heavy seeding.
+- OPNsense was mostly idle and reported no LAN or WAN interface errors, drops,
+  or gateway loss, while the workstation and all six cluster nodes had clean
+  LAN connectivity.
+- Physical WAN upload nevertheless reached 694-909 Mbit/s. Temporarily limiting
+  qBittorrent to 50 MiB/s reduced WAN upload to about 481 Mbit/s and restored
+  interactive website performance, making queueing a useful mitigation but not
+  the underlying cause.
+- A direct read from the EC CephFS library reached about 170 MiB/s, and CPU,
+  memory, local QoS, and node NIC counters did not expose a bottleneck.
+- Matched MTU tests at 1280, 1320, and 1380 all averaged about 82 MiB/s. A fresh
+  Denver Proton WireGuard profile also performed worse than the existing San
+  Jose profile in an isolated streaming upload comparison.
+
+The decisive test exchanged the AP and router connections: OPNsense LAN moved
+from SFP+ 2 through the 10GBase-T transceiver to the switch's native 2.5 GbE 1
+RJ45 port, and the AP moved to the transceiver path. qBittorrent immediately
+returned to a sustained 100-110 MiB/s without changing Ceph, qBittorrent, the
+VPN tunnel, or the 1 Gbit/s router uplink.
+
+This isolates the regression to the former router-facing SFP+/10GBase-T path.
+The available evidence cannot distinguish a faulty transceiver from switch-port
+buffering, flow-control, thermal, or interoperability behavior. It does show
+that clean endpoint counters and successful link negotiation are insufficient
+to clear an unmanaged switch or copper SFP+ adapter under sustained mixed
+traffic. The lower qBittorrent payload rate also did not prove lower physical
+link pressure because tunnel overhead and retransmissions remained part of the
+WAN load.
+
+The planned replacement is a TRENDnet 12-port 10 GbE SFP+ switch using direct
+attach cables for most high-throughput connections. The router path will remain
+1 Gbit/s until the in-wall cabling can be replaced, but it is not the observed
+throughput limiter when attached through a stable native RJ45 path.
+
+Operational lessons:
+
+1. When a throughput regression follows a topology change, physically A/B each
+   new port and transceiver before retuning storage, VPN, or application layers.
+2. Separate average utilization from burst handling. A faster ingress port can
+   overrun a slower egress path inside an unmanaged switch without incrementing
+   either endpoint's error counters.
+3. Rate limiting can preserve interactive traffic during diagnosis, but an
+   improvement under a cap does not by itself prove that ordinary WAN
+   saturation is the root cause.
+4. Prefer native links or DACs for sustained high-throughput paths; treat
+   copper SFP+ adapters as components that need their own endurance validation.
+5. Preserve the validated qBittorrent/Ceph settings while testing physical
+   topology. The restored production baseline is 256 global upload slots,
+   eight slots per torrent, Simple pread/pwrite, three asynchronous I/O threads,
+   four hashing threads, and 16/128 KiB send-buffer watermarks.
