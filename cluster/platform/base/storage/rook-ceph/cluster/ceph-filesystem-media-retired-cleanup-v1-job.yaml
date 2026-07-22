@@ -58,7 +58,7 @@ spec:
               readonly old_pool=ceph-filesystem-bulk
               readonly old_path=/volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5
               readonly old_quota=7696581394432
-              readonly old_minimum_bytes=5500000000000
+              readonly verified_source_minimum_bytes=5520405814767
               readonly old_csi_group=csi
 
               readonly target_fs=cephfs
@@ -67,7 +67,7 @@ spec:
               readonly target_pool=cephfs-bulk
               readonly target_path=/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec
               readonly target_quota=7696581394432
-              readonly target_minimum_bytes=5500000000000
+              readonly target_minimum_bytes=5520405814767
 
               readonly nfs_cluster=ceph-nfs-bulk
               readonly nfs_pseudo=/media
@@ -82,32 +82,38 @@ spec:
               install -m 0600 /etc/ceph-admin/keyring \
                 /etc/ceph/ceph.client.admin.keyring
 
-              # Deletion is useful if capacity itself is warning, but every
-              # availability, topology, and PG-state fault remains a hard stop.
-              cluster_status="$(ceph status --format json)"
-              if ! printf '%s\n' "${cluster_status}" | jq -e '
-                  ((.health.checks | keys) - [
-                    "BLUESTORE_SLOW_OP_ALERT",
-                    "OSD_NEARFULL",
-                    "POOL_NEARFULL"
-                  ] | length) == 0 and
-                  .osdmap.num_osds > 0 and
-                  .osdmap.num_osds == .osdmap.num_up_osds and
-                  .osdmap.num_osds == .osdmap.num_in_osds and
-                  .osdmap.num_remapped_pgs == 0
-                ' >/dev/null; then
-                echo 'Refusing retired-media cleanup with unexpected Ceph health' >&2
-                printf '%s\n' "${cluster_status}" | jq .health >&2
-                exit 75
-              fi
-              ceph pg stat --format json | jq -e '
-                .pg_ready == true and
-                ([.pg_summary.num_pg_by_state[].num] | add) ==
-                  .pg_summary.num_pgs and
-                all(.pg_summary.num_pg_by_state[];
-                  (.name | split("+") |
-                    (index("active") != null and index("clean") != null)))
-              ' >/dev/null
+              validate_cluster_clean() {
+                local cluster_status
+
+                # Deletion is useful if capacity itself is warning, but every
+                # availability, topology, and PG-state fault remains a hard stop.
+                cluster_status="$(ceph status --format json)"
+                if ! printf '%s\n' "${cluster_status}" | jq -e '
+                    ((.health.checks | keys) - [
+                      "BLUESTORE_SLOW_OP_ALERT",
+                      "OSD_NEARFULL",
+                      "POOL_NEARFULL"
+                    ] | length) == 0 and
+                    .osdmap.num_osds > 0 and
+                    .osdmap.num_osds == .osdmap.num_up_osds and
+                    .osdmap.num_osds == .osdmap.num_in_osds and
+                    .osdmap.num_remapped_pgs == 0
+                  ' >/dev/null; then
+                  echo 'Refusing retired-media cleanup with unexpected Ceph health' >&2
+                  printf '%s\n' "${cluster_status}" | jq .health >&2
+                  return 1
+                fi
+                ceph pg stat --format json | jq -e '
+                  .pg_ready == true and
+                  ([.pg_summary.num_pg_by_state[].num] | add) ==
+                    .pg_summary.num_pgs and
+                  all(.pg_summary.num_pg_by_state[];
+                    (.name | split("+") |
+                      (index("active") != null and index("clean") != null)))
+                ' >/dev/null
+              }
+
+              validate_cluster_clean
 
               filesystems="$(ceph fs ls --format json)"
               printf '%s\n' "${filesystems}" | jq -e \
@@ -150,6 +156,8 @@ spec:
                   .bytes_quota == $quota and
                   .bytes_used >= $minimum_bytes
                 ' >/dev/null
+              target_bytes="$(printf '%s\n' "${target_info}" | jq -er \
+                '.bytes_used | numbers')"
 
               nfs_export="$(ceph nfs export info \
                 "${nfs_cluster}" "${nfs_pseudo}" --format json)"
@@ -173,11 +181,34 @@ spec:
                   (.clients | length) == 0
                 ' >/dev/null
 
-              # No CSI subvolume or snapshot remains elsewhere in the old
-              # filesystem. The bulk group must contain only this exact source.
+              # Prove there is no older asynchronous deletion already in flight.
+              # This also makes an idempotent retry wait until any prior purge
+              # has fully drained before it can report success.
+              volume_info="$(ceph fs volume info "${old_fs}" --format json)"
+              printf '%s\n' "${volume_info}" | jq -e \
+                '.pending_subvolume_deletions == 0' >/dev/null
+
+              # Inventory every namespace and snapshot surface in the retired
+              # filesystem. The bulk group may contain only this exact source.
+              groups="$(ceph fs subvolumegroup ls "${old_fs}" --format json)"
+              printf '%s\n' "${groups}" | jq -e \
+                '([.[].name] | sort) == ["bulk", "csi"]' >/dev/null
+
+              ungrouped_subvolumes="$(ceph fs subvolume ls \
+                "${old_fs}" --format json)"
+              printf '%s\n' "${ungrouped_subvolumes}" | jq -e \
+                'length == 0' >/dev/null
+
               csi_subvolumes="$(ceph fs subvolume ls "${old_fs}" \
                 --group_name "${old_csi_group}" --format json)"
               printf '%s\n' "${csi_subvolumes}" | jq -e 'length == 0' >/dev/null
+
+              for group in "${old_group}" "${old_csi_group}"; do
+                group_snapshots="$(ceph fs subvolumegroup snapshot ls \
+                  "${old_fs}" "${group}" --format json)"
+                printf '%s\n' "${group_snapshots}" | jq -e \
+                  'length == 0' >/dev/null
+              done
 
               bulk_subvolumes="$(ceph fs subvolume ls "${old_fs}" \
                 --group_name "${old_group}" --format json)"
@@ -192,7 +223,7 @@ spec:
                   --arg path "${old_path}" \
                   --arg pool "${old_pool}" \
                   --argjson quota "${old_quota}" \
-                  --argjson minimum_bytes "${old_minimum_bytes}" '
+                  --argjson minimum_bytes "${verified_source_minimum_bytes}" '
                     .type == "subvolume" and
                     .state == "complete" and
                     .path == $path and
@@ -200,12 +231,28 @@ spec:
                     .bytes_quota == $quota and
                     .bytes_used >= $minimum_bytes
                   ' >/dev/null
+                source_bytes="$(printf '%s\n' "${source_info}" | jq -er \
+                  '.bytes_used | numbers')"
+                if (( target_bytes < source_bytes )); then
+                  echo "Refusing cleanup: target ${target_bytes} bytes is smaller than source ${source_bytes}" >&2
+                  exit 73
+                fi
 
                 snapshots="$(ceph fs subvolume snapshot ls \
                   "${old_fs}" "${old_subvolume}" \
                   --group_name "${old_group}" --format json)"
                 printf '%s\n' "${snapshots}" | jq -e 'length == 0' >/dev/null
 
+                fs_status="$(ceph fs status "${old_fs}" --format json)"
+                standby_entity="$(printf '%s\n' "${fs_status}" | jq -er \
+                  --arg prefix "${old_fs}-" '
+                    [.mdsmap[] | select(
+                      .rank == "0-s" and .state == "standby-replay") | .name]
+                    | if length == 1 and (.[0] | startswith($prefix))
+                      then .[0] | ltrimstr($prefix)
+                      else empty
+                      end
+                  ')"
                 old_clients="$(ceph tell "mds.${old_fs}:0" client ls \
                   --format json)"
                 source_clients="$(printf '%s\n' "${old_clients}" | jq \
@@ -218,11 +265,14 @@ spec:
                   exit 71
                 fi
 
-                # standby-replay MDS b appears in client ls as client.b rooted
-                # at /. It is not a data consumer. Refuse every other session.
-                unexpected_clients="$(printf '%s\n' "${old_clients}" | jq '
+                # The authenticated standby-replay MDS appears as a client
+                # rooted at /. It is not a data consumer. Refuse every other
+                # session, including anything spoofing only client metadata.
+                unexpected_clients="$(printf '%s\n' "${old_clients}" | jq \
+                  --arg standby "${standby_entity}" '
                   [.[] | select(
-                    ((.client_metadata.entity_id // "") != "b") or
+                    ((.auth_name.id // "") != $standby) or
+                    ((.client_metadata.entity_id // "") != $standby) or
                     ((.client_metadata.root // "") != "/") or
                     ((.client_metadata.pid // "") != "1")
                   )]
@@ -261,12 +311,16 @@ spec:
                     --arg pool "${old_pool}" \
                     '.pools[] | select(.name == $pool) | .stats.stored')"
                   test -n "${stored_bytes}"
-                  if (( stored_bytes <= residual_pool_threshold_bytes )); then
+                  pending_deletions="$(ceph fs volume info "${old_fs}" \
+                    --format json | jq -er '.pending_subvolume_deletions | numbers')"
+                  if (( pending_deletions == 0 && \
+                        stored_bytes <= residual_pool_threshold_bytes )); then
+                    validate_cluster_clean
                     echo "Retired media source purged; pool stores ${stored_bytes} bytes"
                     exit 0
                   fi
                   if (( attempt % 6 == 0 )); then
-                    echo "Waiting for asynchronous media purge: ${stored_bytes} bytes remain"
+                    echo "Waiting for asynchronous media purge: ${stored_bytes} bytes remain, ${pending_deletions} queued deletion(s)"
                   fi
                 elif (( attempt % 6 == 0 )); then
                   echo 'Waiting for the retired media subvolume to disappear'
