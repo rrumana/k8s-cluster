@@ -262,8 +262,8 @@ snapshot.
   intentionally avoided because it has caused stuck GPU processes that survive
   container termination and require node reboots.
 - Persistent storage is:
-- `immich-photos` at `1Ti`
-- `immich-ml-cache` at `64Gi`
+- `immich-photos-critical` at `1Ti`
+- `immich-ml-cache-critical` at `64Gi`
 - Immich is exposed by both ingress (`immich.rcrumana.xyz`) and direct MetalLB IP `192.168.1.234`.
 
 ## `productivity` namespace

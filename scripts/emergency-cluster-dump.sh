@@ -336,7 +336,7 @@ write_cluster_snapshot_step() {
     printf -- '---\n'
     kube -n media get ingress immich -o yaml
     printf -- '---\n'
-    kube -n media get pvc immich-photos -o yaml
+    kube -n media get pvc immich-photos-critical -o yaml
   } >"$cluster_config" || return 1
 }
 
