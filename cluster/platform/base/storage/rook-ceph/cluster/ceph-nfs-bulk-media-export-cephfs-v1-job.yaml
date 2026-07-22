@@ -133,8 +133,12 @@ spec:
                   .bytes_quota == $quota
                 ' >/dev/null
 
-              if current="$(ceph nfs export info "${cluster}" "${pseudo}" \
-                  --format json 2>/tmp/export-info-error)"; then
+              exports="$(ceph nfs export ls "${cluster}" --format json)"
+              if printf '%s\n' "${exports}" | jq -e \
+                  --arg pseudo "${pseudo}" \
+                  'index($pseudo) != null' >/dev/null; then
+                current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                  --format json)"
                 if printf '%s\n' "${current}" | export_matches_target; then
                   echo 'The exact target /media export already exists; no-op'
                   printf '%s\n' "${current}" | jq .
@@ -144,8 +148,6 @@ spec:
                 printf '%s\n' "${current}" | jq . >&2
                 exit 73
               fi
-              ceph nfs export ls "${cluster}" --format json \
-                | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
 
               set +e
               create_output="$(ceph nfs export create cephfs \
@@ -156,23 +158,26 @@ spec:
               printf '%s\n' "${create_output}"
 
               current=""
+              export_listed=false
               for _ in {1..12}; do
-                if current="$(ceph nfs export info "${cluster}" "${pseudo}" \
-                    --format json 2>/tmp/export-info-error)"; then
-                  break
+                exports="$(ceph nfs export ls "${cluster}" --format json)"
+                if printf '%s\n' "${exports}" | jq -e \
+                    --arg pseudo "${pseudo}" \
+                    'index($pseudo) != null' >/dev/null; then
+                  export_listed=true
+                  current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                    --format json)"
+                  if printf '%s\n' "${current}" | export_matches_target; then
+                    echo 'Created and validated the target /media export'
+                    printf '%s\n' "${current}" | jq .
+                    exit 0
+                  fi
                 fi
                 sleep 2
               done
 
-              if [[ -n "${current}" ]] && \
-                  printf '%s\n' "${current}" | export_matches_target; then
-                echo 'Created and validated the target /media export'
-                printf '%s\n' "${current}" | jq .
-                exit 0
-              fi
-
               echo "Target export creation failed validation (status=${create_status})" >&2
-              if [[ -n "${current}" ]]; then
+              if [[ "${export_listed}" = true ]]; then
                 printf '%s\n' "${current}" | jq . >&2
                 echo 'Removing the invalid export to fail closed' >&2
                 ceph nfs export rm "${cluster}" "${pseudo}"
