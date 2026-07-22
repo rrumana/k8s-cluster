@@ -9,17 +9,38 @@ data:
 
     PF_FILE="${PF_FILE:-/pf/state/forwarded_port}"
     WEBUI_PORT="${QB_WEBUI_PORT:?missing QB_WEBUI_PORT}"
-    GLOBAL_UPLOAD_SLOTS="${QB_GLOBAL_UPLOAD_SLOTS:?missing QB_GLOBAL_UPLOAD_SLOTS}"
-    UPLOAD_SLOTS_PER_TORRENT="${QB_UPLOAD_SLOTS_PER_TORRENT:?missing QB_UPLOAD_SLOTS_PER_TORRENT}"
-    DISK_IO_TYPE="${QB_DISK_IO_TYPE:?missing QB_DISK_IO_TYPE}"
-    ASYNC_IO_THREADS="${QB_ASYNC_IO_THREADS:?missing QB_ASYNC_IO_THREADS}"
-    HASHING_THREADS="${QB_HASHING_THREADS:?missing QB_HASHING_THREADS}"
-    SEND_BUFFER_LOW_WATERMARK="${QB_SEND_BUFFER_LOW_WATERMARK:?missing QB_SEND_BUFFER_LOW_WATERMARK}"
-    SEND_BUFFER_WATERMARK="${QB_SEND_BUFFER_WATERMARK:?missing QB_SEND_BUFFER_WATERMARK}"
-    SEND_BUFFER_WATERMARK_FACTOR="${QB_SEND_BUFFER_WATERMARK_FACTOR:?missing QB_SEND_BUFFER_WATERMARK_FACTOR}"
+    RECONCILE_PERFORMANCE_SETTINGS="${QB_RECONCILE_PERFORMANCE_SETTINGS:-true}"
+    GLOBAL_UPLOAD_SLOTS="${QB_GLOBAL_UPLOAD_SLOTS:-}"
+    UPLOAD_SLOTS_PER_TORRENT="${QB_UPLOAD_SLOTS_PER_TORRENT:-}"
+    DISK_IO_TYPE="${QB_DISK_IO_TYPE:-}"
+    ASYNC_IO_THREADS="${QB_ASYNC_IO_THREADS:-}"
+    HASHING_THREADS="${QB_HASHING_THREADS:-}"
+    SEND_BUFFER_LOW_WATERMARK="${QB_SEND_BUFFER_LOW_WATERMARK:-}"
+    SEND_BUFFER_WATERMARK="${QB_SEND_BUFFER_WATERMARK:-}"
+    SEND_BUFFER_WATERMARK_FACTOR="${QB_SEND_BUFFER_WATERMARK_FACTOR:-}"
     ALTERNATIVE_WEBUI_ENABLED="${QB_ALTERNATIVE_WEBUI_ENABLED:?missing QB_ALTERNATIVE_WEBUI_ENABLED}"
     ALTERNATIVE_WEBUI_PATH="${QB_ALTERNATIVE_WEBUI_PATH:?missing QB_ALTERNATIVE_WEBUI_PATH}"
+
+    case "$RECONCILE_PERFORMANCE_SETTINGS" in
+      true|false) : ;;
+      *) echo "pf-sync(sidecar): QB_RECONCILE_PERFORMANCE_SETTINGS must be true or false" >&2; exit 1 ;;
+    esac
+
+    if [ "$RECONCILE_PERFORMANCE_SETTINGS" = true ]; then
+      : "${GLOBAL_UPLOAD_SLOTS:?missing QB_GLOBAL_UPLOAD_SLOTS}"
+      : "${UPLOAD_SLOTS_PER_TORRENT:?missing QB_UPLOAD_SLOTS_PER_TORRENT}"
+      : "${DISK_IO_TYPE:?missing QB_DISK_IO_TYPE}"
+      : "${ASYNC_IO_THREADS:?missing QB_ASYNC_IO_THREADS}"
+      : "${HASHING_THREADS:?missing QB_HASHING_THREADS}"
+      : "${SEND_BUFFER_LOW_WATERMARK:?missing QB_SEND_BUFFER_LOW_WATERMARK}"
+      : "${SEND_BUFFER_WATERMARK:?missing QB_SEND_BUFFER_WATERMARK}"
+      : "${SEND_BUFFER_WATERMARK_FACTOR:?missing QB_SEND_BUFFER_WATERMARK_FACTOR}"
+    fi
+
     echo "pf-sync(sidecar): watching $PF_FILE for qB WebUI :$WEBUI_PORT"
+    if [ "$RECONCILE_PERFORMANCE_SETTINGS" = false ]; then
+      echo "pf-sync(sidecar): performance preference reconciliation is disabled"
+    fi
 
     qbit_available=false
     while :; do
@@ -58,37 +79,48 @@ data:
         fi
 
         if [ "$port_ready" = true ]; then
-              cur_port="$(printf '%s' "$compact_prefs" | sed -n 's/.*"listen_port":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_global_slots="$(printf '%s' "$compact_prefs" | sed -n 's/.*"max_uploads":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_torrent_slots="$(printf '%s' "$compact_prefs" | sed -n 's/.*"max_uploads_per_torrent":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_disk_io_type="$(printf '%s' "$compact_prefs" | sed -n 's/.*"disk_io_type":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_async_threads="$(printf '%s' "$compact_prefs" | sed -n 's/.*"async_io_threads":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_hashing_threads="$(printf '%s' "$compact_prefs" | sed -n 's/.*"hashing_threads":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_send_low="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_low_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_send_high="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
-              cur_send_factor="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark_factor":\([-0-9][0-9]*\).*/\1/p' || true)"
-
-          if [ "$cur_port" != "$p" ] \
-            || [ "$cur_global_slots" != "$GLOBAL_UPLOAD_SLOTS" ] \
-            || [ "$cur_torrent_slots" != "$UPLOAD_SLOTS_PER_TORRENT" ] \
-            || [ "$cur_disk_io_type" != "$DISK_IO_TYPE" ] \
-            || [ "$cur_async_threads" != "$ASYNC_IO_THREADS" ] \
-            || [ "$cur_hashing_threads" != "$HASHING_THREADS" ] \
-            || [ "$cur_send_low" != "$SEND_BUFFER_LOW_WATERMARK" ] \
-            || [ "$cur_send_high" != "$SEND_BUFFER_WATERMARK" ] \
-            || [ "$cur_send_factor" != "$SEND_BUFFER_WATERMARK_FACTOR" ]; then
+          cur_port="$(printf '%s' "$compact_prefs" | sed -n 's/.*"listen_port":\([-0-9][0-9]*\).*/\1/p' || true)"
+          if [ "$cur_port" != "$p" ]; then
             reconcile_preferences=true
+          fi
+
+          if [ "$RECONCILE_PERFORMANCE_SETTINGS" = true ]; then
+            cur_global_slots="$(printf '%s' "$compact_prefs" | sed -n 's/.*"max_uploads":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_torrent_slots="$(printf '%s' "$compact_prefs" | sed -n 's/.*"max_uploads_per_torrent":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_disk_io_type="$(printf '%s' "$compact_prefs" | sed -n 's/.*"disk_io_type":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_async_threads="$(printf '%s' "$compact_prefs" | sed -n 's/.*"async_io_threads":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_hashing_threads="$(printf '%s' "$compact_prefs" | sed -n 's/.*"hashing_threads":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_send_low="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_low_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_send_high="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark":\([-0-9][0-9]*\).*/\1/p' || true)"
+            cur_send_factor="$(printf '%s' "$compact_prefs" | sed -n 's/.*"send_buffer_watermark_factor":\([-0-9][0-9]*\).*/\1/p' || true)"
+
+            if [ "$cur_global_slots" != "$GLOBAL_UPLOAD_SLOTS" ] \
+              || [ "$cur_torrent_slots" != "$UPLOAD_SLOTS_PER_TORRENT" ] \
+              || [ "$cur_disk_io_type" != "$DISK_IO_TYPE" ] \
+              || [ "$cur_async_threads" != "$ASYNC_IO_THREADS" ] \
+              || [ "$cur_hashing_threads" != "$HASHING_THREADS" ] \
+              || [ "$cur_send_low" != "$SEND_BUFFER_LOW_WATERMARK" ] \
+              || [ "$cur_send_high" != "$SEND_BUFFER_WATERMARK" ] \
+              || [ "$cur_send_factor" != "$SEND_BUFFER_WATERMARK_FACTOR" ]; then
+              reconcile_preferences=true
+            fi
           fi
         fi
 
         if [ "$reconcile_preferences" = true ]; then
           if [ "$port_ready" = true ]; then
-            echo "pf-sync(sidecar): reconciling qBittorrent port, performance, and WebUI preferences"
-            json=$(printf '{"listen_port": %s, "random_port": false, "upnp": false, "natpmp": false, "listen_on_ipv6": false, "max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s, "alternative_webui_enabled": %s, "alternative_webui_path": "%s"}' \
-              "$p" "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
-              "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
-              "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" "$SEND_BUFFER_WATERMARK_FACTOR" \
-              "$ALTERNATIVE_WEBUI_ENABLED" "$ALTERNATIVE_WEBUI_PATH")
+            if [ "$RECONCILE_PERFORMANCE_SETTINGS" = true ]; then
+              echo "pf-sync(sidecar): reconciling qBittorrent port, performance, and WebUI preferences"
+              json=$(printf '{"listen_port": %s, "random_port": false, "upnp": false, "natpmp": false, "listen_on_ipv6": false, "max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s, "alternative_webui_enabled": %s, "alternative_webui_path": "%s"}' \
+                "$p" "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
+                "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
+                "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" "$SEND_BUFFER_WATERMARK_FACTOR" \
+                "$ALTERNATIVE_WEBUI_ENABLED" "$ALTERNATIVE_WEBUI_PATH")
+            else
+              echo "pf-sync(sidecar): reconciling qBittorrent port and WebUI preferences"
+              json=$(printf '{"listen_port": %s, "random_port": false, "upnp": false, "natpmp": false, "listen_on_ipv6": false, "alternative_webui_enabled": %s, "alternative_webui_path": "%s"}' \
+                "$p" "$ALTERNATIVE_WEBUI_ENABLED" "$ALTERNATIVE_WEBUI_PATH")
+            fi
           else
             echo "pf-sync(sidecar): reconciling qBittorrent WebUI preferences while port forwarding is unavailable"
             json=$(printf '{"alternative_webui_enabled": %s, "alternative_webui_path": "%s"}' \

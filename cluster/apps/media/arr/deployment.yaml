@@ -195,6 +195,7 @@ spec:
           env:
             - { name: PF_FILE, value: "/pf/state/forwarded_port" }
             - { name: QB_WEBUI_PORT, value: "8020" }
+            - { name: QB_RECONCILE_PERFORMANCE_SETTINGS, value: "false" }
             - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "-1" }
             - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "-1" }
             - { name: QB_DISK_IO_TYPE, value: "3" }
