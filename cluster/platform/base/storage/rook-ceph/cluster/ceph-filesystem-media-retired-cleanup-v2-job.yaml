@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/name: ceph-filesystem
     app.kubernetes.io/component: retired-data-cleanup
 spec:
-  suspend: true
+  suspend: false
   podReplacementPolicy: Failed
   backoffLimit: 0
   completions: 1
