@@ -12,7 +12,7 @@ spec:
   # This is a destructive one-shot operation. Keep it suspended through shared
   # resource adoption and legacy Application removal. Unsuspending is its own
   # reviewed GitOps phase after every RUNBOOK gate passes.
-  suspend: true
+  suspend: false
   backoffLimit: 0
   activeDeadlineSeconds: 1800
   template:
