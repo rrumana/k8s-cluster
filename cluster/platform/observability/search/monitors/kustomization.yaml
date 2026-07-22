@@ -6,6 +6,7 @@ namespace: search
 resources:
   - data-prepper-servicemonitor.yaml
   - fluent-bit-servicemonitor.yaml
+  - fluent-bit-prometheusrule.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: observability-search-monitors

@@ -9,5 +9,7 @@ spec:
       app.kubernetes.io/name: fluent-bit
   endpoints:
     - port: http-metrics
-      path: /api/v1/metrics/prometheus
+      # v2 retains the existing counters and adds storage/backlog capacity
+      # metrics needed to observe filesystem buffering.
+      path: /api/v2/metrics/prometheus
       interval: 30s

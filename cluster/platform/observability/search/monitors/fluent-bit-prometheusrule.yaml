@@ -1,0 +1,86 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fluent-bit-pipeline
+  namespace: search
+  labels:
+    # Prometheus selects rules carrying the Helm release label across all
+    # namespaces.
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: fluent-bit.pipeline
+      rules:
+        - alert: FluentBitInputStalled
+          expr: |
+            (
+              sum by (namespace, pod) (
+                increase(fluentbit_input_records_total{namespace="search", name="tail.0"}[30m])
+              ) == 0
+            )
+            and on (namespace, pod)
+            (
+              max by (namespace, pod) (
+                fluentbit_uptime{namespace="search"}
+              ) > 1800
+            )
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Fluent Bit input is stalled on {{ $labels.pod }}
+            description: >-
+              Fluent Bit has been running but has not tailed a record for at
+              least 30 minutes. The alert deliberately does not restart the
+              collector; inspect its tail database, node log activity, and
+              filesystem buffer.
+        - alert: FluentBitOutputStalled
+          expr: |
+            (
+              sum by (namespace, pod) (
+                increase(fluentbit_input_records_total{namespace="search", name="tail.0"}[15m])
+              ) > 0
+            )
+            and on (namespace, pod)
+            (
+              sum by (namespace, pod) (
+                increase(fluentbit_output_proc_records_total{namespace="search", name="http.0"}[15m])
+              ) == 0
+            )
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Fluent Bit output is stalled on {{ $labels.pod }}
+            description: >-
+              Fluent Bit is accepting new records but has delivered none for
+              at least 15 minutes. Inspect Data Prepper reachability, retries,
+              and the collector's filesystem-buffer backlog.
+        - alert: FluentBitRecordsDropped
+          expr: |
+            sum by (namespace, pod) (
+              increase(fluentbit_output_dropped_records_total{namespace="search", name="http.0"}[10m])
+              + increase(fluentbit_output_retries_failed_total{namespace="search", name="http.0"}[10m])
+            ) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Fluent Bit dropped records on {{ $labels.pod }}
+            description: >-
+              Fluent Bit discarded records or exhausted an output retry. Check
+              whether the bounded filesystem queue filled before logs aged out
+              of the buffer.
+        - alert: FluentBitBufferNearCapacity
+          expr: |
+            min by (namespace, pod) (
+              fluentbit_output_chunk_available_capacity_percent{namespace="search", name="http.0"}
+            ) < 20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Fluent Bit buffer is nearly full on {{ $labels.pod }}
+            description: >-
+              Less than 20 percent of this collector's bounded filesystem
+              output queue remains. Restore output delivery before the oldest
+              buffered chunks are discarded.

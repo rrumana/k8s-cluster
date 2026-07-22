@@ -9,6 +9,10 @@ spec:
       app.kubernetes.io/name: fluent-bit
   template:
     metadata:
+      annotations:
+        # The ConfigMap is mounted with subPath, so bump this value whenever
+        # fluent-bit.conf changes to trigger a controlled DaemonSet rollout.
+        homelab.rcrumana.xyz/fluent-bit-config-version: "2"
       labels:
         app.kubernetes.io/name: fluent-bit
     spec:
@@ -19,6 +23,10 @@ spec:
           effect: NoSchedule
         - key: node-role.kubernetes.io/master
           operator: Exists
+          effect: NoSchedule
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
           effect: NoSchedule
       containers:
         - name: fluent-bit
