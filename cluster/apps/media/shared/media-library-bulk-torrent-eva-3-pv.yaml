@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cephfs-media-library-bulk-torrent-eva-3
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+  labels:
+    app.kubernetes.io/name: media-library
+    app.kubernetes.io/component: bulk-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 7Ti
+  claimRef:
+    namespace: media
+    name: media-library-bulk-torrent-eva-3
+  csi:
+    driver: rook-ceph.cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      name: rook-csi-cephfs-node
+      namespace: rook-ceph
+    volumeAttributes:
+      clusterID: rook-ceph
+      fsName: cephfs
+      staticVolume: "true"
+      rootPath: /volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec
+    volumeHandle: cephfs-media-library-bulk-torrent-eva-3
+  # EC has no complete local replica, so the old read_from_replica and
+  # crush_location options do not apply. Keep the bounded readahead that
+  # prevents qBittorrent's sparse/random reads from amplifying into large
+  # CephFS reads.
+  mountOptions:
+    - noatime
+    - rasize=131072
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - eva-3
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-library-bulk-torrent-eva-3
+  namespace: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+  labels:
+    app.kubernetes.io/name: media-library
+    app.kubernetes.io/component: bulk-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 7Ti
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: cephfs-media-library-bulk-torrent-eva-3
