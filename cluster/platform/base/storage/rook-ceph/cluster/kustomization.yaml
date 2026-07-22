@@ -9,7 +9,7 @@ resources:
   - ceph-filesystem.yaml
   - ceph-filesystem-final.yaml
   - ceph-nfs-bulk.yaml
-  - ceph-nfs-bulk-media-export-fence-v1-job.yaml
+  - ceph-nfs-bulk-media-export-fence-v2-job.yaml
   - ceph-nfs-bulk-service.yaml
   - rook-config-override.yaml
   - storage-class-ceph-block-app-replicated.yaml

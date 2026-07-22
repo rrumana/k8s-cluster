@@ -1,10 +1,9 @@
-# INERT: this fail-closed cutover fence is intentionally absent from
-# kustomization. Add it and flip spec.suspend only after Plex/Jellyfin/ARR and
-# every known external NFS client are quiesced.
+# STAGED CUTOVER FENCE: keep suspended until Plex/Jellyfin/ARR and every known
+# external NFS client are quiesced. Activate it only in a separate commit.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ceph-nfs-bulk-media-export-fence-v1
+  name: ceph-nfs-bulk-media-export-fence-v2
   namespace: rook-ceph
   annotations:
     argocd.argoproj.io/sync-wave: "10"
@@ -12,7 +11,7 @@ metadata:
     app.kubernetes.io/name: ceph-nfs-bulk
     app.kubernetes.io/component: media-export-migration
 spec:
-  suspend: false
+  suspend: true
   podReplacementPolicy: Failed
   backoffLimit: 0
   completions: 1
@@ -94,13 +93,15 @@ spec:
                   .perf_stats.apply_latency_ms < 100)
               ' >/dev/null
 
-              if ! current="$(ceph nfs export info "${cluster}" "${pseudo}" \
-                  --format json 2>/tmp/export-info-error)"; then
-                ceph nfs export ls "${cluster}" --format json \
-                  | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
+              exports="$(ceph nfs export ls "${cluster}" --format json)"
+              if printf '%s\n' "${exports}" | jq -e \
+                  --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null; then
                 echo 'The /media export is already absent; the NFS fence is in place'
                 exit 0
               fi
+
+              current="$(ceph nfs export info "${cluster}" "${pseudo}" \
+                --format json)"
 
               printf '%s\n' "${current}" | jq -e \
                 --arg cluster "${cluster}" \
@@ -137,15 +138,22 @@ spec:
               printf '%s\n' "${current}" | jq .
               ceph nfs export rm "${cluster}" "${pseudo}"
 
-              if ceph nfs export info "${cluster}" "${pseudo}" \
-                  --format json >/tmp/unexpected-export 2>&1; then
-                echo 'The /media export still exists after the fence operation' >&2
-                cat /tmp/unexpected-export >&2
-                exit 72
-              fi
-              ceph nfs export ls "${cluster}" --format json \
-                | jq -e --arg pseudo "${pseudo}" 'index($pseudo) == null' >/dev/null
-              echo 'NFS /media export fenced successfully'
+              for _ in {1..12}; do
+                exports="$(ceph nfs export ls "${cluster}" --format json)"
+                if printf '%s\n' "${exports}" | jq -e \
+                    --arg pseudo "${pseudo}" \
+                    'index($pseudo) == null' >/dev/null; then
+                  echo 'NFS /media export fenced successfully'
+                  exit 0
+                fi
+                sleep 2
+              done
+
+              echo 'The /media export remains listed after the fence operation' >&2
+              printf '%s\n' "${exports}" | jq . >&2
+              ceph nfs export info "${cluster}" "${pseudo}" \
+                --format json-pretty >&2 || true
+              exit 72
           env:
             - name: ROOK_CEPH_MON_ENDPOINTS
               valueFrom:
