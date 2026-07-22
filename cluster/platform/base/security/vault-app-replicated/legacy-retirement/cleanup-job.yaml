@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vault-legacy-storage-cleanup-v2
+  name: vault-legacy-storage-cleanup-v3
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/component: legacy-storage-cleanup
@@ -62,6 +62,7 @@ spec:
                     --request "$method" \
                     --cacert "$ca_file" \
                     --header "Authorization: Bearer $(cat "$token_file")" \
+                    --header 'Accept: application/json' \
                     --header 'Content-Type: application/json' \
                     --data-binary "$body" \
                     --output "$output" \
@@ -72,6 +73,7 @@ spec:
                     --request "$method" \
                     --cacert "$ca_file" \
                     --header "Authorization: Bearer $(cat "$token_file")" \
+                    --header 'Accept: application/json' \
                     --output "$output" \
                     --write-out '%{http_code}' \
                     "$api$path"
