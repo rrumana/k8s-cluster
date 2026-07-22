@@ -122,6 +122,10 @@ snapshot.
 - Grafana is exposed through restricted ingress at `grafana.rcrumana.xyz`.
 - The `search` namespace hosts the shared OpenSearch log cluster plus Data Prepper and Fluent Bit.
 - Cluster logs are collected from Kubernetes node log paths by Fluent Bit, forwarded to Data Prepper, and written into daily `logs-*` indices in OpenSearch.
+- The dated [OpenSearch and app-replicated storage audit](opensearch-app-replicated-storage-audit.md)
+  records the deferred retention, collector-reliability, mapping, and RBD trim
+  follow-up that must wait until the current storage transfers are complete and
+  Ceph is healthy.
 
 ### Registry and operational helpers
 
