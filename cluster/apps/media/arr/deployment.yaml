@@ -198,7 +198,7 @@ spec:
             - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "-1" }
             - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "-1" }
             - { name: QB_DISK_IO_TYPE, value: "3" }
-            - { name: QB_ASYNC_IO_THREADS, value: "3" }
+            - { name: QB_ASYNC_IO_THREADS, value: "10" }
             - { name: QB_HASHING_THREADS, value: "4" }
             - { name: QB_SEND_BUFFER_LOW_WATERMARK, value: "16384" }
             - { name: QB_SEND_BUFFER_WATERMARK, value: "131072" }
