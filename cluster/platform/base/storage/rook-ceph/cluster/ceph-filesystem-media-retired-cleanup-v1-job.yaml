@@ -1,0 +1,324 @@
+# INERT: one-shot removal of the retired replicated media source. Keep this
+# Job suspended and outside kustomization until every Kubernetes/NFS consumer
+# has been proven on the final EC target and all five old static bindings are
+# absent. Activate only in a separate GitOps commit after a zero-pod staging
+# reconciliation.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ceph-filesystem-media-retired-cleanup-v1
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app.kubernetes.io/name: ceph-filesystem
+    app.kubernetes.io/component: retired-data-cleanup
+spec:
+  suspend: true
+  podReplacementPolicy: Failed
+  backoffLimit: 0
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ceph-filesystem
+        app.kubernetes.io/component: retired-data-cleanup
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: remove-retired-media
+          image: harbor.rcrumana.xyz/mirror/rook/ceph@sha256:afb615fc5482db55218f95950d8ce80fb386e480aff17bb7b466d6ae072ebf05
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -Eeuo pipefail
+
+              readonly old_fs=ceph-filesystem
+              readonly old_group=bulk
+              readonly old_subvolume=media
+              readonly old_pool=ceph-filesystem-bulk
+              readonly old_path=/volumes/bulk/media/e51b34bd-ab57-4678-bc00-5861411d64f5
+              readonly old_quota=7696581394432
+              readonly old_minimum_bytes=5500000000000
+              readonly old_csi_group=csi
+
+              readonly target_fs=cephfs
+              readonly target_group=csi
+              readonly target_subvolume=csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1
+              readonly target_pool=cephfs-bulk
+              readonly target_path=/volumes/csi/csi-vol-ef558726-9083-4b68-967b-68384ebbe5f1/93c2eaaf-c82c-492f-a60a-1d6e552de2ec
+              readonly target_quota=7696581394432
+              readonly target_minimum_bytes=5500000000000
+
+              readonly nfs_cluster=ceph-nfs-bulk
+              readonly nfs_pseudo=/media
+              readonly residual_pool_threshold_bytes=2147483648
+
+              MON_HOST="$(printf '%s' "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')"
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${MON_HOST}
+              EOF
+              install -m 0600 /etc/ceph-admin/keyring \
+                /etc/ceph/ceph.client.admin.keyring
+
+              # Deletion is useful if capacity itself is warning, but every
+              # availability, topology, and PG-state fault remains a hard stop.
+              cluster_status="$(ceph status --format json)"
+              if ! printf '%s\n' "${cluster_status}" | jq -e '
+                  ((.health.checks | keys) - [
+                    "BLUESTORE_SLOW_OP_ALERT",
+                    "OSD_NEARFULL",
+                    "POOL_NEARFULL"
+                  ] | length) == 0 and
+                  .osdmap.num_osds > 0 and
+                  .osdmap.num_osds == .osdmap.num_up_osds and
+                  .osdmap.num_osds == .osdmap.num_in_osds and
+                  .osdmap.num_remapped_pgs == 0
+                ' >/dev/null; then
+                echo 'Refusing retired-media cleanup with unexpected Ceph health' >&2
+                printf '%s\n' "${cluster_status}" | jq .health >&2
+                exit 75
+              fi
+              ceph pg stat --format json | jq -e '
+                .pg_ready == true and
+                ([.pg_summary.num_pg_by_state[].num] | add) ==
+                  .pg_summary.num_pgs and
+                all(.pg_summary.num_pg_by_state[];
+                  (.name | split("+") |
+                    (index("active") != null and index("clean") != null)))
+              ' >/dev/null
+
+              filesystems="$(ceph fs ls --format json)"
+              printf '%s\n' "${filesystems}" | jq -e \
+                --arg old_fs "${old_fs}" \
+                --arg old_pool "${old_pool}" \
+                --arg target_fs "${target_fs}" \
+                --arg target_pool "${target_pool}" '
+                  any(.[];
+                    .name == $old_fs and
+                    (.data_pools | index($old_pool)) != null) and
+                  any(.[];
+                    .name == $target_fs and
+                    (.data_pools | index($target_pool)) != null)
+                ' >/dev/null
+
+              pool_details="$(ceph osd pool get "${old_pool}" all --format json)"
+              printf '%s\n' "${pool_details}" | jq -e \
+                --arg pool "${old_pool}" '
+                  .pool == $pool and
+                  .size == 2 and
+                  .min_size == 1 and
+                  .pg_num == 128 and
+                  .crush_rule == $pool
+                ' >/dev/null
+
+              # Prove the authoritative EC target is populated, complete, and
+              # still published by NFS before allowing source deletion.
+              target_info="$(ceph fs subvolume info \
+                "${target_fs}" "${target_subvolume}" \
+                --group_name "${target_group}" --format json)"
+              printf '%s\n' "${target_info}" | jq -e \
+                --arg path "${target_path}" \
+                --arg pool "${target_pool}" \
+                --argjson quota "${target_quota}" \
+                --argjson minimum_bytes "${target_minimum_bytes}" '
+                  .type == "subvolume" and
+                  .state == "complete" and
+                  .path == $path and
+                  .data_pool == $pool and
+                  .bytes_quota == $quota and
+                  .bytes_used >= $minimum_bytes
+                ' >/dev/null
+
+              nfs_export="$(ceph nfs export info \
+                "${nfs_cluster}" "${nfs_pseudo}" --format json)"
+              printf '%s\n' "${nfs_export}" | jq -e \
+                --arg cluster "${nfs_cluster}" \
+                --arg pseudo "${nfs_pseudo}" \
+                --arg fs "${target_fs}" \
+                --arg path "${target_path}" '
+                  .cluster_id == $cluster and
+                  .pseudo == $pseudo and
+                  .path == $path and
+                  .fsal.name == "CEPH" and
+                  .fsal.fs_name == $fs and
+                  .fsal.cmount_path == "/" and
+                  .access_type == "RW" and
+                  .squash == "no_root_squash" and
+                  (.sectype | sort) == ["sys"] and
+                  (.protocols | sort) == [3, 4] and
+                  (.transports | sort) == ["TCP"] and
+                  .security_label == true and
+                  (.clients | length) == 0
+                ' >/dev/null
+
+              # No CSI subvolume or snapshot remains elsewhere in the old
+              # filesystem. The bulk group must contain only this exact source.
+              csi_subvolumes="$(ceph fs subvolume ls "${old_fs}" \
+                --group_name "${old_csi_group}" --format json)"
+              printf '%s\n' "${csi_subvolumes}" | jq -e 'length == 0' >/dev/null
+
+              bulk_subvolumes="$(ceph fs subvolume ls "${old_fs}" \
+                --group_name "${old_group}" --format json)"
+              if printf '%s\n' "${bulk_subvolumes}" | jq -e \
+                  --arg subvolume "${old_subvolume}" '
+                    ([.[].name] | sort) == [$subvolume]
+                  ' >/dev/null; then
+                source_info="$(ceph fs subvolume info \
+                  "${old_fs}" "${old_subvolume}" \
+                  --group_name "${old_group}" --format json)"
+                printf '%s\n' "${source_info}" | jq -e \
+                  --arg path "${old_path}" \
+                  --arg pool "${old_pool}" \
+                  --argjson quota "${old_quota}" \
+                  --argjson minimum_bytes "${old_minimum_bytes}" '
+                    .type == "subvolume" and
+                    .state == "complete" and
+                    .path == $path and
+                    .data_pool == $pool and
+                    .bytes_quota == $quota and
+                    .bytes_used >= $minimum_bytes
+                  ' >/dev/null
+
+                snapshots="$(ceph fs subvolume snapshot ls \
+                  "${old_fs}" "${old_subvolume}" \
+                  --group_name "${old_group}" --format json)"
+                printf '%s\n' "${snapshots}" | jq -e 'length == 0' >/dev/null
+
+                old_clients="$(ceph tell "mds.${old_fs}:0" client ls \
+                  --format json)"
+                source_clients="$(printf '%s\n' "${old_clients}" | jq \
+                  --arg root "${old_path}" '
+                    [.[] | select((.client_metadata.root // "") == $root)]
+                  ')"
+                if [[ "$(printf '%s\n' "${source_clients}" | jq length)" != 0 ]]; then
+                  echo 'Refusing cleanup while the old media source is mounted:' >&2
+                  printf '%s\n' "${source_clients}" | jq . >&2
+                  exit 71
+                fi
+
+                # standby-replay MDS b appears in client ls as client.b rooted
+                # at /. It is not a data consumer. Refuse every other session.
+                unexpected_clients="$(printf '%s\n' "${old_clients}" | jq '
+                  [.[] | select(
+                    ((.client_metadata.entity_id // "") != "b") or
+                    ((.client_metadata.root // "") != "/") or
+                    ((.client_metadata.pid // "") != "1")
+                  )]
+                ')"
+                if [[ "$(printf '%s\n' "${unexpected_clients}" | jq length)" != 0 ]]; then
+                  echo 'Refusing cleanup with an unexpected old-filesystem client:' >&2
+                  printf '%s\n' "${unexpected_clients}" | jq . >&2
+                  exit 72
+                fi
+
+                echo 'Validated the exact retired media source; scheduling its purge'
+                ceph fs subvolume rm \
+                  "${old_fs}" "${old_subvolume}" \
+                  --group_name "${old_group}"
+              elif printf '%s\n' "${bulk_subvolumes}" | jq -e \
+                  'length == 0' >/dev/null; then
+                echo 'The exact retired media subvolume is already absent'
+              else
+                echo 'Refusing cleanup: unexpected old bulk subvolume inventory' >&2
+                printf '%s\n' "${bulk_subvolumes}" | jq . >&2
+                exit 70
+              fi
+
+              # CephFS removes the namespace first and purges backing objects
+              # asynchronously. Keep the Job until the old 2x pool has drained
+              # to filesystem residuals so subsequent filesystem deletion does
+              # not hide an incomplete purge.
+              for attempt in $(seq 1 4320); do
+                remaining="$(ceph fs subvolume ls "${old_fs}" \
+                  --group_name "${old_group}" --format json)"
+                if printf '%s\n' "${remaining}" | jq -e \
+                    --arg subvolume "${old_subvolume}" '
+                      all(.[]; .name != $subvolume)
+                    ' >/dev/null; then
+                  stored_bytes="$(ceph df detail --format json | jq -r \
+                    --arg pool "${old_pool}" \
+                    '.pools[] | select(.name == $pool) | .stats.stored')"
+                  test -n "${stored_bytes}"
+                  if (( stored_bytes <= residual_pool_threshold_bytes )); then
+                    echo "Retired media source purged; pool stores ${stored_bytes} bytes"
+                    exit 0
+                  fi
+                  if (( attempt % 6 == 0 )); then
+                    echo "Waiting for asynchronous media purge: ${stored_bytes} bytes remain"
+                  fi
+                elif (( attempt % 6 == 0 )); then
+                  echo 'Waiting for the retired media subvolume to disappear'
+                fi
+                sleep 10
+              done
+
+              echo 'Timed out waiting for retired media objects to be purged' >&2
+              ceph fs subvolume ls "${old_fs}" \
+                --group_name "${old_group}" --format json-pretty >&2
+              ceph df detail --format json | jq \
+                --arg pool "${old_pool}" \
+                '.pools[] | select(.name == $pool)' >&2
+              exit 74
+          env:
+            - name: ROOK_CEPH_MON_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: rook-ceph-mon-endpoints
+                  key: data
+            - name: ROOK_CEPH_FSID
+              valueFrom:
+                secretKeyRef:
+                  name: rook-ceph-mon
+                  key: fsid
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
+        - name: tmp
+          emptyDir: {}
