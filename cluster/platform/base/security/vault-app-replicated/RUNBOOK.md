@@ -264,7 +264,7 @@ be committed as a migration mechanism.
 
 Reconfirm the cleanup gates, including direct `rbd status` and `rbd snap ls`
 checks for all three source images. Then change only
-`spec.suspend: true -> false` on `vault-legacy-storage-cleanup-v3` in Git.
+`spec.suspend: true -> false` on `vault-legacy-storage-cleanup-v4` in Git.
 
 The one-shot job validates the exact proven target StatefulSet and target PVC
 UIDs; the exact zero-replica source StatefulSet UID; the old PVC, PV, pool,

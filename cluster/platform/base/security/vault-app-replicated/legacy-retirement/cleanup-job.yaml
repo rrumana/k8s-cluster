@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: vault-legacy-storage-cleanup-v3
+  name: vault-legacy-storage-cleanup-v4
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/component: legacy-storage-cleanup
@@ -52,6 +52,13 @@ spec:
                 exit 1
               }
 
+              compact_json() {
+                input="$1"
+                compact="$work/compact.json"
+                tr -d '[:space:]' < "$input" > "$compact"
+                mv "$compact" "$input"
+              }
+
               request() {
                 method="$1"
                 path="$2"
@@ -87,6 +94,7 @@ spec:
                 output="$work/get.json"
                 code="$(request GET "$path" "$output")"
                 [ "$code" = 200 ] || fail "$label GET returned HTTP $code: $(cat "$output")"
+                compact_json "$output"
                 grep -Fq "\"uid\":\"$expected_uid\"" "$output" || \
                   fail "$label exists with an unexpected UID"
               }
@@ -104,6 +112,7 @@ spec:
                 label="$3"
                 code="$(request GET "$path" "$output")"
                 [ "$code" = 200 ] || fail "$label GET returned HTTP $code: $(cat "$output")"
+                compact_json "$output"
               }
 
               delete_exact() {
