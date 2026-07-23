@@ -5,11 +5,11 @@ metadata:
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "10"
-    storage.rcrumana.xyz/activation-gate: >-
-      Keep this file outside Kustomize and keep the Job suspended until stage 1
-      is proven on every index and both OpenSearch and Ceph are healthy. A reviewed
-      activation revision must render it and set spec.suspend=false. Do not make
-      concurrent ISM policy changes while this one-shot Job is running.
+    storage.rcrumana.xyz/activation-record: >-
+      Activated after all 226 indices completed stage-1 initialization, every
+      age-eligible index settled in the inert hold state, all policies reported
+      zero failed/disabled/completed indices, OpenSearch was green, and Ceph was
+      HEALTH_OK. Do not make concurrent ISM policy changes while this Job runs.
     storage.rcrumana.xyz/safety-property: >-
       This stage OCC-updates exact hold policies to ARMED policies whose delete
       states are unreachable; it never adds a transition to delete.
@@ -17,7 +17,7 @@ metadata:
     app.kubernetes.io/name: opensearch-retention
     app.kubernetes.io/component: policy-arm
 spec:
-  suspend: true
+  suspend: false
   backoffLimit: 0
   activeDeadlineSeconds: 1200
   completions: 1

@@ -17,6 +17,8 @@ resources:
   - opensearch-ism-accelerate-v2-job.yaml
   - opensearch-retention-stage1-configmap.yaml
   - opensearch-retention-stage1-job.yaml
+  - opensearch-retention-stage2-armed-configmap.yaml
+  - opensearch-retention-stage2-armed-job.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: observability-logging
