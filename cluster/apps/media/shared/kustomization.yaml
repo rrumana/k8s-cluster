@@ -6,6 +6,7 @@ namespace: media
 resources:
   - externalsecret.yaml
   - media-library-bulk-pvc.yaml
+  - media-library-bulk-torrent-eva-2-pv.yaml
   - media-library-bulk-torrent-eva-3-pv.yaml
   - serviceaccount.yaml
 
