@@ -32,9 +32,9 @@ spec:
   # CephFS reads.
   mountOptions:
     - noatime
-    # EC uses a 32 KiB full stripe (2 x 16 KiB data chunks). Use a two-stripe
-    # readahead window for qBittorrent's latency-sensitive random reads.
-    - rasize=65536
+    # Match readahead to one full EC stripe (2 x 16 KiB data chunks). This
+    # gives ARR steadier throughput than the lower-latency 64 KiB experiment.
+    - rasize=32768
   nodeAffinity:
     required:
       nodeSelectorTerms:
