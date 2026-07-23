@@ -6,9 +6,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-30"
   labels: { app: arr-stack }
 spec:
-  # Temporarily stopped so CSI fully releases the staged CephFS mount before
-  # the 32 KiB readahead can be tested. Restore to 1 after unmount verification.
-  replicas: 0
+  replicas: 1
   strategy: { type: Recreate }
   selector:
     matchLabels: { app: arr-stack }
