@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opensearch-retention-delete-expired-v1
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app.kubernetes.io/name: opensearch-retention
+    app.kubernetes.io/component: expired-index-deletion
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opensearch-retention
+        app.kubernetes.io/component: expired-index-deletion
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: delete-expired
+          image: harbor.rcrumana.xyz/mirror/opensearchproject/opensearch:3.4.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ceu
+            - |
+              user="$(< /credentials/username)"
+              password="$(< /credentials/password)"
+              url="https://opensearch-logs.search.svc.cluster.local:9200"
+              curl_args=(--fail --silent --show-error --cacert /tls/ca.crt --user "${user}:${password}")
+
+              curl "${curl_args[@]}" \
+                "${url}/_cluster/health?wait_for_status=green&wait_for_no_relocating_shards=true&wait_for_no_initializing_shards=true&timeout=60s"
+
+              logs="logs-2026.04.06,logs-2026.04.07,logs-2026.04.08,logs-2026.04.09,logs-2026.04.10,logs-2026.04.11,logs-2026.04.12,logs-2026.04.13,logs-2026.04.14,logs-2026.04.15,logs-2026.04.16,logs-2026.04.17,logs-2026.04.18,logs-2026.04.19,logs-2026.04.20,logs-2026.04.21,logs-2026.04.22,logs-2026.04.23,logs-2026.04.24,logs-2026.04.25,logs-2026.04.26,logs-2026.04.27,logs-2026.04.28,logs-2026.04.29,logs-2026.04.30,logs-2026.05.01,logs-2026.05.02,logs-2026.05.03,logs-2026.05.04,logs-2026.05.05,logs-2026.05.06,logs-2026.05.07,logs-2026.05.08,logs-2026.05.09,logs-2026.05.10,logs-2026.05.11,logs-2026.05.12,logs-2026.05.13,logs-2026.05.14,logs-2026.05.15,logs-2026.05.16,logs-2026.05.17,logs-2026.05.18,logs-2026.05.19,logs-2026.05.20,logs-2026.05.21,logs-2026.05.22,logs-2026.05.23,logs-2026.05.24"
+              audit="security-auditlog-2026.04.06,security-auditlog-2026.04.07,security-auditlog-2026.04.08,security-auditlog-2026.04.09,security-auditlog-2026.04.10,security-auditlog-2026.04.11,security-auditlog-2026.04.12,security-auditlog-2026.04.13,security-auditlog-2026.04.14,security-auditlog-2026.04.15,security-auditlog-2026.04.16,security-auditlog-2026.04.17,security-auditlog-2026.04.18,security-auditlog-2026.04.19,security-auditlog-2026.04.20,security-auditlog-2026.04.21,security-auditlog-2026.04.22,security-auditlog-2026.04.23,security-auditlog-2026.04.24"
+
+              curl "${curl_args[@]}" --request DELETE "${url}/${logs}"
+              curl "${curl_args[@]}" --request DELETE "${url}/${audit}"
+
+              curl "${curl_args[@]}" \
+                "${url}/_cluster/health?wait_for_status=green&wait_for_no_relocating_shards=true&wait_for_no_initializing_shards=true&timeout=120s"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: credentials
+              mountPath: /credentials
+              readOnly: true
+            - name: tls-ca
+              mountPath: /tls
+              readOnly: true
+      volumes:
+        - name: credentials
+          secret:
+            secretName: opensearch-admin-credentials
+            defaultMode: 0440
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+        - name: tls-ca
+          secret:
+            secretName: opensearch-logs-ca
+            defaultMode: 0444
+            items:
+              - key: ca.crt
+                path: ca.crt
