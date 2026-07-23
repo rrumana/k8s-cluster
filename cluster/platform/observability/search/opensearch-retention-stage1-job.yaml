@@ -5,14 +5,15 @@ metadata:
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "10"
-    storage.rcrumana.xyz/activation-gate: >-
-      Keep suspended until OpenSearch and Ceph are healthy; set spec.suspend=false
-      in a reviewed Git revision to create and verify only the inert stage-1 policies.
+    storage.rcrumana.xyz/activation-record: >-
+      Activated after OpenSearch was green with three data nodes and no recovery,
+      Ceph was HEALTH_OK with all 417 PGs active+clean, and the corrected
+      nonterminal hold policies were synced and verified absent from OpenSearch.
   labels:
     app.kubernetes.io/name: opensearch-retention
     app.kubernetes.io/component: policy-bootstrap
 spec:
-  suspend: true
+  suspend: false
   backoffLimit: 0
   activeDeadlineSeconds: 600
   completions: 1
