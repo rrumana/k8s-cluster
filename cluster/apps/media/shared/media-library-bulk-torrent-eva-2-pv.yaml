@@ -32,9 +32,9 @@ spec:
   # CephFS reads.
   mountOptions:
     - noatime
-    # EC uses a 32 KiB full stripe (2 x 16 KiB data chunks). Test a one-stripe
+    # EC uses a 32 KiB full stripe (2 x 16 KiB data chunks). Use a two-stripe
     # readahead window for qBittorrent's latency-sensitive random reads.
-    - rasize=32768
+    - rasize=65536
   nodeAffinity:
     required:
       nodeSelectorTerms:
