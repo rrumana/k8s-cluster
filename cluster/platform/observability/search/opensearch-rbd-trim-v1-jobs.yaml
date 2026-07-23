@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-0-v1
+  name: opensearch-rbd-trim-0-v2
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "20"
@@ -19,6 +19,11 @@ spec:
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: harbor-pull-creds
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -48,7 +53,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-1-v1
+  name: opensearch-rbd-trim-1-v2
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "21"
@@ -66,6 +71,11 @@ spec:
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: harbor-pull-creds
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -95,7 +105,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-2-v1
+  name: opensearch-rbd-trim-2-v2
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "22"
@@ -113,6 +123,11 @@ spec:
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: harbor-pull-creds
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
