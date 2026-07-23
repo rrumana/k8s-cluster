@@ -146,6 +146,8 @@ data:
     CA_FILE = "/tls/ca.crt"
     VERIFY_TIMEOUT_SECONDS = 240
     VERIFY_INTERVAL_SECONDS = 5
+    SOURCE_SCHEMA_VERSION = 1
+    EXPECTED_SERVER_SCHEMA_VERSION = 24
     # OpenSearch marks a state with no transitions complete and disables its job.
     # Keep the observation state nonterminal with a back-edge that cannot fire in
     # practice; the activation revision will replace this sentinel transition.
@@ -265,7 +267,6 @@ data:
         desired_policy = desired["policy"]
         fields = (
             "description",
-            "schema_version",
             "default_state",
             "states",
         )
@@ -277,6 +278,9 @@ data:
             return False
         return (
             existing_policy.get("error_notification") is None
+            and desired_policy.get("schema_version") == SOURCE_SCHEMA_VERSION
+            and existing_policy.get("schema_version")
+            == EXPECTED_SERVER_SCHEMA_VERSION
             and all(
                 existing_policy.get(field) == desired_policy[field]
                 for field in fields

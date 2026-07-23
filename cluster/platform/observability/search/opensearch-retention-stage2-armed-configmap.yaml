@@ -175,6 +175,8 @@ data:
     VERIFY_TIMEOUT_SECONDS = 900
     VERIFY_INTERVAL_SECONDS = 10
     REQUIRED_STABLE_PASSES = 2
+    SOURCE_SCHEMA_VERSION = 1
+    EXPECTED_SERVER_SCHEMA_VERSION = 24
     # This matches the stage-1 sentinel: an empty transition list would make
     # OpenSearch complete and disable the policy before the activation revision.
     HOLD_SENTINEL_AGE = "365000d"
@@ -356,7 +358,7 @@ data:
         return normalized
 
 
-    def functional_policy(policy):
+    def functional_policy(policy, expected_schema_version):
         if not isinstance(policy, dict):
             raise RuntimeError(f"policy body is not an object: {policy!r}")
         unexpected = set(policy) - SERVER_POLICY_FIELDS
@@ -364,9 +366,14 @@ data:
             raise RuntimeError(f"unexpected policy fields: {sorted(unexpected)}")
         if policy.get("error_notification") is not None:
             raise RuntimeError("unexpected error_notification in retention policy")
+        if policy.get("schema_version") != expected_schema_version:
+            raise RuntimeError(
+                "unexpected policy schema_version: "
+                f"expected={expected_schema_version} "
+                f"actual={policy.get('schema_version')!r}"
+            )
         return {
             "description": policy.get("description"),
-            "schema_version": policy.get("schema_version"),
             "default_state": policy.get("default_state"),
             "states": policy.get("states"),
             "ism_template": normalize_ism_template(policy.get("ism_template")),
@@ -442,10 +449,16 @@ data:
                 f"policy_id mismatch for {spec['policy_id']}: "
                 f"{policy.get('policy_id')!r}"
             )
-        functional = functional_policy(policy)
-        if functional == functional_policy(expected_hold_policy(spec)):
+        functional = functional_policy(
+            policy, EXPECTED_SERVER_SCHEMA_VERSION
+        )
+        if functional == functional_policy(
+            expected_hold_policy(spec), SOURCE_SCHEMA_VERSION
+        ):
             return "hold"
-        if functional == functional_policy(expected_armed_policy(spec)):
+        if functional == functional_policy(
+            expected_armed_policy(spec), SOURCE_SCHEMA_VERSION
+        ):
             return "armed"
         raise RuntimeError(
             f"policy {spec['policy_id']} is neither the exact stage-1 hold "
@@ -461,8 +474,10 @@ data:
             raise RuntimeError(
                 f"invalid wrapper in {spec['armed_filename']}: {sorted(source)}"
             )
-        if functional_policy(source["policy"]) != functional_policy(
-            expected_armed_policy(spec)
+        if functional_policy(
+            source["policy"], SOURCE_SCHEMA_VERSION
+        ) != functional_policy(
+            expected_armed_policy(spec), SOURCE_SCHEMA_VERSION
         ):
             raise RuntimeError(
                 f"refusing {spec['policy_id']}: ARMED source is not exact"
