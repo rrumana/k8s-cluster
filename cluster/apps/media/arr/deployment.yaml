@@ -21,7 +21,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 180
       nodeSelector:
-        kubernetes.io/hostname: eva-3
+        kubernetes.io/hostname: eva-2
       tolerations:
         - key: homelab.rcrumana.xyz/storage
           operator: Equal
@@ -60,7 +60,7 @@ spec:
             claimName: arr-stack-jellyseerr-config-critical
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-bulk-torrent-eva-3
+            claimName: media-library-bulk-torrent-eva-2
         - name: temp
           hostPath: { path: /var/lib/qbit-temp, type: DirectoryOrCreate }
         - name: pf-state
