@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-0-v2
+  name: opensearch-rbd-trim-0-v3
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "20"
@@ -42,6 +42,7 @@ spec:
               fstrim -v /data
           securityContext:
             privileged: true
+            runAsUser: 0
           volumeMounts:
             - name: data
               mountPath: /data
@@ -53,7 +54,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-1-v2
+  name: opensearch-rbd-trim-1-v3
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "21"
@@ -94,6 +95,7 @@ spec:
               fstrim -v /data
           securityContext:
             privileged: true
+            runAsUser: 0
           volumeMounts:
             - name: data
               mountPath: /data
@@ -105,7 +107,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-rbd-trim-2-v2
+  name: opensearch-rbd-trim-2-v3
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "22"
@@ -146,6 +148,7 @@ spec:
               fstrim -v /data
           securityContext:
             privileged: true
+            runAsUser: 0
           volumeMounts:
             - name: data
               mountPath: /data
