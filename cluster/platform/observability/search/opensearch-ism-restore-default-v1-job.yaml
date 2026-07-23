@@ -5,15 +5,14 @@ metadata:
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "10"
-    storage.rcrumana.xyz/activation-gate: >-
-      Keep outside Kustomize until retention activation, deletion, and trim are
-      complete; then render this Job to remove the temporary one-minute override
-      and verify the five-minute default is effective.
+    storage.rcrumana.xyz/activation-record: >-
+      Activated after retention deletion and all three OpenSearch PVC trims
+      completed with OpenSearch green and Ceph HEALTH_OK.
   labels:
     app.kubernetes.io/name: opensearch-retention
     app.kubernetes.io/component: scheduler-restore
 spec:
-  suspend: true
+  suspend: false
   backoffLimit: 0
   activeDeadlineSeconds: 300
   completions: 1

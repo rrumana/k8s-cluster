@@ -14,7 +14,7 @@ resources:
   - fluent-bit-daemonset.yaml
   - fluent-bit-service.yaml
   - opensearch-ism-interval-v1-configmap.yaml
-  - opensearch-ism-accelerate-v2-job.yaml
+  - opensearch-ism-restore-default-v1-job.yaml
   - opensearch-retention-stage1-configmap.yaml
   - opensearch-retention-stage1-job.yaml
 
