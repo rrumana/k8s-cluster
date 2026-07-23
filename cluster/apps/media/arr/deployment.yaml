@@ -21,7 +21,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 180
       nodeSelector:
-        kubernetes.io/hostname: eva-2
+        kubernetes.io/hostname: eva-3
       tolerations:
         - key: homelab.rcrumana.xyz/storage
           operator: Equal
@@ -60,7 +60,7 @@ spec:
             claimName: arr-stack-jellyseerr-config-critical
         - name: media
           persistentVolumeClaim:
-            claimName: media-library-bulk-torrent-eva-2
+            claimName: media-library-bulk-torrent-eva-3
         - name: temp
           hostPath: { path: /var/lib/qbit-temp, type: DirectoryOrCreate }
         - name: pf-state
@@ -195,13 +195,13 @@ spec:
           env:
             - { name: PF_FILE, value: "/pf/state/forwarded_port" }
             - { name: QB_WEBUI_PORT, value: "8020" }
-            - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "256" }
+            - { name: QB_GLOBAL_UPLOAD_SLOTS, value: "128" }
             - { name: QB_UPLOAD_SLOTS_PER_TORRENT, value: "8" }
             - { name: QB_DISK_IO_TYPE, value: "3" }
-            - { name: QB_ASYNC_IO_THREADS, value: "3" }
+            - { name: QB_ASYNC_IO_THREADS, value: "4" }
             - { name: QB_HASHING_THREADS, value: "4" }
-            - { name: QB_SEND_BUFFER_LOW_WATERMARK, value: "16384" }
-            - { name: QB_SEND_BUFFER_WATERMARK, value: "131072" }
+            - { name: QB_SEND_BUFFER_LOW_WATERMARK, value: "32" }
+            - { name: QB_SEND_BUFFER_WATERMARK, value: "128" }
             - { name: QB_SEND_BUFFER_WATERMARK_FACTOR, value: "250" }
             - { name: QB_ALTERNATIVE_WEBUI_ENABLED, value: "true" }
             - { name: QB_ALTERNATIVE_WEBUI_PATH, value: "/config/vuetorrent-v2.31.0" }

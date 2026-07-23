@@ -9,11 +9,20 @@ data:
 
     PF_FILE="${PF_FILE:-/pf/state/forwarded_port}"
     WEBUI_PORT="${QB_WEBUI_PORT:?missing QB_WEBUI_PORT}"
+    GLOBAL_UPLOAD_SLOTS="${QB_GLOBAL_UPLOAD_SLOTS:?missing QB_GLOBAL_UPLOAD_SLOTS}"
+    UPLOAD_SLOTS_PER_TORRENT="${QB_UPLOAD_SLOTS_PER_TORRENT:?missing QB_UPLOAD_SLOTS_PER_TORRENT}"
+    DISK_IO_TYPE="${QB_DISK_IO_TYPE:?missing QB_DISK_IO_TYPE}"
+    ASYNC_IO_THREADS="${QB_ASYNC_IO_THREADS:?missing QB_ASYNC_IO_THREADS}"
+    HASHING_THREADS="${QB_HASHING_THREADS:?missing QB_HASHING_THREADS}"
+    SEND_BUFFER_LOW_WATERMARK="${QB_SEND_BUFFER_LOW_WATERMARK:?missing QB_SEND_BUFFER_LOW_WATERMARK}"
+    SEND_BUFFER_WATERMARK="${QB_SEND_BUFFER_WATERMARK:?missing QB_SEND_BUFFER_WATERMARK}"
+    SEND_BUFFER_WATERMARK_FACTOR="${QB_SEND_BUFFER_WATERMARK_FACTOR:?missing QB_SEND_BUFFER_WATERMARK_FACTOR}"
     ALTERNATIVE_WEBUI_ENABLED="${QB_ALTERNATIVE_WEBUI_ENABLED:?missing QB_ALTERNATIVE_WEBUI_ENABLED}"
     ALTERNATIVE_WEBUI_PATH="${QB_ALTERNATIVE_WEBUI_PATH:?missing QB_ALTERNATIVE_WEBUI_PATH}"
     echo "pf-sync(sidecar): watching $PF_FILE for qB WebUI :$WEBUI_PORT"
 
     qbit_available=false
+    performance_initialized=false
     preferences_initialized=false
     last_synced_port=""
     while :; do
@@ -34,11 +43,31 @@ data:
         --data-urlencode "password=${QB_PASSWORD}" \
         "http://127.0.0.1:${WEBUI_PORT}/api/v2/auth/login" 2>/dev/null || true)"
       if [ "$login_status" = "200" ] || [ "$login_status" = "204" ]; then
+        # Apply the GitOps-owned baseline once per pod start. Do not continuously
+        # reconcile these values so controlled live performance tests remain
+        # possible without restarting the deployment.
+        if [ "$performance_initialized" = false ]; then
+          echo "pf-sync(sidecar): applying qBittorrent startup performance baseline"
+          performance_json=$(printf '{"max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s}' \
+            "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
+            "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
+            "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" \
+            "$SEND_BUFFER_WATERMARK_FACTOR")
+          if curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
+               --data-urlencode "json=$performance_json" \
+               "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
+          then
+            echo "pf-sync(sidecar): startup performance baseline applied"
+            performance_initialized=true
+          else
+            echo "pf-sync(sidecar): startup performance baseline failed"
+          fi
+        fi
+
         reconcile_preferences=false
 
-        # Performance preferences are intentionally not read or reconciled.
-        # This sidecar owns only the VPN-forwarded port, WebUI setup, and the
-        # startup interface-binding repair so live performance tests persist.
+        # Port and WebUI preferences remain independently reconciled as the VPN
+        # forwarded port changes.
         if [ "$preferences_initialized" = false ]; then
           reconcile_preferences=true
         elif [ "$port_ready" = true ] && [ "$last_synced_port" != "$p" ]; then
@@ -96,6 +125,7 @@ data:
       else
         echo "pf-sync(sidecar): login failed"
         qbit_available=false
+        performance_initialized=false
         preferences_initialized=false
         last_synced_port=""
       fi

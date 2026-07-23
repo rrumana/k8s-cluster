@@ -32,7 +32,8 @@ spec:
   # CephFS reads.
   mountOptions:
     - noatime
-    - rasize=131072
+    # Match readahead to one full EC stripe (2 x 16 KiB data chunks).
+    - rasize=32768
   nodeAffinity:
     required:
       nodeSelectorTerms:
