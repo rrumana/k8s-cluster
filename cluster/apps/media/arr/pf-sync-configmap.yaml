@@ -6,6 +6,7 @@ data:
   pf-sync.sh: |
     #!/bin/sh
     set -eu
+    trap 'exit 0' TERM INT
 
     PF_FILE="${PF_FILE:-/pf/state/forwarded_port}"
     WEBUI_PORT="${QB_WEBUI_PORT:?missing QB_WEBUI_PORT}"
