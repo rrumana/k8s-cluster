@@ -123,27 +123,28 @@ data:
             raise RuntimeError(
                 f"refusing to override transient {SETTING}={before['transient']!r}"
             )
-        if str(before["default"]) != "5":
+        before_persistent = (
+            None
+            if before["persistent"] is None
+            else str(before["persistent"])
+        )
+        if before_persistent not in (None, "1"):
+            raise RuntimeError(
+                f"unexpected persistent {SETTING}={before['persistent']!r}"
+            )
+        if before["default"] is not None and str(before["default"]) != "5":
             raise RuntimeError(
                 f"unexpected default {SETTING}={before['default']!r}"
             )
+        if before_persistent is None and str(before["default"]) != "5":
+            raise RuntimeError(
+                f"default {SETTING} is not visible without an override: "
+                f"{before['default']!r}"
+            )
 
         if MODE == "accelerate":
-            if before["persistent"] is not None and str(
-                before["persistent"]
-            ) != "1":
-                raise RuntimeError(
-                    f"unexpected persistent {SETTING}={before['persistent']!r}"
-                )
             desired = 1
         else:
-            if before["persistent"] is not None and str(
-                before["persistent"]
-            ) != "1":
-                raise RuntimeError(
-                    f"refusing to remove unexpected persistent "
-                    f"{SETTING}={before['persistent']!r}"
-                )
             desired = None
 
         if (MODE == "accelerate" and str(before["persistent"]) == "1") or (
@@ -163,15 +164,21 @@ data:
 
         after = settings()
         expected_persistent = "1" if MODE == "accelerate" else None
+        actual_persistent = (
+            None
+            if after["persistent"] is None
+            else str(after["persistent"])
+        )
+        expected_default = (
+            (None, "5") if MODE == "accelerate" else ("5",)
+        )
+        actual_default = (
+            None if after["default"] is None else str(after["default"])
+        )
         if (
             after["transient"] is not None
-            or (
-                None
-                if after["persistent"] is None
-                else str(after["persistent"])
-            )
-            != expected_persistent
-            or str(after["default"]) != "5"
+            or actual_persistent != expected_persistent
+            or actual_default not in expected_default
         ):
             raise RuntimeError(
                 f"failed to verify mode={MODE}: before={before!r} after={after!r}"

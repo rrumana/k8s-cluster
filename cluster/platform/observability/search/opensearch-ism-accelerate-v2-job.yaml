@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: opensearch-ism-accelerate-v1
+  name: opensearch-ism-accelerate-v2
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "10"
