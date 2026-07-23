@@ -1,0 +1,903 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensearch-retention-stage2-armed-v1
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    storage.rcrumana.xyz/safety-property: >-
+      ARMED only: each policy contains a delete action, but no transition targets
+      the delete state. The 1,000-year hold back-edge prevents OpenSearch
+      from disabling the policy. A later, separately gated revision is required
+      to make deletion reachable.
+data:
+  logs-retention-60d-v1-armed.json: |
+    {
+      "policy": {
+        "description": "Stage 2 ARMED policy for ordinary cluster logs. The delete action exists only in an unreachable state; a separately gated activation revision must add the transition that enforces 60-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "60d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "delete",
+            "actions": [
+              {
+                "delete": {}
+              }
+            ],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["logs-*"],
+          "priority": 100
+        }
+      }
+    }
+  security-audit-retention-90d-v1-armed.json: |
+    {
+      "policy": {
+        "description": "Stage 2 ARMED policy for OpenSearch security audit logs. The delete action exists only in an unreachable state; a separately gated activation revision must add the transition that enforces 90-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "90d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "delete",
+            "actions": [
+              {
+                "delete": {}
+              }
+            ],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["security-auditlog-*"],
+          "priority": 100
+        }
+      }
+    }
+  top-queries-retention-14d-v1-armed.json: |
+    {
+      "policy": {
+        "description": "Stage 2 ARMED policy for Query Insights top-query indices. The delete action exists only in an unreachable state; a separately gated activation revision must add the transition that enforces 14-day retention.",
+        "schema_version": 1,
+        "default_state": "retained",
+        "states": [
+          {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "eligible_for_deletion",
+                "conditions": {
+                  "min_index_age": "14d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
+          },
+          {
+            "name": "delete",
+            "actions": [
+              {
+                "delete": {}
+              }
+            ],
+            "transitions": []
+          }
+        ],
+        "ism_template": {
+          "index_patterns": ["top_queries-*"],
+          "priority": 100
+        }
+      }
+    }
+  arm-and-verify.py: |
+    import base64
+    import json
+    import os
+    import ssl
+    import sys
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+
+    BASE_URL = os.environ.get(
+        "OPENSEARCH_URL",
+        "https://opensearch-logs.search.svc.cluster.local:9200",
+    ).rstrip("/")
+    CONFIG_DIR = "/config"
+    USERNAME_FILE = "/credentials/username"
+    PASSWORD_FILE = "/credentials/password"
+    CA_FILE = "/tls/ca.crt"
+    VERIFY_TIMEOUT_SECONDS = 900
+    VERIFY_INTERVAL_SECONDS = 10
+    REQUIRED_STABLE_PASSES = 2
+    # This matches the stage-1 sentinel: an empty transition list would make
+    # OpenSearch complete and disable the policy before the activation revision.
+    HOLD_SENTINEL_AGE = "365000d"
+    ALLOWED_STATES = frozenset(("retained", "eligible_for_deletion"))
+
+    POLICIES = (
+        {
+            "policy_id": "logs-retention-60d-v1",
+            "pattern": "logs-*",
+            "retention_age": "60d",
+            "armed_filename": "logs-retention-60d-v1-armed.json",
+            "hold_description": (
+                "Stage 1 hold policy for ordinary cluster logs. The separately "
+                "gated activation revision will enforce 60-day retention."
+            ),
+            "armed_description": (
+                "Stage 2 ARMED policy for ordinary cluster logs. The delete action "
+                "exists only in an unreachable state; a separately gated activation "
+                "revision must add the transition that enforces 60-day retention."
+            ),
+        },
+        {
+            "policy_id": "security-audit-retention-90d-v1",
+            "pattern": "security-auditlog-*",
+            "retention_age": "90d",
+            "armed_filename": "security-audit-retention-90d-v1-armed.json",
+            "hold_description": (
+                "Stage 1 hold policy for OpenSearch security audit logs. The "
+                "separately gated activation revision will enforce 90-day retention."
+            ),
+            "armed_description": (
+                "Stage 2 ARMED policy for OpenSearch security audit logs. The delete "
+                "action exists only in an unreachable state; a separately gated "
+                "activation revision must add the transition that enforces 90-day "
+                "retention."
+            ),
+        },
+        {
+            "policy_id": "top-queries-retention-14d-v1",
+            "pattern": "top_queries-*",
+            "retention_age": "14d",
+            "armed_filename": "top-queries-retention-14d-v1-armed.json",
+            "hold_description": (
+                "Stage 1 hold policy for Query Insights top-query indices. The "
+                "separately gated activation revision will enforce 14-day retention."
+            ),
+            "armed_description": (
+                "Stage 2 ARMED policy for Query Insights top-query indices. The delete "
+                "action exists only in an unreachable state; a separately gated "
+                "activation revision must add the transition that enforces 14-day "
+                "retention."
+            ),
+        },
+    )
+
+    POLICY_FIELDS = frozenset(
+        (
+            "description",
+            "schema_version",
+            "default_state",
+            "states",
+            "ism_template",
+        )
+    )
+    SERVER_POLICY_FIELDS = POLICY_FIELDS | frozenset(
+        (
+            "policy_id",
+            "last_updated_time",
+            "last_updated_time_in_millis",
+            "error_notification",
+            "user",
+        )
+    )
+    SERVER_TEMPLATE_FIELDS = frozenset(
+        (
+            "index_patterns",
+            "priority",
+            "last_updated_time",
+            "last_updated_time_in_millis",
+        )
+    )
+
+
+    def read_text(path):
+        with open(path, "r", encoding="utf-8") as handle:
+            return handle.read().strip()
+
+
+    username = read_text(USERNAME_FILE)
+    password = read_text(PASSWORD_FILE)
+    authorization = base64.b64encode(
+        f"{username}:{password}".encode("utf-8")
+    ).decode("ascii")
+    tls_context = ssl.create_default_context(cafile=CA_FILE)
+
+
+    def request(method, path, body=None, allowed_statuses=(200, 201)):
+        data = None
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Basic {authorization}",
+        }
+        if body is not None:
+            data = json.dumps(body, separators=(",", ":")).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+
+        req = urllib.request.Request(
+            f"{BASE_URL}{path}",
+            data=data,
+            headers=headers,
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(req, context=tls_context, timeout=75) as response:
+                payload = response.read()
+                status = response.status
+        except urllib.error.HTTPError as error:
+            payload = error.read()
+            status = error.code
+
+        decoded = json.loads(payload) if payload else {}
+        if status not in allowed_statuses:
+            raise RuntimeError(
+                f"{method} {path} returned HTTP {status}: "
+                f"{json.dumps(decoded, sort_keys=True)}"
+            )
+        return status, decoded
+
+
+    def ensure_green():
+        _, health = request(
+            "GET",
+            "/_cluster/health?wait_for_status=green&timeout=60s",
+        )
+        unhealthy_counters = {
+            key: health.get(key)
+            for key in (
+                "relocating_shards",
+                "initializing_shards",
+                "unassigned_shards",
+                "number_of_pending_tasks",
+            )
+            if health.get(key) not in (None, 0)
+        }
+        if (
+            health.get("timed_out")
+            or health.get("status") != "green"
+            or unhealthy_counters
+        ):
+            raise RuntimeError(
+                "OpenSearch is not quiescent green: "
+                f"{json.dumps(health, sort_keys=True)}"
+            )
+
+
+    def normalize_ism_template(value):
+        if isinstance(value, dict):
+            templates = [value]
+        elif isinstance(value, list):
+            templates = value
+        else:
+            raise RuntimeError(f"invalid ism_template value: {value!r}")
+
+        normalized = []
+        for template in templates:
+            if not isinstance(template, dict):
+                raise RuntimeError(f"invalid ism_template entry: {template!r}")
+            unexpected = set(template) - SERVER_TEMPLATE_FIELDS
+            if unexpected:
+                raise RuntimeError(
+                    f"unexpected ism_template fields: {sorted(unexpected)}"
+                )
+            normalized.append(
+                {
+                    "index_patterns": template.get("index_patterns"),
+                    "priority": template.get("priority"),
+                }
+            )
+        return normalized
+
+
+    def functional_policy(policy):
+        if not isinstance(policy, dict):
+            raise RuntimeError(f"policy body is not an object: {policy!r}")
+        unexpected = set(policy) - SERVER_POLICY_FIELDS
+        if unexpected:
+            raise RuntimeError(f"unexpected policy fields: {sorted(unexpected)}")
+        if policy.get("error_notification") is not None:
+            raise RuntimeError("unexpected error_notification in retention policy")
+        return {
+            "description": policy.get("description"),
+            "schema_version": policy.get("schema_version"),
+            "default_state": policy.get("default_state"),
+            "states": policy.get("states"),
+            "ism_template": normalize_ism_template(policy.get("ism_template")),
+        }
+
+
+    def retained_state(retention_age):
+        return {
+            "name": "retained",
+            "actions": [],
+            "transitions": [
+                {
+                    "state_name": "eligible_for_deletion",
+                    "conditions": {"min_index_age": retention_age},
+                }
+            ],
+        }
+
+
+    def eligible_state():
+        return {
+            "name": "eligible_for_deletion",
+            "actions": [],
+            "transitions": [
+                {
+                    "state_name": "retained",
+                    "conditions": {"min_state_age": HOLD_SENTINEL_AGE},
+                }
+            ],
+        }
+
+
+    def expected_hold_policy(spec):
+        return {
+            "description": spec["hold_description"],
+            "schema_version": 1,
+            "default_state": "retained",
+            "states": [
+                retained_state(spec["retention_age"]),
+                eligible_state(),
+            ],
+            "ism_template": {
+                "index_patterns": [spec["pattern"]],
+                "priority": 100,
+            },
+        }
+
+
+    def expected_armed_policy(spec):
+        return {
+            "description": spec["armed_description"],
+            "schema_version": 1,
+            "default_state": "retained",
+            "states": [
+                retained_state(spec["retention_age"]),
+                eligible_state(),
+                {
+                    "name": "delete",
+                    "actions": [{"delete": {}}],
+                    "transitions": [],
+                },
+            ],
+            "ism_template": {
+                "index_patterns": [spec["pattern"]],
+                "priority": 100,
+            },
+        }
+
+
+    def policy_kind(policy, spec):
+        if policy.get("policy_id") != spec["policy_id"]:
+            raise RuntimeError(
+                f"policy_id mismatch for {spec['policy_id']}: "
+                f"{policy.get('policy_id')!r}"
+            )
+        functional = functional_policy(policy)
+        if functional == functional_policy(expected_hold_policy(spec)):
+            return "hold"
+        if functional == functional_policy(expected_armed_policy(spec)):
+            return "armed"
+        raise RuntimeError(
+            f"policy {spec['policy_id']} is neither the exact stage-1 hold "
+            "nor the exact stage-2 ARMED form"
+        )
+
+
+    def validate_armed_source(spec):
+        source = json.loads(
+            read_text(f"{CONFIG_DIR}/{spec['armed_filename']}")
+        )
+        if set(source) != {"policy"}:
+            raise RuntimeError(
+                f"invalid wrapper in {spec['armed_filename']}: {sorted(source)}"
+            )
+        if functional_policy(source["policy"]) != functional_policy(
+            expected_armed_policy(spec)
+        ):
+            raise RuntimeError(
+                f"refusing {spec['policy_id']}: ARMED source is not exact"
+            )
+
+        states = source["policy"]["states"]
+        transitions_to_delete = [
+            state["name"]
+            for state in states
+            for transition in state.get("transitions", [])
+            if transition.get("state_name") == "delete"
+        ]
+        delete_actions = [
+            action
+            for state in states
+            for action in state.get("actions", [])
+            if isinstance(action, dict) and "delete" in action
+        ]
+        if transitions_to_delete:
+            raise RuntimeError(
+                f"refusing {spec['policy_id']}: delete is reachable from "
+                f"{transitions_to_delete}"
+            )
+        if delete_actions != [{"delete": {}}]:
+            raise RuntimeError(
+                f"refusing {spec['policy_id']}: expected one isolated delete action"
+            )
+        return source
+
+
+    def policy_path(policy_id):
+        return urllib.parse.quote(policy_id, safe="-_.")
+
+
+    def concrete_indices(pattern):
+        escaped_pattern = urllib.parse.quote(pattern, safe="*-_.")
+        _, payload = request(
+            "GET",
+            f"/_cat/indices/{escaped_pattern}?format=json&h=index&expand_wildcards=open",
+        )
+        return sorted(row["index"] for row in payload)
+
+
+    def explain(pattern):
+        escaped_pattern = urllib.parse.quote(pattern, safe="*-_.")
+        _, payload = request(
+            "GET",
+            f"/_plugins/_ism/explain/{escaped_pattern}?show_policy=true",
+        )
+        return payload
+
+
+    def attached_policy(details):
+        return (
+            details.get("policy_id")
+            or details.get("index.plugins.index_state_management.policy_id")
+            or details.get("index.opendistro.index_state_management.policy_id")
+        )
+
+
+    def policy_tokens(payload, context):
+        seq_no = payload.get("_seq_no")
+        primary_term = payload.get("_primary_term")
+        if not isinstance(seq_no, int) or seq_no < 0:
+            raise RuntimeError(f"invalid _seq_no for {context}: {seq_no!r}")
+        if not isinstance(primary_term, int) or primary_term < 1:
+            raise RuntimeError(
+                f"invalid _primary_term for {context}: {primary_term!r}"
+            )
+        return seq_no, primary_term
+
+
+    def current_state(details):
+        state = details.get("state")
+        if isinstance(state, dict):
+            return state.get("name")
+        return None
+
+
+    def validate_no_failure(index, details):
+        if details.get("policy_completed") is True:
+            raise RuntimeError(
+                f"ISM policy unexpectedly completed for {index}; refusing to arm"
+            )
+        if details.get("enabled") is False:
+            raise RuntimeError(f"ISM is disabled for {index}")
+        action = details.get("action") or {}
+        retry_info = details.get("retry_info") or {}
+        if not isinstance(action, dict) or not isinstance(retry_info, dict):
+            raise RuntimeError(f"invalid ISM status metadata for {index}")
+        if action.get("failed") or retry_info.get("failed"):
+            raise RuntimeError(f"ISM reports a failed action for {index}")
+
+
+    def inspect_family(spec, record, allow_not_initialized=False):
+        indices = concrete_indices(spec["pattern"])
+        if not indices:
+            raise RuntimeError(
+                f"index pattern {spec['pattern']!r} matched no open indices"
+            )
+        result = explain(spec["pattern"])
+        reported = result.get("total_managed_indices")
+        observations = []
+
+        for index in indices:
+            details = result.get(index, {})
+            actual_policy = attached_policy(details)
+            if actual_policy is None and allow_not_initialized:
+                observations.append(
+                    {
+                        "index": index,
+                        "ready": False,
+                        "problem": "policy not initialized yet",
+                    }
+                )
+                continue
+            if actual_policy != spec["policy_id"]:
+                raise RuntimeError(
+                    f"wrong policy on {index}: expected {spec['policy_id']!r}, "
+                    f"found {actual_policy!r}"
+                )
+            validate_no_failure(index, details)
+
+            state = current_state(details)
+            if state is None and allow_not_initialized:
+                observations.append(
+                    {
+                        "index": index,
+                        "ready": False,
+                        "problem": "state not initialized yet",
+                    }
+                )
+                continue
+            if state not in ALLOWED_STATES:
+                raise RuntimeError(f"unexpected state for {index}: {state!r}")
+
+            index_uuid = details.get("index_uuid")
+            if not isinstance(index_uuid, str) or not index_uuid:
+                raise RuntimeError(f"missing index_uuid for {index}")
+
+            cached = details.get("policy")
+            if cached is None and allow_not_initialized:
+                observations.append(
+                    {
+                        "index": index,
+                        "ready": False,
+                        "problem": "cached policy not initialized yet",
+                    }
+                )
+                continue
+            kind = policy_kind(cached, spec)
+            seq_no = details.get("policy_seq_no")
+            primary_term = details.get("policy_primary_term")
+
+            if record["kind"] == "hold" and kind == "hold" and (
+                seq_no != record["seq_no"]
+                or primary_term != record["primary_term"]
+            ):
+                raise RuntimeError(
+                    f"cached token mismatch for {index}: body={kind} "
+                    f"tokens=({seq_no!r},{primary_term!r}) latest="
+                    f"({record['seq_no']},{record['primary_term']})"
+                )
+            if record["kind"] == "hold" and kind != "hold":
+                raise RuntimeError(
+                    f"index {index} cached ARMED policy while latest policy is hold"
+                )
+
+            observations.append(
+                {
+                    "index": index,
+                    "identity": (index, index_uuid),
+                    "ready": True,
+                    "details": details,
+                    "state": state,
+                    "kind": kind,
+                    "seq_no": seq_no,
+                    "primary_term": primary_term,
+                }
+            )
+
+        if reported != len(indices):
+            if not allow_not_initialized:
+                raise RuntimeError(
+                    f"managed-index count mismatch for {spec['pattern']}: "
+                    f"reported={reported!r} expected={len(indices)}"
+                )
+            observations.append(
+                {
+                    "index": "<family>",
+                    "ready": False,
+                    "problem": (
+                        f"managed count {reported!r} does not match {len(indices)}"
+                    ),
+                }
+            )
+        return indices, observations
+
+
+    def get_policy_record(spec):
+        _, payload = request(
+            "GET",
+            f"/_plugins/_ism/policies/{policy_path(spec['policy_id'])}",
+        )
+        kind = policy_kind(payload.get("policy", {}), spec)
+        seq_no, primary_term = policy_tokens(payload, spec["policy_id"])
+        return {
+            "kind": kind,
+            "seq_no": seq_no,
+            "primary_term": primary_term,
+            "version": payload.get("_version"),
+        }
+
+
+    def update_policy_to_armed(spec, record, armed_source):
+        if record["kind"] == "armed":
+            print(f"policy={spec['policy_id']} is already exactly ARMED")
+            return
+        ensure_green()
+        query = urllib.parse.urlencode(
+            {
+                "if_seq_no": record["seq_no"],
+                "if_primary_term": record["primary_term"],
+            }
+        )
+        request(
+            "PUT",
+            f"/_plugins/_ism/policies/{policy_path(spec['policy_id'])}?{query}",
+            armed_source,
+        )
+        print(
+            f"OCC-updated policy={spec['policy_id']} from exact hold to ARMED "
+            f"using seq_no={record['seq_no']} primary_term={record['primary_term']}"
+        )
+
+
+    def queue_exact_change(spec, observation):
+        index = observation["index"]
+        escaped_index = urllib.parse.quote(index, safe="-_.")
+        # Omitting `state` is intentional. OpenSearch 3.4 treats that as keeping
+        # the index in its current state, while the include filter ensures a state
+        # race cannot silently move it. With unchanged empty action lists, the
+        # plugin classifies this same-policy version change as immediately safe.
+        body = {
+            "policy_id": spec["policy_id"],
+            "include": [{"state": observation["state"]}],
+        }
+        _, changed = request(
+            "POST",
+            f"/_plugins/_ism/change_policy/{escaped_index}",
+            body,
+        )
+        if changed.get("failures") or changed.get("failed_indices"):
+            raise RuntimeError(
+                f"change_policy failed for {index}: "
+                f"{json.dumps(changed, sort_keys=True)}"
+            )
+        updated = changed.get("updated_indices")
+        if updated not in (0, 1):
+            raise RuntimeError(
+                f"unexpected updated_indices for exact index {index}: {updated!r}"
+            )
+        print(
+            f"queued exact-index change_policy index={index} "
+            f"preserved_state={observation['state']} updated_indices={updated}"
+        )
+        return updated
+
+
+    def converge_cached_policies(policy_records):
+        deadline = time.monotonic() + VERIFY_TIMEOUT_SECONDS
+        stable_signature = None
+        stable_passes = 0
+        last_problems = []
+        submitted_indices = set()
+
+        while time.monotonic() < deadline:
+            ensure_green()
+            # Revalidate the authoritative document before every convergence pass.
+            # change_policy has no policy-version parameter, so the operational gate
+            # still forbids concurrent ISM admins; this narrows that race window and
+            # guarantees any observed drift stops the Job before its next batch.
+            for spec in POLICIES:
+                expected_record = policy_records[spec["policy_id"]]
+                current_record = get_policy_record(spec)
+                if (
+                    current_record["kind"] != "armed"
+                    or current_record["seq_no"] != expected_record["seq_no"]
+                    or current_record["primary_term"]
+                    != expected_record["primary_term"]
+                ):
+                    raise RuntimeError(
+                        f"authoritative policy changed during convergence: "
+                        f"{spec['policy_id']}"
+                    )
+            all_ready = True
+            problems = []
+            signature = []
+            changes_to_queue = []
+
+            for spec in POLICIES:
+                record = policy_records[spec["policy_id"]]
+                indices, observations = inspect_family(
+                    spec,
+                    record,
+                    allow_not_initialized=True,
+                )
+                signature.append((spec["policy_id"], tuple(indices)))
+
+                for observation in observations:
+                    if not observation.get("ready"):
+                        all_ready = False
+                        problems.append(
+                            f"{observation['index']}: {observation['problem']}"
+                        )
+                        continue
+
+                    details = observation["details"]
+                    exact_armed_cache = (
+                        observation["kind"] == "armed"
+                        and observation["seq_no"] == record["seq_no"]
+                        and observation["primary_term"] == record["primary_term"]
+                    )
+                    if exact_armed_cache:
+                        continue
+
+                    all_ready = False
+                    if details.get("transition_to") is not None:
+                        problems.append(
+                            f"{observation['index']}: state transition in progress"
+                        )
+                    elif observation["identity"] in submitted_indices:
+                        # Explain exposes cached policy metadata, not the pending
+                        # ManagedIndexConfig.change_policy object. Do not hammer the
+                        # same exact index while waiting for its next ISM execution.
+                        problems.append(
+                            f"{observation['index']}: waiting for submitted change_policy"
+                        )
+                    else:
+                        changes_to_queue.append((spec, observation))
+                        problems.append(
+                            f"{observation['index']}: cached policy/tokens are stale"
+                        )
+
+            if changes_to_queue:
+                ensure_green()
+                for spec, observation in changes_to_queue:
+                    if queue_exact_change(spec, observation) == 1:
+                        submitted_indices.add(observation["identity"])
+
+            current_signature = tuple(signature)
+            if all_ready and current_signature == stable_signature:
+                stable_passes += 1
+            elif all_ready:
+                stable_signature = current_signature
+                stable_passes = 1
+            else:
+                stable_signature = None
+                stable_passes = 0
+
+            if stable_passes >= REQUIRED_STABLE_PASSES:
+                total = sum(len(indices) for _, indices in current_signature)
+                print(
+                    f"verified {total} indices across {len(POLICIES)} families: "
+                    "every cached policy body and OCC token is exactly ARMED, "
+                    "with all indices retained or eligible_for_deletion"
+                )
+                return
+
+            last_problems = problems
+            time.sleep(VERIFY_INTERVAL_SECONDS)
+
+        raise RuntimeError(
+            "timed out waiting for exact ARMED cached policies: "
+            f"{last_problems[:10]}"
+        )
+
+
+    def main():
+        armed_sources = {
+            spec["policy_id"]: validate_armed_source(spec) for spec in POLICIES
+        }
+        ensure_green()
+
+        # Full non-mutating preflight occurs before any policy update. A clean first
+        # run requires the exact stage-1 hold document and cached version everywhere;
+        # an exact mixture of hold/ARMED is accepted only to recover a partial rerun.
+        policy_records = {}
+        for spec in POLICIES:
+            record = get_policy_record(spec)
+            policy_records[spec["policy_id"]] = record
+        for spec in POLICIES:
+            indices, _ = inspect_family(
+                spec,
+                policy_records[spec["policy_id"]],
+            )
+            print(
+                f"preflight policy={spec['policy_id']} "
+                f"latest={policy_records[spec['policy_id']]['kind']} "
+                f"managed_indices={len(indices)}"
+            )
+
+        # OCC prevents this job from overwriting a policy that changed after the
+        # preflight. A conflict is a hard stop; retries re-read and revalidate.
+        for spec in POLICIES:
+            update_policy_to_armed(
+                spec,
+                policy_records[spec["policy_id"]],
+                armed_sources[spec["policy_id"]],
+            )
+
+        # Re-read authoritative policy documents and capture the exact tokens that
+        # every managed index must eventually cache.
+        for spec in POLICIES:
+            record = get_policy_record(spec)
+            if record["kind"] != "armed":
+                raise RuntimeError(
+                    f"policy {spec['policy_id']} did not converge to exact ARMED form"
+                )
+            policy_records[spec["policy_id"]] = record
+            print(
+                f"latest ARMED policy={spec['policy_id']} "
+                f"seq_no={record['seq_no']} primary_term={record['primary_term']}"
+            )
+
+        converge_cached_policies(policy_records)
+        print(
+            "stage 2 ARMED complete: delete states exist but remain unreachable; "
+            "retention deletion has NOT been activated"
+        )
+
+
+    if __name__ == "__main__":
+        try:
+            main()
+        except Exception as error:
+            print(f"ERROR: {error}", file=sys.stderr)
+            raise

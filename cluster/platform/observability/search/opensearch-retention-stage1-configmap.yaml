@@ -5,6 +5,10 @@ metadata:
   namespace: search
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    storage.rcrumana.xyz/safety-property: >-
+      Non-deleting observation policy. The 1,000-year hold back-edge keeps the
+      hold state scheduled because OpenSearch disables policies whose current
+      state has an empty transition list.
 data:
   logs-retention-60d-v1.json: |
     {
@@ -28,7 +32,14 @@ data:
           {
             "name": "eligible_for_deletion",
             "actions": [],
-            "transitions": []
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
           }
         ],
         "ism_template": {
@@ -59,7 +70,14 @@ data:
           {
             "name": "eligible_for_deletion",
             "actions": [],
-            "transitions": []
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
           }
         ],
         "ism_template": {
@@ -90,7 +108,14 @@ data:
           {
             "name": "eligible_for_deletion",
             "actions": [],
-            "transitions": []
+            "transitions": [
+              {
+                "state_name": "retained",
+                "conditions": {
+                  "min_state_age": "365000d"
+                }
+              }
+            ]
           }
         ],
         "ism_template": {
@@ -121,6 +146,10 @@ data:
     CA_FILE = "/tls/ca.crt"
     VERIFY_TIMEOUT_SECONDS = 240
     VERIFY_INTERVAL_SECONDS = 5
+    # OpenSearch marks a state with no transitions complete and disables its job.
+    # Keep the observation state nonterminal with a back-edge that cannot fire in
+    # practice; the activation revision will replace this sentinel transition.
+    HOLD_SENTINEL_AGE = "365000d"
 
     POLICIES = (
         ("logs-retention-60d-v1", "logs-*", "60d", "logs-retention-60d-v1.json"),
@@ -195,6 +224,42 @@ data:
         return False
 
 
+    def normalize_ism_template(value):
+        # OpenSearch 3.4 accepts the legacy single-object request used here, but
+        # serializes it back as a one-element array and adds server-owned template
+        # timestamps. Compare only the functional template fields so a policy can
+        # pass its own create-then-GET/idempotency check without accepting drift.
+        if isinstance(value, dict):
+            templates = [value]
+        elif isinstance(value, list):
+            templates = value
+        else:
+            raise ValueError(f"invalid ism_template value: {value!r}")
+
+        allowed_fields = {
+            "index_patterns",
+            "priority",
+            "last_updated_time",
+            "last_updated_time_in_millis",
+        }
+        normalized = []
+        for template in templates:
+            if not isinstance(template, dict):
+                raise ValueError(f"invalid ism_template entry: {template!r}")
+            if set(template) - allowed_fields:
+                raise ValueError(
+                    "unexpected ism_template fields: "
+                    f"{sorted(set(template) - allowed_fields)}"
+                )
+            normalized.append(
+                {
+                    "index_patterns": template.get("index_patterns"),
+                    "priority": template.get("priority"),
+                }
+            )
+        return normalized
+
+
     def policy_matches(existing, desired):
         existing_policy = existing.get("policy", {})
         desired_policy = desired["policy"]
@@ -203,9 +268,21 @@ data:
             "schema_version",
             "default_state",
             "states",
-            "ism_template",
         )
-        return all(existing_policy.get(field) == desired_policy[field] for field in fields)
+        try:
+            templates_match = normalize_ism_template(
+                existing_policy.get("ism_template")
+            ) == normalize_ism_template(desired_policy["ism_template"])
+        except ValueError:
+            return False
+        return (
+            existing_policy.get("error_notification") is None
+            and all(
+                existing_policy.get(field) == desired_policy[field]
+                for field in fields
+            )
+            and templates_match
+        )
 
 
     def concrete_indices(pattern):
@@ -242,18 +319,32 @@ data:
             result = explain(pattern)
             wrong = []
             failed = []
+            inactive = []
             for index in indices:
                 details = result.get(index, {})
                 actual_policy = attached_policy(details)
                 if actual_policy != policy_id:
                     wrong.append(f"{index}={actual_policy!r}")
-                if details.get("action", {}).get("failed") or details.get(
-                    "retry_info", {}
-                ).get("failed"):
+                action = details.get("action") or {}
+                retry_info = details.get("retry_info") or {}
+                if not isinstance(action, dict) or not isinstance(
+                    retry_info, dict
+                ):
                     failed.append(index)
+                elif action.get("failed") or retry_info.get("failed"):
+                    failed.append(index)
+                if details.get("enabled") is False or details.get(
+                    "policy_completed"
+                ) is True:
+                    inactive.append(index)
 
             managed_count = result.get("total_managed_indices")
-            if not wrong and not failed and managed_count == len(indices):
+            if (
+                not wrong
+                and not failed
+                and not inactive
+                and managed_count == len(indices)
+            ):
                 print(
                     f"verified policy={policy_id} pattern={pattern} "
                     f"managed_indices={len(indices)}"
@@ -262,6 +353,7 @@ data:
 
             last_problem = (
                 f"wrong_policy={wrong[:5]} failed={failed[:5]} "
+                f"inactive={inactive[:5]} "
                 f"reported_managed={managed_count} expected={len(indices)}"
             )
             time.sleep(VERIFY_INTERVAL_SECONDS)
@@ -300,7 +392,12 @@ data:
                 {
                     "name": "eligible_for_deletion",
                     "actions": [],
-                    "transitions": [],
+                    "transitions": [
+                        {
+                            "state_name": "retained",
+                            "conditions": {"min_state_age": HOLD_SENTINEL_AGE},
+                        }
+                    ],
                 },
             ]
             if desired["policy"].get("states") != expected_states:
