@@ -121,6 +121,7 @@ spec:
       osd_pool_erasure_code_stripe_unit: "16384"
       osd_mclock_override_recovery_settings: "true"
       osd_mclock_profile: high_client_ops
+      osd_max_scrubs: "8"
       osd_max_backfills: "6"
       osd_recovery_max_active: "6"
       osd_recovery_max_single_start: "6"
