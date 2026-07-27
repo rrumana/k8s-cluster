@@ -110,8 +110,10 @@ spec:
     enabled: true
     metricsDisabled: false
 
-  # Temporary replacement recovery settings. Restore the client-priority
-  # profile after the eva-3 replacement OSD is fully backfilled and clean.
+  # Client-priority recovery settings for the mixed consumer-NVMe OSD fleet.
+  # Cap scrub concurrency below the observed failure point: osd.0's Crucial
+  # P310 produced 5-9 second BlueStore commit stalls when five or more PG
+  # scrubs overlapped after this was raised to eight.
   cephConfig:
     global:
       public_network: "192.168.1.0/24"
@@ -121,7 +123,7 @@ spec:
       osd_pool_erasure_code_stripe_unit: "16384"
       osd_mclock_override_recovery_settings: "true"
       osd_mclock_profile: high_client_ops
-      osd_max_scrubs: "8"
+      osd_max_scrubs: "4"
       osd_max_backfills: "6"
       osd_recovery_max_active: "6"
       osd_recovery_max_single_start: "6"
