@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rook-ceph-mgr-prometheus
+  namespace: rook-ceph
+  labels:
+    # kube-prometheus-stack selects rules carrying its Helm release label.
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: rook-ceph.mgr-prometheus
+      rules:
+        - alert: CephMgrPrometheusCollectorStalled
+          expr: |
+            (
+              up{job="rook-ceph-mgr", namespace="rook-ceph"} == 1
+            )
+            and on (namespace, pod)
+            (
+              changes(
+                ceph_prometheus_collect_duration_seconds_count{
+                  job="rook-ceph-mgr",
+                  namespace="rook-ceph",
+                  method="get_health"
+                }[10m]
+              ) == 0
+            )
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Ceph manager Prometheus collection is stalled
+            description: >-
+              The Ceph manager metrics endpoint is reachable, but its background
+              collector has not completed a collection in at least 10 minutes.
+              The endpoint may be serving a frozen cache, leaving Ceph Dashboard
+              capacity and throughput charts stale or empty. Roll the manager
+              pods through GitOps and inspect manager/orchestrator API connectivity.

@@ -29,6 +29,10 @@ spec:
   annotations:
     all:
       homelab.rcrumana.xyz/rollout-trigger: "ceph-lan-2026-07-07"
+    mgr:
+      # Recover the Prometheus collector thread that stopped advancing while
+      # the manager continued to serve its last successful cached snapshot.
+      homelab.rcrumana.xyz/prometheus-rollout-trigger: "collector-recovery-2026-07-29"
 
   mon:
     count: 3
@@ -109,6 +113,9 @@ spec:
   monitoring:
     enabled: true
     metricsDisabled: false
+    # Keep Rook's ServiceMonitor and the Ceph Prometheus module on the same
+    # interval. Ceph's cache freshness logic assumes these intervals match.
+    interval: 15s
 
   # Client-priority recovery settings for the mixed consumer-NVMe OSD fleet.
   # Cap scrub concurrency below the observed failure point: osd.0's Crucial
