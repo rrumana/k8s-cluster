@@ -40,6 +40,20 @@ spec:
 
   enableSuperuserAccess: true
 
+  managed:
+    roles:
+      - name: authentik
+        ensure: present
+        comment: Authentik identity platform
+        login: true
+        superuser: false
+        createdb: false
+        createrole: false
+        replication: false
+        connectionLimit: 40
+        passwordSecret:
+          name: authentik-postgres-role
+
   monitoring:
     enablePodMonitor: true
 

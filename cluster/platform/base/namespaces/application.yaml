@@ -30,3 +30,10 @@ metadata:
   name: other
   annotations:
     config.linkerd.io/default-inbound-policy: all-unauthenticated
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: identity
+  annotations:
+    config.linkerd.io/default-inbound-policy: all-unauthenticated

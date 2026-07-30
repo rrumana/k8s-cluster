@@ -1,0 +1,21 @@
+# Merge this section into config.yaml only after the Authentik headscale
+# provider and the headscale OIDC Secret both exist.
+oidc:
+  only_start_if_oidc_is_available: true
+  issuer: https://auth.rcrumana.xyz/application/o/headscale/
+  client_id: headscale
+  # Mount the client-secret key from the staged ExternalSecret at this path.
+  client_secret_path: /etc/headscale/oidc/client-secret
+  scope:
+    - openid
+    - profile
+    - email
+    - groups
+  email_verified_required: true
+  allowed_groups:
+    - headscale-users
+  expiry: 30d
+  use_expiry_from_token: false
+  pkce:
+    enabled: true
+    method: S256

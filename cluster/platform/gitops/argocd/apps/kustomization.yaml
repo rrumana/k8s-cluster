@@ -51,6 +51,7 @@ resources:
   - nextcloud-app.yaml
   - plex-app.yaml
   - headscale-app.yaml
+  - authentik-app.yaml
   - harbor-app.yaml
   - renovate-app.yaml
   - unifi-os-server-app.yaml

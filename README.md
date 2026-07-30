@@ -166,5 +166,6 @@ On a more serious note this setup is very personal and unique to my circumstance
 ## Further Reading
 
 - `docs/vault-operations.md`
+- `docs/identity-access-runbook.md`
 - `docs/apps.md`
 - `docs/emergency-dump-runbook.md`

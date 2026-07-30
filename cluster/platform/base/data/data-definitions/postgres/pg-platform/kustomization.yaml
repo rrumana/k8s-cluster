@@ -6,3 +6,5 @@ namespace: databases
 resources:
   - cluster.yaml
   - backup.yaml
+  - authentik-role-secret.yaml
+  - authentik-database.yaml

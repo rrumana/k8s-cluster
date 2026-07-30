@@ -1,0 +1,69 @@
+# Staged supplemental values for the Authentik cutover.
+# Do not add this file to the Argo CD valueFiles list until the prerequisites in
+# docs/identity-access-runbook.md are complete.
+
+image:
+  registry: harbor.rcrumana.xyz
+  repository: apps-private/nextcloud
+  tag: "33.0.0-user_oidc-8.10.1@sha256:ff71a5b9d74d8d9db95e5679de069b7b0d7a46ab502789320c914648adab65f4"
+
+nextcloud:
+  extraEnv:
+    - name: NEXTCLOUD_OIDC_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-identity
+          key: client-id
+    - name: NEXTCLOUD_OIDC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-identity
+          key: client-secret
+    - name: MAIL_FROM_ADDRESS
+      value: nextcloud
+    - name: MAIL_DOMAIN
+      value: mail.rcrumana.xyz
+    - name: SMTP_HOST
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-mail
+          key: host
+    - name: SMTP_PORT
+      value: "587"
+    - name: SMTP_SECURE
+      value: tls
+    - name: SMTP_AUTHTYPE
+      value: LOGIN
+    - name: SMTP_NAME
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-mail
+          key: username
+    - name: SMTP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-mail
+          key: password
+
+  hooks:
+    before-starting: |-
+      #!/bin/sh
+      set -eu
+
+      php /var/www/html/occ app:enable user_oidc
+      php /var/www/html/occ user_oidc:provider authentik \
+        --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
+        --clientsecret-env=NEXTCLOUD_OIDC_CLIENT_SECRET \
+        --discoveryuri="https://auth.rcrumana.xyz/application/o/nextcloud/.well-known/openid-configuration" \
+        --postlogouturi="https://nextcloud.rcrumana.xyz/login" \
+        --scope="openid email profile" \
+        --unique-uid=1 \
+        --mapping-uid=sub \
+        --mapping-email=email \
+        --mapping-display-name=name \
+        --mapping-groups=groups \
+        --group-provisioning=1 \
+        --group-whitelist-regex='/^app-nextcloud$/' \
+        --group-restrict-login-to-whitelist=1
+      php /var/www/html/occ config:app:set user_oidc \
+        allow_multiple_user_backends --type=string --value=1

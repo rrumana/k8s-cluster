@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://charts.goauthentik.io
+      targetRevision: "2026.5.6"
+      chart: authentik
+      helm:
+        releaseName: authentik
+        valueFiles:
+          - $values/cluster/apps/identity/authentik/values.yaml
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/apps/identity/authentik
+      kustomize: {}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: identity
+
+  syncPolicy:
+    # Intentionally manual until Vault data, private DNS, SMTP, and the
+    # invitation/passkey bootstrap checklist have been completed.
+    syncOptions:
+      - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        app.kubernetes.io/name: authentik
+        app.kubernetes.io/part-of: identity-platform
+        app.kubernetes.io/managed-by: argocd

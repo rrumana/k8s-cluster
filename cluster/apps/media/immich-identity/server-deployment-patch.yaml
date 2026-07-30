@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: immich-server
+          env:
+            - name: IMMICH_CONFIG_FILE
+              value: /etc/immich/immich.json
+          volumeMounts:
+            - name: identity-config
+              mountPath: /etc/immich
+              readOnly: true
+      volumes:
+        - name: identity-config
+          secret:
+            secretName: immich-identity-config
+            items:
+              - key: immich.json
+                path: immich.json

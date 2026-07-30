@@ -1,0 +1,197 @@
+global:
+  fullnameOverride: authentik
+  revisionHistoryLimit: 3
+
+  image:
+    repository: harbor.rcrumana.xyz/mirror/goauthentik/server
+    tag: "2026.5.6@sha256:f624d5b44c3f68441bce720b091b3c486e7f557b2fcf5027bccc857a21291a1c"
+    pullPolicy: IfNotPresent
+
+  imagePullSecrets:
+    - name: harbor-pull-creds
+
+  nodeSelector:
+    homelab.rcrumana.xyz/node-plane: control
+
+  affinity:
+    podAntiAffinity: hard
+    nodeAffinity:
+      type: hard
+      matchExpressions:
+        - key: homelab.rcrumana.xyz/node-plane
+          operator: In
+          values:
+            - control
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+
+  deploymentStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  podAnnotations:
+    linkerd.io/inject: enabled
+    config.linkerd.io/skip-outbound-ports: "587"
+
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+
+  env:
+    - name: AUTHENTIK_LOG_LEVEL
+      value: info
+    - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+      value: "false"
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: pg-platform-rw.databases.svc.cluster.local
+    - name: AUTHENTIK_POSTGRESQL__PORT
+      value: "5432"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: authentik
+    - name: AUTHENTIK_POSTGRESQL__USER
+      value: authentik
+    - name: AUTHENTIK_POSTGRESQL__SSLMODE
+      value: require
+    - name: AUTHENTIK_POSTGRESQL__CONN_MAX_AGE
+      value: "0"
+    - name: AUTHENTIK_EMAIL__HOST
+      value: smtp.mailgun.org
+    - name: AUTHENTIK_EMAIL__PORT
+      value: "587"
+    - name: AUTHENTIK_EMAIL__USE_TLS
+      value: "true"
+    - name: AUTHENTIK_EMAIL__USE_SSL
+      value: "false"
+    - name: AUTHENTIK_EMAIL__TIMEOUT
+      value: "30"
+    - name: AUTHENTIK_EMAIL__FROM
+      value: Rcrumana Identity <auth@mail.rcrumana.xyz>
+    - name: AUTHENTIK_OUTPOSTS__DISCOVER
+      value: "false"
+    - name: AUTHENTIK_OUTPOSTS__CONTAINER_IMAGE_BASE
+      value: harbor.rcrumana.xyz/mirror/goauthentik/%(type)s:%(version)s
+
+authentik:
+  existingSecret:
+    secretName: authentik-config
+
+blueprints:
+  configMaps:
+    - authentik-blueprints
+
+server:
+  replicas: 2
+  serviceAccountName: authentik
+  automountServiceAccountToken: false
+
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  service:
+    type: ClusterIP
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 5s
+      labels:
+        release: kube-prometheus-stack
+
+  ingress:
+    enabled: true
+    ingressClassName: haproxy
+    labels:
+      security.rcrumana.xyz/exposure: public
+      security.rcrumana.xyz/public-approved: "true"
+      security.rcrumana.xyz/public-edge: direct
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      haproxy-ingress.github.io/backend-protocol: http
+      haproxy-ingress.github.io/ssl-redirect: "true"
+      haproxy-ingress.github.io/timeout-client: 600s
+      haproxy-ingress.github.io/timeout-server: 600s
+      # Bootstrap gate: remove only after private initialization, SMTP,
+      # passkey, recovery, and rollback validation have succeeded.
+      haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10"
+    hosts:
+      - auth.rcrumana.xyz
+    tls:
+      - secretName: auth-rcrumana-xyz-tls
+        hosts:
+          - auth.rcrumana.xyz
+
+worker:
+  replicas: 2
+  serviceAccountName: authentik
+  automountServiceAccountToken: false
+
+  pdb:
+    enabled: true
+    minAvailable: 1
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 768Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 5s
+      labels:
+        release: kube-prometheus-stack
+
+serviceAccount:
+  # Avoid the chart's remote-cluster RBAC. Managed outposts are not part of
+  # the initial deployment.
+  create: false
+
+geoip:
+  enabled: false
+
+prometheus:
+  rules:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
+
+postgresql:
+  enabled: false

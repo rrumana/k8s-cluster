@@ -1,0 +1,46 @@
+{
+  "notifications": {
+    "smtp": {
+      "enabled": true,
+      "from": "immich@mail.rcrumana.xyz",
+      "replyTo": "",
+      "transport": {
+        "host": "smtp.mailgun.org",
+        "ignoreCert": false,
+        "password": "REPLACE_FROM_VAULT",
+        "port": 587,
+        "secure": false,
+        "username": "REPLACE_FROM_VAULT"
+      }
+    }
+  },
+  "oauth": {
+    "autoLaunch": false,
+    "autoRegister": true,
+    "buttonText": "Sign in with Authentik",
+    "clientId": "immich",
+    "clientSecret": "REPLACE_FROM_VAULT",
+    "defaultStorageQuota": null,
+    "enabled": true,
+    "issuerUrl": "https://auth.rcrumana.xyz/application/o/immich/",
+    "endSessionEndpoint": "",
+    "mobileOverrideEnabled": false,
+    "mobileRedirectUri": "",
+    "profileSigningAlgorithm": "none",
+    "roleClaim": "immich_role",
+    "scope": "openid email profile immich",
+    "signingAlgorithm": "RS256",
+    "storageLabelClaim": "preferred_username",
+    "storageQuotaClaim": "immich_quota",
+    "timeout": 30000,
+    "tokenEndpointAuthMethod": "client_secret_post"
+  },
+  "passwordLogin": {
+    "enabled": true
+  },
+  "server": {
+    "externalDomain": "https://immich.rcrumana.xyz",
+    "loginPageMessage": "",
+    "publicUsers": false
+  }
+}
