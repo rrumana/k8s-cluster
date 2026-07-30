@@ -3,13 +3,15 @@ kind: Ingress
 metadata:
   name: librechat
   namespace: ai
+  labels:
+    security.rcrumana.xyz/exposure: private
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/backend-protocol: "http"
     haproxy-ingress.github.io/ssl-redirect: "true"
     haproxy-ingress.github.io/timeout-client: "600s"
     haproxy-ingress.github.io/timeout-server: "600s"
-    haproxy-ingress.github.io/whitelist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8"
+    haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10"
 spec:
   ingressClassName: haproxy-restricted
   tls:

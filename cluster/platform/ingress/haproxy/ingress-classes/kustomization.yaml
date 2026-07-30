@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - externalsecret.yaml
   - haproxy.yaml
+  - ingress-exposure-policy.yaml
   - restricted-internal.yaml
 
 labels:

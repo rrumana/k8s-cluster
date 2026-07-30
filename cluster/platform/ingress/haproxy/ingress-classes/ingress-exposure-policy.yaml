@@ -1,0 +1,160 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: haproxy-ingress-exposure
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    security.rcrumana.xyz/enforcement-stage: audit
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - networking.k8s.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - ingresses
+        scope: Namespaced
+  variables:
+    - name: exposure
+      expression: >-
+        has(object.metadata.labels) &&
+        'security.rcrumana.xyz/exposure' in object.metadata.labels
+          ? object.metadata.labels['security.rcrumana.xyz/exposure']
+          : ''
+    - name: ingressClass
+      expression: >-
+        has(object.spec.ingressClassName)
+          ? object.spec.ingressClassName
+          : ''
+    - name: publicEdge
+      expression: >-
+        has(object.metadata.labels) &&
+        'security.rcrumana.xyz/public-edge' in object.metadata.labels
+          ? object.metadata.labels['security.rcrumana.xyz/public-edge']
+          : ''
+    - name: privateAllowlist
+      expression: >-
+        '192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10'
+    - name: cloudflareAllowlist
+      expression: >-
+        '173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32,192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10'
+  validations:
+    - expression: variables.exposure in ['public', 'private']
+      message: >-
+        Ingresses must declare security.rcrumana.xyz/exposure as public or
+        private.
+      reason: Invalid
+    - expression: >-
+        variables.exposure == 'private'
+          ? variables.ingressClass == 'haproxy-restricted'
+          : true
+      message: Private Ingresses must use the haproxy-restricted IngressClass.
+      reason: Invalid
+    - expression: >-
+        variables.exposure == 'private'
+          ? (
+              has(object.metadata.annotations) &&
+              'haproxy-ingress.github.io/allowlist-source-range' in
+                object.metadata.annotations &&
+              object.metadata.annotations[
+                'haproxy-ingress.github.io/allowlist-source-range'
+              ] == variables.privateAllowlist
+            )
+          : true
+      message: >-
+        Private Ingresses must use the canonical RFC1918 and Headscale source
+        allowlist.
+      reason: Invalid
+    - expression: >-
+        variables.exposure == 'public'
+          ? variables.ingressClass == 'haproxy'
+          : true
+      message: Public Ingresses must use the haproxy IngressClass.
+      reason: Invalid
+    - expression: >-
+        variables.exposure == 'public'
+          ? variables.publicEdge in ['direct', 'cloudflare']
+          : true
+      message: Public Ingresses must declare a direct or cloudflare public edge.
+      reason: Invalid
+    - expression: >-
+        variables.exposure == 'public' &&
+        variables.publicEdge == 'cloudflare'
+          ? (
+              has(object.metadata.annotations) &&
+              'haproxy-ingress.github.io/allowlist-source-range' in
+                object.metadata.annotations &&
+              object.metadata.annotations[
+                'haproxy-ingress.github.io/allowlist-source-range'
+              ] == variables.cloudflareAllowlist
+            )
+          : true
+      message: >-
+        Cloudflare-proxied Ingresses must reject direct WAN traffic with the
+        canonical Cloudflare and private-network source allowlist.
+      reason: Forbidden
+    - expression: >-
+        variables.exposure == 'public'
+          ? (
+              has(object.metadata.labels) &&
+              'security.rcrumana.xyz/public-approved' in
+                object.metadata.labels &&
+              object.metadata.labels[
+                'security.rcrumana.xyz/public-approved'
+              ] == 'true'
+            )
+          : true
+      message: >-
+        Public Ingresses require
+        security.rcrumana.xyz/public-approved=true.
+      reason: Forbidden
+    - expression: >-
+        variables.exposure == 'public'
+          ? request.namespace in [
+              'web',
+              'other',
+              'identity',
+              'media',
+              'productivity'
+            ]
+          : true
+      message: Public Ingresses are not permitted in this namespace.
+      reason: Forbidden
+    - expression: >-
+        has(object.spec.tls) &&
+        size(object.spec.tls) > 0 &&
+        object.spec.tls.all(t, has(t.secretName) && t.secretName != '')
+      message: Ingresses must terminate TLS with an explicitly named Secret.
+      reason: Invalid
+    - expression: >-
+        has(object.spec.rules) &&
+        size(object.spec.rules) > 0 &&
+        object.spec.rules.all(
+          r,
+          has(r.host) &&
+          r.host.matches(
+            '^(?:rcrumana\\.xyz|[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\\.rcrumana\\.xyz)$'
+          )
+        )
+      message: >-
+        Ingress rules must use explicit, non-wildcard hosts below
+        rcrumana.xyz.
+      reason: Invalid
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: haproxy-ingress-exposure-audit
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    security.rcrumana.xyz/enforcement-stage: audit
+spec:
+  policyName: haproxy-ingress-exposure
+  validationActions:
+    - Audit
+    - Warn
