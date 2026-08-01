@@ -24,7 +24,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: vaultwarden
-        image: harbor.rcrumana.xyz/proxy-dockerhub/vaultwarden/server:1.36.0
+        image: harbor.rcrumana.xyz/proxy-dockerhub/vaultwarden/server:1.37.1
         ports:
         - containerPort: 80
           name: http

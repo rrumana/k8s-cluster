@@ -29,7 +29,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: immich-server
-          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-server:v3.0.3
+          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-server:v3.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2283
