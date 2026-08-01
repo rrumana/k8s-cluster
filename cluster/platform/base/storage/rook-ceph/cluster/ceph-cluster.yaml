@@ -7,7 +7,7 @@ spec:
   dataDirHostPath: /var/lib/rook
 
   cephVersion:
-    image: quay.io/ceph/ceph:v20.2.2
+    image: quay.io/ceph/ceph:v21.1.0
 
   # Four NVMe OSDs run on each 64 GiB Eva node. The hard limit prevents each
   # BlueStore cache from sizing itself against the entire node, while the
