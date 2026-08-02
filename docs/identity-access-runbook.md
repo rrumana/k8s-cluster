@@ -48,14 +48,25 @@ application or overlay:
 | Vault path | Required properties |
 |---|---|
 | `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret` |
-| `apps/identity/harbor-pull-creds` | `.dockerconfigjson` with pull-only access to `mirror/goauthentik/server` |
 | `apps/media/immich-identity` | `config.json` |
 | `apps/productivity/nextcloud-identity` | `client-id`, `client-secret` |
 | `apps/productivity/nextcloud-mail` | `host`, `username`, `password` |
 | `apps/other/headscale-identity` | `client-id`, `client-secret` |
 
-Generate independent random values for every field. The Authentik and
-application copy of each OIDC client secret must match.
+The script generates independent Authentik, PostgreSQL, and OIDC values. SMTP
+usernames and passwords come from the dedicated credentials created in
+Mailgun. The Authentik and application copy of each OIDC client secret must
+match.
+
+Copy `scripts/seed-identity-prereqs.sh` and a complete current Immich
+configuration export to the Balthasar directory containing `vault-init.json`.
+Run the script from that directory; it is self-contained and does not require a
+repository checkout. It prompts for the Mailgun credentials, generates the
+internal values, merges the Immich identity configuration, and creates these
+paths without exposing secret values in shell history. Authentik uses the
+existing shared pull credential at
+`apps/productivity/harbor-pull-creds`; the script does not create or rotate a
+Harbor account.
 
 The Immich `config.json` value must be a complete export of the current Immich
 system configuration, not merely the example committed beside the overlay.

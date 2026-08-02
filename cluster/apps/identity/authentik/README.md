@@ -20,9 +20,9 @@ Create `kv/apps/identity/authentik` with:
 - `oidc-headscale-client-secret`: the same independent random value stored at
   `kv/apps/other/headscale-identity`
 
-Create `kv/apps/identity/harbor-pull-creds` with:
-
-- `.dockerconfigjson`: credentials that can pull the mirrored Authentik image
+The namespace-local `harbor-pull-creds` Secret is populated from the existing
+shared Vault entry at `kv/apps/productivity/harbor-pull-creds`. No dedicated
+Authentik Harbor account or Vault entry is required.
 
 The Authentik image is mirrored from `ghcr.io/goauthentik/server:2026.5.6` to
 `harbor.rcrumana.xyz/mirror/goauthentik/server:2026.5.6` with digest
