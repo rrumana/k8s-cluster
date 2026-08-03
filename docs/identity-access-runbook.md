@@ -134,9 +134,11 @@ forced update test and alerting.
 6. Confirm public enrollment is disabled.
 7. Send an invitation to a test address. It must be single-use, fixed to that
    address, and expire in 72 hours.
-8. Complete email verification, password setup, platform-passkey registration,
-   and recovery-code generation.
-9. Verify passkey-first login and password plus email/recovery fallback.
+8. Complete email verification, password setup, passkey registration, TOTP
+   authenticator registration, and recovery-code generation.
+9. Verify passkey-first login and password plus TOTP/recovery fallback. Email
+   remains an account-recovery and verification channel, not a normal MFA
+   factor.
 10. Verify `/if/admin/` is unavailable from a public source but available
     through Headscale.
 

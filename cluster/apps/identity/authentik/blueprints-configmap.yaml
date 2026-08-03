@@ -234,7 +234,10 @@ data:
         attrs:
           create_users_as_inactive: true
           user_creation_mode: always_create
-          user_type: external
+          # Human users need the Authentik user interface to manage passkeys,
+          # sessions, and recovery credentials. Group membership, not user
+          # type, controls administrative access.
+          user_type: internal
           user_path_template: users/invited
 
       - model: authentik_stages_email.emailstage
@@ -265,10 +268,7 @@ data:
           friendly_name: Platform passkey
           user_verification: required
           resident_key_requirement: required
-          authenticator_attachment: platform
           prevent_duplicate_devices: true
-          hints:
-            - client-device
           max_attempts: 5
 
       - model: authentik_stages_authenticator_email.authenticatoremailstage
@@ -276,10 +276,21 @@ data:
         identifiers:
           name: rcrumana-enrollment-email-otp
         attrs:
-          friendly_name: Email fallback code
+          # Retain a confirmed EmailDevice as the durable email-verification
+          # signal used by the OIDC claims mapping. Email devices are not
+          # accepted by the normal authentication or recovery MFA stages.
+          friendly_name: Verified email (recovery only)
           use_global_settings: true
           token_expiry: minutes=10
-          subject: Your Rcrumana sign-in code
+          subject: Verify your Rcrumana email address
+
+      - model: authentik_stages_authenticator_totp.authenticatortotpstage
+        id: enrollment-totp
+        identifiers:
+          name: rcrumana-enrollment-totp
+        attrs:
+          friendly_name: Authenticator app (TOTP)
+          digits: "6"
 
       - model: authentik_stages_authenticator_static.authenticatorstaticstage
         id: enrollment-recovery-codes
@@ -340,6 +351,11 @@ data:
       - model: authentik_flows.flowstagebinding
         identifiers:
           target: !KeyOf invitation-enrollment-flow
+          stage: !KeyOf enrollment-totp
+          order: 65
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf invitation-enrollment-flow
           stage: !KeyOf enrollment-recovery-codes
           order: 70
 
@@ -364,11 +380,9 @@ data:
           not_configured_action: deny
           device_classes:
             - webauthn
-            - email
+            - totp
             - static
           webauthn_user_verification: required
-          webauthn_hints:
-            - client-device
 
       - model: authentik_stages_identification.identificationstage
         identifiers:
@@ -378,7 +392,10 @@ data:
             - email
             - username
           webauthn_stage: !KeyOf default-authentication-mfa-validation
-          enable_remember_me: true
+          # Remembering the identifier can jump directly to the password stage
+          # and bypass conditional passkey discovery on the identification
+          # screen. Keep every fresh login passkey-first instead.
+          enable_remember_me: false
           recovery_flow: !KeyOf recovery-flow
 
       - model: authentik_stages_user_login.userloginstage
@@ -406,6 +423,13 @@ data:
           friendly_name: Recovery codes
           token_count: 10
           token_length: 12
+
+      - model: authentik_stages_authenticator_totp.authenticatortotpstage
+        identifiers:
+          name: default-authenticator-totp-setup
+        attrs:
+          friendly_name: Authenticator app (TOTP)
+          digits: "6"
 
       # Password recovery requires both an email link and an existing MFA
       # device before changing the password.
@@ -438,6 +462,7 @@ data:
           not_configured_action: deny
           device_classes:
             - webauthn
+            - totp
             - static
           webauthn_user_verification: required
 

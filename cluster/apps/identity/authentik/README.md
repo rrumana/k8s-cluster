@@ -36,8 +36,10 @@ separate `/if/admin/` Ingress must remain private.
 ## Bootstrap boundary
 
 The mounted blueprints create the brand, authorization groups, invitation-only
-enrollment, platform-passkey/email/recovery-code setup, passkey-first login,
-MFA recovery, and the Immich/Nextcloud/Headscale OIDC providers. Invitations
+enrollment, passkey/TOTP/recovery-code setup, passkey-first login, MFA recovery,
+and the Immich/Nextcloud/Headscale OIDC providers. Invitation enrollment also
+confirms the fixed email address for account recovery and OIDC claims, but email
+OTP is not accepted as a normal sign-in factor. Invitations
 are created per recipient in the admin UI with a 72-hour expiry,
 `single_use: true`, and fixed data such as:
 
