@@ -28,7 +28,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: immich-machine-learning
-          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v3.0.3
+          image: harbor.rcrumana.xyz/proxy-ghcr/immich-app/immich-machine-learning:v3.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3003
