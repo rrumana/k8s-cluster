@@ -90,21 +90,21 @@ KEY2=$(jq -r '.unseal_keys_b64[1]' ~/vault-init.json)
 ROOT_TOKEN=$(jq -r '.root_token' ~/vault-init.json)
 
 # 2) Unseal vault-0 (active/bootstrap node)
-kubectl -n security exec vault-0 -- vault operator unseal "$KEY1"
-kubectl -n security exec vault-0 -- vault operator unseal "$KEY2"
+kubectl -n security exec vault-app-replicated-0 -- vault operator unseal "$KEY1"
+kubectl -n security exec vault-app-replicated-0 -- vault operator unseal "$KEY2"
 
 # 3) Join followers to raft (safe to run every time; may say already joined)
-kubectl -n security exec vault-1 -- vault operator raft join http://vault-0.vault-internal:8200 || true
-kubectl -n security exec vault-2 -- vault operator raft join http://vault-0.vault-internal:8200 || true
+kubectl -n security exec vault-app-replicated-1 -- vault operator raft join http://vault-0.vault-internal:8200 || true
+kubectl -n security exec vault-app-replicated-2 -- vault operator raft join http://vault-0.vault-internal:8200 || true
 
 # 4) Unseal followers
-kubectl -n security exec vault-1 -- vault operator unseal "$KEY1"
-kubectl -n security exec vault-1 -- vault operator unseal "$KEY2"
-kubectl -n security exec vault-2 -- vault operator unseal "$KEY1"
-kubectl -n security exec vault-2 -- vault operator unseal "$KEY2"
+kubectl -n security exec vault-app-replicated-1 -- vault operator unseal "$KEY1"
+kubectl -n security exec vault-app-replicated-1 -- vault operator unseal "$KEY2"
+kubectl -n security exec vault-app-replicated-2 -- vault operator unseal "$KEY1"
+kubectl -n security exec vault-app-replicated-2 -- vault operator unseal "$KEY2"
 
 # 5) Verify all nodes are unsealed
-for p in vault-0 vault-1 vault-2; do
+for p in vault-app-replicated-0 vault-app-replicated-1 vault-app-replicated-2; do
   echo "=== $p ==="
   kubectl -n security exec "$p" -- vault status
 done

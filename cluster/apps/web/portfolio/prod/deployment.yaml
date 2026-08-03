@@ -8,6 +8,9 @@ spec:
   replicas: 3
   strategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: portfolio
@@ -19,6 +22,7 @@ spec:
         app: portfolio
     spec:
       serviceAccountName: portfolio
+      automountServiceAccountToken: false
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -38,7 +42,7 @@ spec:
               containerPort: 8085
           readinessProbe:
             httpGet:
-              path: /
+              path: /readyz
               port: http
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -46,7 +50,7 @@ spec:
             failureThreshold: 6
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
             initialDelaySeconds: 15
             periodSeconds: 20
