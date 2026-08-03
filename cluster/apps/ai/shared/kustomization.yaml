@@ -5,6 +5,7 @@ namespace: ai
 
 resources:
   - externalsecret.yaml
+  - llama-models-cache-bulk-pv.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: ai-shared

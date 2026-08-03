@@ -4,8 +4,12 @@ metadata:
   name: llama-models-cache-bulk
   annotations:
     argocd.argoproj.io/sync-wave: "-20"
+    # Keep this claim declarative, but never let Argo prune it automatically.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   storageClassName: cephfs-bulk
+  # Pin recovery to the retained CephFS PV instead of provisioning an empty one.
+  volumeName: pvc-ca7fd713-8d74-49bb-b420-1a8b9ee4f80a
   accessModes:
     - ReadWriteMany
   resources:

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvc-ca7fd713-8d74-49bb-b420-1a8b9ee4f80a
+  annotations:
+    # This PV is a recovery anchor for the terminating llama-models-cache-bulk
+    # claim. Never prune the underlying CephFS subvolume with the Argo app.
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 500Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: llama-models-cache-bulk
+    namespace: ai
+    uid: ca7fd713-8d74-49bb-b420-1a8b9ee4f80a
+  csi:
+    controllerExpandSecretRef:
+      name: rook-csi-cephfs-provisioner
+      namespace: rook-ceph
+    driver: rook-ceph.cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      name: rook-csi-cephfs-node
+      namespace: rook-ceph
+    volumeAttributes:
+      clusterID: rook-ceph
+      fsName: cephfs
+      pool: cephfs-bulk
+      storage.kubernetes.io/csiProvisionerIdentity: 1783488485990-2538-rook-ceph.cephfs.csi.ceph.com
+      subvolumeName: csi-vol-9470b1de-3507-4006-bafa-57ec63726084
+      subvolumePath: /volumes/csi/csi-vol-9470b1de-3507-4006-bafa-57ec63726084/f5dcb94f-089d-4f10-90ed-371a9faefe3e
+    volumeHandle: 0001-0009-rook-ceph-0000000000000002-9470b1de-3507-4006-bafa-57ec63726084
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: cephfs-bulk
+  volumeMode: Filesystem
