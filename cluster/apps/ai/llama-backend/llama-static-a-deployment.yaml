@@ -2,12 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: llama-static-a
+  annotations:
+    # Temporary recovery ordering: release the terminating model-cache PVC.
+    argocd.argoproj.io/sync-wave: "-30"
   labels:
     app: llama-static-a
     app.kubernetes.io/component: model-worker
     app.kubernetes.io/part-of: llama-backend
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   revisionHistoryLimit: 2
