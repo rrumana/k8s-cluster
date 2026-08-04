@@ -201,8 +201,10 @@ SHA-256 digest.
 
 The before-starting hook is idempotent, reads the client secret from an
 environment variable, maps the stable `sub` claim to the Nextcloud UID, and
-rejects users outside `app-nextcloud`. Multiple login backends remain enabled
-for local-administrator recovery.
+rejects users outside `app-nextcloud`. Normal login redirects directly to
+Authentik. The local administrator remains available for break-glass recovery
+at `https://nextcloud.rcrumana.xyz/login?direct=1`; keep its password offline
+and test this path after identity changes.
 
 Rollback by removing the supplemental values file and restoring the private
 Ingress.

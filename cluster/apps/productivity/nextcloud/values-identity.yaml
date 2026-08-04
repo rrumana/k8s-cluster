@@ -1,5 +1,6 @@
-# Supplemental values for the Authentik-backed Nextcloud pilot.
-# Local Nextcloud authentication remains enabled as a recovery path.
+# Supplemental values for Authentik-backed Nextcloud authentication.
+# Normal login redirects to Authentik. The local administrator remains
+# available for break-glass recovery through /login?direct=1.
 
 # The hook ConfigMap is emitted at Argo CD's default wave. Start the
 # Deployment afterward so its required hook volume exists before scheduling.
@@ -70,4 +71,4 @@ nextcloud:
         --group-whitelist-regex='/^app-nextcloud$/' \
         --group-restrict-login-to-whitelist=1
       php /var/www/html/occ config:app:set user_oidc \
-        allow_multiple_user_backends --type=string --value=1
+        allow_multiple_user_backends --type=string --value=0
