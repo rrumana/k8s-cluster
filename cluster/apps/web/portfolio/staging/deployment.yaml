@@ -23,6 +23,12 @@ spec:
     spec:
       serviceAccountName: portfolio-staging
       automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -32,8 +38,17 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: portfolio
-          image: harbor.rcrumana.xyz/apps-private/portfolio@sha256:b610be8cbb74584eb2838e534643c9f773807569e614f13cf67e0bd9b1b9ef88
+          image: harbor.rcrumana.xyz/apps-private/portfolio@sha256:ed8ce6ccc5bf770d61148a7d35d3fd1e6c54993d73f6da0073d2a925382816da
           imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           env:
             - name: RUST_LOG
               value: "info"
