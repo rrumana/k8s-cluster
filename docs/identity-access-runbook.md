@@ -136,9 +136,10 @@ forced update test and alerting.
    address, and expire in 72 hours.
 8. Complete email verification, password setup, passkey registration, TOTP
    authenticator registration, and recovery-code generation.
-9. Verify passkey-first login and password plus TOTP/recovery fallback. Email
-   remains an account-recovery and verification channel, not a normal MFA
-   factor.
+9. Verify passkey-first login and password plus TOTP, email OTP, and recovery
+   code fallbacks. Authentik may prefer the last successfully used fallback on
+   a later password login, so verify that the user can explicitly select every
+   enrolled method.
 10. Verify `/if/admin/` is unavailable from a public source but available
     through Headscale.
 
