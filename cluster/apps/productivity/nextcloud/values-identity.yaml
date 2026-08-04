@@ -1,6 +1,11 @@
 # Supplemental values for the Authentik-backed Nextcloud pilot.
 # Local Nextcloud authentication remains enabled as a recovery path.
 
+# The hook ConfigMap is emitted at Argo CD's default wave. Start the
+# Deployment afterward so its required hook volume exists before scheduling.
+deploymentAnnotations:
+  argocd.argoproj.io/sync-wave: "10"
+
 image:
   registry: harbor.rcrumana.xyz
   repository: apps-private/nextcloud
