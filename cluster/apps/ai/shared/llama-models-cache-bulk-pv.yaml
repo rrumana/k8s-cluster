@@ -16,7 +16,6 @@ spec:
     kind: PersistentVolumeClaim
     name: llama-models-cache-bulk
     namespace: ai
-    uid: ca7fd713-8d74-49bb-b420-1a8b9ee4f80a
   csi:
     controllerExpandSecretRef:
       name: rook-csi-cephfs-provisioner
