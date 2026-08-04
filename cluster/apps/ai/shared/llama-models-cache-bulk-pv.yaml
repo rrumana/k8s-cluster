@@ -3,9 +3,9 @@ kind: PersistentVolume
 metadata:
   name: pvc-ca7fd713-8d74-49bb-b420-1a8b9ee4f80a
   annotations:
-    # This PV is a recovery anchor for the terminating llama-models-cache-bulk
-    # claim. Never prune the underlying CephFS subvolume with the Argo app.
-    argocd.argoproj.io/sync-options: Prune=false
+    # This adopted PV is the durable identity of the existing CephFS model
+    # cache. Do not prune it during sync or delete it with the Argo app.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   accessModes:
     - ReadWriteMany

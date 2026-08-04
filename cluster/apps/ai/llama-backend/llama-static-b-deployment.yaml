@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/part-of: llama-backend
 spec:
   replicas: 1
+  # Cold CephFS-backed model loads can take more than ten minutes.
+  progressDeadlineSeconds: 1800
   strategy:
     type: Recreate
   revisionHistoryLimit: 2
@@ -160,15 +162,19 @@ spec:
               memory: "4Gi"
               amd.com/gpu: "1"
           startupProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: http
             failureThreshold: 180
             periodSeconds: 10
+            timeoutSeconds: 2
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 2
           livenessProbe:
             tcpSocket:
               port: http

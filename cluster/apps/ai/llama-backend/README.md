@@ -33,6 +33,13 @@ Model storage:
 - The claim uses `cephfs-bulk`, the EC 2:1 data pool on the retained `cephfs`
   filesystem. Model files are immutable/reconstructable bulk data and do not
   belong on the replicated CephFS pool.
+- The claim is pinned to a Git-managed, adopted PV with reclaim policy `Retain`.
+  Its PV name, CSI volume handle, subvolume name, and subvolume path identify
+  the existing CephFS cache and must not be regenerated or replaced unless the
+  cache is being deliberately migrated.
+- Argo must not prune or delete either the adopted PV or its claim. If the claim
+  is ever replaced, rebind the retained PV through a staged GitOps change; do
+  not allow the storage class to provision an empty replacement.
 - The models were migrated off the retired legacy `ceph-filesystem-data0`
   surface. Do not reintroduce that filesystem or the old claim name when adding
   a worker; mount `llama-models-cache-bulk` instead.
