@@ -614,6 +614,7 @@ data:
           expression: |
             legacy_uids = {
                 "b1ff6934-ecb9-4235-9260-cdaaf13e90a0": "Ryan_and_Kaylee",
+                "c582b58e-fc7d-446e-9a18-7c75d97c8801": "admin",
             }
             authentik_uuid = str(request.user.uuid)
             return {
