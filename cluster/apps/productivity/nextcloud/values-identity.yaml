@@ -1,6 +1,5 @@
-# Staged supplemental values for the Authentik cutover.
-# Do not add this file to the Argo CD valueFiles list until the prerequisites in
-# docs/identity-access-runbook.md are complete.
+# Supplemental values for the Authentik-backed Nextcloud pilot.
+# Local Nextcloud authentication remains enabled as a recovery path.
 
 image:
   registry: harbor.rcrumana.xyz

@@ -17,6 +17,7 @@ spec:
         releaseName: nextcloud
         valueFiles:
           - $values/cluster/apps/productivity/nextcloud/values.yaml
+          - $values/cluster/apps/productivity/nextcloud/values-identity.yaml
     - repoURL: https://github.com/rrumana/k8s-homelab-2.git
       targetRevision: main
       ref: values
