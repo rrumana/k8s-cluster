@@ -604,6 +604,22 @@ data:
                 "groups": [group.name for group in request.user.groups.all()],
             }
 
+      - model: authentik_providers_oauth2.scopemapping
+        id: nextcloud-uid-scope
+        identifiers:
+          name: Rcrumana Nextcloud UID
+        attrs:
+          scope_name: nextcloud
+          description: Stable Nextcloud UID with explicit legacy account links
+          expression: |
+            legacy_uids = {
+                "b1ff6934-ecb9-4235-9260-cdaaf13e90a0": "Ryan_and_Kaylee",
+            }
+            authentik_uuid = str(request.user.uuid)
+            return {
+                "nextcloud_uid": legacy_uids.get(authentik_uuid, authentik_uuid),
+            }
+
       - model: authentik_providers_oauth2.oauth2provider
         id: immich-provider
         identifiers:
@@ -714,6 +730,7 @@ data:
               - authentik_providers_oauth2.scopemapping
               - [managed, goauthentik.io/providers/oauth2/scope-offline_access]
             - !KeyOf groups-scope
+            - !KeyOf nextcloud-uid-scope
           signing_key: !Find
             - authentik_crypto.certificatekeypair
             - [name, authentik Self-signed Certificate]
