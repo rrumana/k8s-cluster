@@ -56,7 +56,7 @@ nextcloud:
         --clientsecret-env=NEXTCLOUD_OIDC_CLIENT_SECRET \
         --discoveryuri="https://auth.rcrumana.xyz/application/o/nextcloud/.well-known/openid-configuration" \
         --postlogouturi="https://nextcloud.rcrumana.xyz/login" \
-        --scope="openid email profile" \
+        --scope="openid email profile groups" \
         --unique-uid=1 \
         --mapping-uid=sub \
         --mapping-email=email \

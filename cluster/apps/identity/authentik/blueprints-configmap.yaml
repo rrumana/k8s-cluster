@@ -273,7 +273,9 @@ data:
           friendly_name: Platform passkey
           user_verification: required
           resident_key_requirement: required
+          authenticator_attachment: null
           prevent_duplicate_devices: true
+          hints: []
           max_attempts: 5
 
       - model: authentik_stages_authenticator_email.authenticatoremailstage
@@ -282,8 +284,8 @@ data:
           name: rcrumana-enrollment-email-otp
         attrs:
           # Retain a confirmed EmailDevice as the durable email-verification
-          # signal used by the OIDC claims mapping. Email devices are not
-          # accepted by the normal authentication or recovery MFA stages.
+          # signal used by the OIDC claims mapping. Email is allowed only as a
+          # password-login fallback and is not accepted by recovery MFA.
           friendly_name: Verified email (recovery only)
           use_global_settings: true
           token_expiry: minutes=10
@@ -389,6 +391,7 @@ data:
             - email
             - static
           webauthn_user_verification: required
+          webauthn_hints: []
 
       - model: authentik_stages_identification.identificationstage
         identifiers:
@@ -710,6 +713,7 @@ data:
             - !Find
               - authentik_providers_oauth2.scopemapping
               - [managed, goauthentik.io/providers/oauth2/scope-offline_access]
+            - !KeyOf groups-scope
           signing_key: !Find
             - authentik_crypto.certificatekeypair
             - [name, authentik Self-signed Certificate]
