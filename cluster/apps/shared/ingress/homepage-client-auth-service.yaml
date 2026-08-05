@@ -10,3 +10,19 @@ spec:
     - name: http
       port: 80
       targetPort: 80
+---
+# Keep HAProxy's internal auth subrequest on a backend that is not shared with
+# an HTTPS ingress. Reusing authentik-server's ingress backend causes the local
+# HTTP auth check to be redirected before it reaches Authentik.
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-forward-auth
+  namespace: productivity
+spec:
+  type: ExternalName
+  externalName: authentik-server.identity.svc.cluster.local
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
