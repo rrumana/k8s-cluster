@@ -13,6 +13,11 @@ metadata:
     haproxy-ingress.github.io/timeout-client: "3600s"
     haproxy-ingress.github.io/timeout-server: "3600s"
     haproxy-ingress.github.io/proxy-body-size: "0"
+    haproxy-ingress.github.io/config-backend: |
+      acl is_login_path path_reg -i ^/(index\.php/)?login/?$
+      acl has_direct_login_parameter url_param(direct) -m found
+      acl is_private_client src 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 100.64.0.0/10
+      http-request deny deny_status 403 if is_login_path has_direct_login_parameter !is_private_client
 spec:
   ingressClassName: haproxy
   tls:

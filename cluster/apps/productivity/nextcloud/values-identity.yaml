@@ -72,3 +72,29 @@ nextcloud:
         --group-restrict-login-to-whitelist=1
       php /var/www/html/occ config:app:set user_oidc \
         allow_multiple_user_backends --type=string --value=0
+
+      # Keep public sharing broadly available without weakening authentication
+      # or user-directory privacy. Passwords and expirations remain available
+      # to share owners but are not mandatory defaults.
+      php /var/www/html/occ config:app:set core \
+        shareapi_enabled --type=string --value=yes
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_links --type=string --value=yes
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_public_upload --type=string --value=yes
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_resharing --type=string --value=yes
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_federation_on_public_shares --type=boolean --value=true
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_custom_tokens --type=boolean --value=true
+      php /var/www/html/occ config:app:set core \
+        shareapi_allow_view_without_download --type=boolean --value=true
+      php /var/www/html/occ config:app:set core \
+        shareapi_enable_link_password_by_default --type=boolean --value=false
+      php /var/www/html/occ config:app:set core \
+        shareapi_enforce_links_password --type=boolean --value=false
+      php /var/www/html/occ config:app:set core \
+        shareapi_default_expire_date --type=boolean --value=false
+      php /var/www/html/occ config:app:set core \
+        shareapi_enforce_expire_date --type=boolean --value=false

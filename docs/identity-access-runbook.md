@@ -204,7 +204,17 @@ environment variable, maps the stable `sub` claim to the Nextcloud UID, and
 rejects users outside `app-nextcloud`. Normal login redirects directly to
 Authentik. The local administrator remains available for break-glass recovery
 at `https://nextcloud.rcrumana.xyz/login?direct=1`; keep its password offline
-and test this path after identity changes.
+and test this path after identity changes. HAProxy permits that direct-login
+query only from RFC1918 LAN addresses and the Headscale `100.64.0.0/10` range;
+public clients receive HTTP 403 before the request reaches Nextcloud.
+
+The chart mounts a pod-local `emptyDir` at `/tmp/nextcloud-temp` in both the web
+and cron containers. A least-capability init container recreates it as UID/GID
+33 with mode `0700` before every pod start. The identity hook also declares the
+public-share policy idempotently: link sharing, public uploads, resharing,
+federation, custom tokens, and view-without-download are available, while link
+passwords and expiry dates remain optional. User-enumeration controls are not
+relaxed by this policy.
 
 Rollback by removing the supplemental values file and restoring the private
 Ingress.

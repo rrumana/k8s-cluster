@@ -53,6 +53,40 @@ nextcloud:
         'tempdirectory' => '/tmp/nextcloud-temp',
       );
 
+  # Give the web and cron containers the same disposable, pod-local temp
+  # directory. An init container below creates it with private permissions on
+  # every pod start before either application container can use it.
+  extraVolumes:
+    - name: nextcloud-temp
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: nextcloud-temp
+      mountPath: /tmp/nextcloud-temp
+  extraInitContainers:
+    - name: prepare-nextcloud-temp
+      image: harbor.rcrumana.xyz/mirror/library/busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -ec
+      args:
+        - |-
+          mkdir -p /tmp/nextcloud-temp
+          chmod 0700 /tmp/nextcloud-temp
+          chown 33:33 /tmp/nextcloud-temp
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - CHOWN
+      volumeMounts:
+        - name: nextcloud-temp
+          mountPath: /tmp/nextcloud-temp
+
 phpClientHttpsFix:
   enabled: true
   protocol: https
