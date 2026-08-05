@@ -1,4 +1,4 @@
-apiVersion: policy.linkerd.io/v1beta1
+apiVersion: policy.linkerd.io/v1beta3
 kind: Server
 metadata:
   name: whiteboard
@@ -9,7 +9,7 @@ spec:
   port: http
   proxyProtocol: HTTP/1
 ---
-apiVersion: policy.linkerd.io/v1beta1
+apiVersion: policy.linkerd.io/v1beta3
 kind: Server
 metadata:
   name: elasticsearch-http
@@ -32,6 +32,37 @@ spec:
       name: nextcloud
 ---
 apiVersion: policy.linkerd.io/v1alpha1
+kind: MeshTLSAuthentication
+metadata:
+  name: whiteboard-nextcloud-clients
+spec:
+  identityRefs:
+    - kind: ServiceAccount
+      name: default
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: NetworkAuthentication
+metadata:
+  name: whiteboard-ingress-network
+spec:
+  networks:
+    - cidr: 10.44.0.0/16
+---
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: whiteboard-ingress-clients
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: whiteboard
+  requiredAuthenticationRefs:
+    - group: policy.linkerd.io
+      kind: NetworkAuthentication
+      name: whiteboard-ingress-network
+---
+apiVersion: policy.linkerd.io/v1alpha1
 kind: AuthorizationPolicy
 metadata:
   name: whiteboard-nextcloud-clients
@@ -43,7 +74,7 @@ spec:
   requiredAuthenticationRefs:
     - group: policy.linkerd.io
       kind: MeshTLSAuthentication
-      name: nextcloud-architecture-clients
+      name: whiteboard-nextcloud-clients
 ---
 apiVersion: policy.linkerd.io/v1alpha1
 kind: AuthorizationPolicy

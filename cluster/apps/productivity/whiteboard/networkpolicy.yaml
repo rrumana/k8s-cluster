@@ -1,0 +1,29 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: whiteboard-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: whiteboard
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: ingress-haproxy
+            k8s:app.kubernetes.io/name: haproxy-ingress
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+            k8s:app.kubernetes.io/instance: nextcloud
+      toPorts:
+        - ports:
+            - port: "3002"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: service-mesh
+      toPorts:
+        - ports:
+            - port: "4191"
+              protocol: TCP

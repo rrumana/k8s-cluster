@@ -4,6 +4,8 @@ kind: Kustomization
 namespace: productivity
 
 resources:
+  - externalsecret.yaml
+  - networkpolicy.yaml
   - serviceaccount.yaml
   - deployment.yaml
   - service.yaml

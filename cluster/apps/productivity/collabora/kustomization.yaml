@@ -4,6 +4,8 @@ kind: Kustomization
 namespace: productivity
 
 resources:
+  - linkerd-policy.yaml
+  - networkpolicy.yaml
   - serviceaccount.yaml
   - deployment.yaml
   - service.yaml

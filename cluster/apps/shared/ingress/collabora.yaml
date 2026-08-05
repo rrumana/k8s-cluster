@@ -4,15 +4,21 @@ metadata:
   name: collabora
   namespace: productivity
   labels:
-    security.rcrumana.xyz/exposure: private
+    security.rcrumana.xyz/exposure: public
+    security.rcrumana.xyz/public-approved: "true"
+    security.rcrumana.xyz/public-edge: direct
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/backend-protocol: "http"
     haproxy-ingress.github.io/timeout-client: "600s"
     haproxy-ingress.github.io/timeout-server: "600s"
-    haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10"
+    haproxy-ingress.github.io/config-backend: |
+      acl is_admin_path path_beg -i /adminws /cool/adminws /cool/getMetrics
+      acl is_admin_path path_reg -i ^/browser/([^/]+/)?admin(/|$)
+      acl is_private_client src 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 100.64.0.0/10
+      http-request deny deny_status 403 if is_admin_path !is_private_client
 spec:
-  ingressClassName: haproxy-restricted
+  ingressClassName: haproxy
   tls:
     - hosts:
         - collabora.rcrumana.xyz

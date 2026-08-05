@@ -13,24 +13,54 @@ spec:
       labels: { app: whiteboard }
     spec:
       serviceAccountName: whiteboard
+      securityContext:
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-        - name: wbo
-          image: harbor.rcrumana.xyz/proxy-dockerhub/lovasoa/wbo:v2.16.0
+        - name: whiteboard
+          image: harbor.rcrumana.xyz/proxy-ghcr/nextcloud-releases/whiteboard:stable@sha256:ba9fb41ab8a79284b4bfab92f6169a376d2c8e1d32f3d4434d14b8f299102a97
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
-              value: "5001"
+              value: "3002"
+            - name: TLS
+              value: "false"
+            - name: NEXTCLOUD_URL
+              value: "https://nextcloud.rcrumana.xyz"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: whiteboard-jwt
+                  key: jwt-secret
           ports:
             - name: http
-              containerPort: 5001
+              containerPort: 3002
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            httpGet: { path: /, port: http }
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet: { path: /, port: http }
-            initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet: { path: /, port: http }
-            initialDelaySeconds: 30
             periodSeconds: 30
           resources:
-            requests: { cpu: 50m, memory: 128Mi }
-            limits:   { cpu: "500m", memory: 512Mi }
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "2", memory: 2Gi }
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

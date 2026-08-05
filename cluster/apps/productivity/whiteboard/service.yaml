@@ -9,4 +9,4 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 5001
+      targetPort: 3002

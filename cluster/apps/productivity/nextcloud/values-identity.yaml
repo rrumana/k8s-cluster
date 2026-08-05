@@ -49,6 +49,11 @@ nextcloud:
         secretKeyRef:
           name: nextcloud-mail
           key: password
+    - name: WHITEBOARD_JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: nextcloud-identity
+          key: whiteboard-jwt-secret
 
   hooks:
     before-starting: |-
@@ -98,3 +103,12 @@ nextcloud:
         shareapi_default_expire_date --type=boolean --value=false
       php /var/www/html/occ config:app:set core \
         shareapi_enforce_expire_date --type=boolean --value=false
+
+      # The browser connects directly to the collaboration WebSocket server.
+      # Nextcloud signs each connection with the same Vault-backed secret that
+      # the backend uses to validate it.
+      php /var/www/html/occ app:enable whiteboard
+      php /var/www/html/occ config:app:set whiteboard \
+        collabBackendUrl --type=string --value="https://whiteboard.rcrumana.xyz"
+      php /var/www/html/occ config:app:set whiteboard \
+        jwt_secret_key --type=string --sensitive --value="${WHITEBOARD_JWT_SECRET}"
