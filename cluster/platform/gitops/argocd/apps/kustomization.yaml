@@ -43,6 +43,7 @@ resources:
   - collabora-app.yaml
   - elasticsearch-app.yaml
   - homepage-app.yaml
+  - homepage-client-app.yaml
   - hypermind-app.yaml
   - jellyfin-app.yaml
   - librechat-app.yaml

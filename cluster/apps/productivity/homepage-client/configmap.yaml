@@ -1,0 +1,511 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-client-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+data:
+  kubernetes.yaml: |
+    mode: cluster
+    ingress: true
+    gateway: true
+  proxmox.yaml: ""
+  settings.yaml: |
+    title: Rcrumana Services
+    description: Client services dashboard
+    language: en
+    target: _blank
+    theme: dark
+    color: slate
+    headerStyle: clean
+    hideVersion: true
+    disableUpdateCheck: true
+    disableIndexing: true
+    hideInternetSearch: true
+    hideVisitURL: true
+    background:
+      image: /images/dashboard-background.svg
+      blur: sm
+      saturate: 70
+      brightness: 65
+      opacity: 90
+    cardBlur: md
+    statusStyle: dot
+    useEqualHeights: true
+    layout:
+      Overview:
+        header: false
+        style: row
+        columns: 2
+        Calendar:
+          header: false
+          style: column
+          columns: 1
+        Hosted Services:
+          header: false
+          style: column
+          columns: 1
+      Services:
+        style: row
+        columns: 4
+      Nodes:
+        style: row
+        columns: 3
+  services.yaml: |
+    - Overview:
+        - Calendar:
+            - Calendar:
+                icon: mdi-calendar-month
+                widget:
+                  type: calendar
+                  view: monthly
+                  maxEvents: 12
+                  showTime: true
+                  timezone: America/Los_Angeles
+                  integrations:
+                    - type: sonarr
+                      service_group: Hosted Services
+                      service_name: Calendar Sonarr
+                      color: teal
+                    - type: radarr
+                      service_group: Hosted Services
+                      service_name: Calendar Radarr
+                      color: amber
+                    - type: lidarr
+                      service_group: Hosted Services
+                      service_name: Calendar Lidarr
+                      color: purple
+        - Hosted Services:
+            - Portfolio:
+                icon: mdi-web
+                href: https://rcrumana.xyz
+                description: Public portfolio
+                namespace: web
+                app: portfolio
+            - Portfolio Staging:
+                icon: mdi-web
+                href: https://staging.rcrumana.xyz
+                description: Staging portfolio
+                namespace: web
+                app: portfolio-staging
+            # Homepage's calendar resolves integrations through service widgets.
+            # These source cards remain in the config but are hidden by custom.css.
+            - Calendar Sonarr:
+                widget:
+                  type: sonarr
+                  url: http://sonarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
+            - Calendar Radarr:
+                widget:
+                  type: radarr
+                  url: http://radarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
+            - Calendar Lidarr:
+                widget:
+                  type: lidarr
+                  url: http://lidarr.media.svc.cluster.local
+                  key: "{{HOMEPAGE_VAR_LIDARR_API_KEY}}"
+                  fields: []
+                  hideErrors: true
+
+    - Services:
+        - Jellyfin:
+            icon: jellyfin.png
+            href: https://jellyfin.rcrumana.xyz
+            description: Media server
+            namespace: media
+            app: jellyfin
+            widget:
+              type: jellyfin
+              url: http://jellyfin.media.svc.cluster.local:8096
+              key: "{{HOMEPAGE_VAR_JELLYFIN_API_KEY}}"
+              version: 2
+              enableBlocks: true
+              enableNowPlaying: false
+              enableUser: true
+              enableMediaControl: true
+              fields: ["movies", "series", "episodes"]
+              hideErrors: true
+        - Jellyseerr:
+            icon: jellyseerr.png
+            href: https://jellyseerr.rcrumana.xyz
+            description: Media requests
+            namespace: media
+            podSelector: app=arr-stack
+            widget:
+              type: seerr
+              url: http://jellyseerr.media.svc.cluster.local
+              key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
+              fields: ["pending", "approved", "processing", "issues"]
+              hideErrors: true
+        - Immich:
+            icon: immich.png
+            href: https://immich.rcrumana.xyz
+            description: Photo library
+            namespace: media
+            app: immich
+            widget:
+              type: immich
+              url: http://immich-server.media.svc.cluster.local:2283
+              key: "{{HOMEPAGE_VAR_IMMICH_API_KEY}}"
+              version: 2
+              fields: ["photos", "videos", "storage"]
+              hideErrors: true
+        - Nextcloud:
+            icon: nextcloud.png
+            href: https://nextcloud.rcrumana.xyz
+            description: Files and collaboration
+            namespace: productivity
+            app: nextcloud
+            widget:
+              type: nextcloud
+              url: http://nextcloud.productivity.svc.cluster.local:8080
+              username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
+              password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
+              fields: ["numfiles"]
+              hideErrors: true
+        - LibreChat:
+            icon: librechat.png
+            href: https://chat.rcrumana.xyz
+            description: AI chat frontend
+            namespace: ai
+            app: librechat
+        - Vaultwarden:
+            icon: vaultwarden.png
+            href: https://vault.rcrumana.xyz
+            description: Password vault
+            namespace: productivity
+            app: vaultwarden
+        - Hypermind:
+            icon: mdi-brain
+            href: https://hypermind.rcrumana.xyz
+            description: Shared map and chat
+            namespace: other
+            app: hypermind
+            widget:
+              type: customapi
+              url: http://hypermind.other.svc.cluster.local/api/stats
+              refreshInterval: 30000
+              mappings:
+                - field: peers
+                  label: Peers
+                  format: size
+                - field: totalUnique
+                  label: Known
+                  format: number
+                - field: diagnostics.heartbeatsReceived
+                  label: Received
+                  format: number
+                - field: diagnostics.heartbeatsRelayed
+                  label: Relayed
+                  format: number
+              hideErrors: true
+        - Uptime Kuma:
+            icon: uptime-kuma.png
+            href: https://uptime.rcrumana.xyz
+            description: Service uptime checks
+            namespace: productivity
+            app: uptime-kuma
+
+    - Nodes:
+        - melchior-1:
+            icon: mdi-server
+            description: Control plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: &node_health_highlights
+                Ready:
+                  numeric:
+                    - level: danger
+                      when: eq
+                      value: 0
+                    - level: good
+                      when: eq
+                      value: 100
+                CPU:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 95
+                    - level: warn
+                      when: gte
+                      value: 80
+                RAM:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 95
+                    - level: warn
+                      when: gte
+                      value: 85
+                Temp:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 90
+                    - level: warn
+                      when: gte
+                      value: 80
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="melchior-1",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="melchior-1"}[2m]) / on(node) kube_node_status_capacity{node="melchior-1",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="melchior-1"} / on(node) kube_node_status_capacity{node="melchior-1",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.13:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+        - balthasar-2:
+            icon: mdi-server
+            description: Control plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: *node_health_highlights
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="balthasar-2",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="balthasar-2"}[2m]) / on(node) kube_node_status_capacity{node="balthasar-2",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="balthasar-2"} / on(node) kube_node_status_capacity{node="balthasar-2",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.14:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+        - casper-3:
+            icon: mdi-server
+            description: Control plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: *node_health_highlights
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="casper-3",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="casper-3"}[2m]) / on(node) kube_node_status_capacity{node="casper-3",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="casper-3"} / on(node) kube_node_status_capacity{node="casper-3",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.15:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+        - eva-1:
+            icon: mdi-server
+            description: Storage plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: *node_health_highlights
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="eva-1",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="eva-1"}[2m]) / on(node) kube_node_status_capacity{node="eva-1",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="eva-1"} / on(node) kube_node_status_capacity{node="eva-1",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.16:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+        - eva-2:
+            icon: mdi-server
+            description: Storage plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: *node_health_highlights
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="eva-2",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="eva-2"}[2m]) / on(node) kube_node_status_capacity{node="eva-2",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="eva-2"} / on(node) kube_node_status_capacity{node="eva-2",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.17:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+        - eva-3:
+            icon: mdi-server
+            description: Storage plane
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight: *node_health_highlights
+              metrics:
+                - label: Ready
+                  query: 'kube_node_status_condition{node="eva-3",condition="Ready",status="true"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: CPU
+                  query: 'rate(node_cpu_usage_seconds_total{node="eva-3"}[2m]) / on(node) kube_node_status_capacity{node="eva-3",resource="cpu",unit="core"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: RAM
+                  query: 'node_memory_working_set_bytes{node="eva-3"} / on(node) kube_node_status_capacity{node="eva-3",resource="memory",unit="byte"}'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Temp
+                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.18:9100",chip=~"pci.*18_3"})'
+                  format:
+                    type: number
+                    suffix: " °C"
+                    options:
+                      maximumFractionDigits: 0
+
+  bookmarks.yaml: ""
+  widgets.yaml: ""
+  docker.yaml: ""
+  custom.css: |
+    /* Translucent cards keep the background visible without sacrificing contrast. */
+    .service-card {
+      background-color: rgba(15, 23, 42, 0.56) !important;
+      border: 1px solid rgba(148, 163, 184, 0.18) !important;
+      box-shadow: 0 12px 30px rgba(2, 6, 23, 0.24) !important;
+      transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .service-card:hover {
+      background-color: rgba(15, 23, 42, 0.68) !important;
+      border-color: rgba(56, 189, 248, 0.34) !important;
+      transform: translateY(-1px);
+    }
+
+    #information-widgets {
+      border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+
+    /* Calendar integrations require service widgets, but clients do not need ARR cards. */
+    .service[data-name="Calendar Sonarr"],
+    .service[data-name="Calendar Radarr"],
+    .service[data-name="Calendar Lidarr"] {
+      display: none !important;
+    }
+
+    /* Theme and color are fixed, so the remaining footer controls are unnecessary. */
+    #footer {
+      display: none !important;
+    }
+
+    /* Keep short nested columns aligned with the calendar column. */
+    @media (min-width: 768px) {
+      #layout-groups .services-group.subgroup > div,
+      #layout-groups .services-group.subgroup > div > .services-list {
+        height: 100%;
+      }
+    }
+  custom.js: ""

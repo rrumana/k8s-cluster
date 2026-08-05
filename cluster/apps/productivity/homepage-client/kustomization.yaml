@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: productivity
+
+resources:
+  - serviceaccount.yaml
+  - rbac.yaml
+  - externalsecret.yaml
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - pdb.yaml
+  - vpa.yaml
+
+configMapGenerator:
+  - name: homepage-client-assets
+    files:
+      - background.svg=assets/dashboard-background.svg
+    options:
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
+
+commonLabels:
+  app.kubernetes.io/name: homepage-client
+  app.kubernetes.io/managed-by: argocd

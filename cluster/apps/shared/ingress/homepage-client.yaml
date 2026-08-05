@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage-client
+  namespace: productivity
+  labels:
+    security.rcrumana.xyz/exposure: private
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    haproxy-ingress.github.io/affinity: "cookie"
+    haproxy-ingress.github.io/backend-protocol: "http"
+    haproxy-ingress.github.io/session-cookie-domain: "dashboard.rcrumana.xyz"
+    haproxy-ingress.github.io/session-cookie-name: "homepage-client"
+    haproxy-ingress.github.io/ssl-redirect: "true"
+    haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10"
+    haproxy-ingress.github.io/config-backend: |
+      http-response set-header X-Robots-Tag "noindex, nofollow"
+spec:
+  ingressClassName: haproxy-restricted
+  tls:
+    - hosts:
+        - dashboard.rcrumana.xyz
+      secretName: dashboard-rcrumana-xyz-tls
+  rules:
+    - host: dashboard.rcrumana.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage-client
+                port:
+                  number: 80
