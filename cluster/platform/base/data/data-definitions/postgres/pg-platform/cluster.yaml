@@ -50,7 +50,7 @@ spec:
         createdb: false
         createrole: false
         replication: false
-        connectionLimit: 40
+        connectionLimit: 100
         passwordSecret:
           name: authentik-postgres-role
 
