@@ -594,10 +594,23 @@ data:
           description: Immich role and quota
           expression: |
             is_admin = request.user.groups.filter(name="platform-admins").exists()
-            return {
+            claims = {
                 "immich_role": "admin" if is_admin else "user",
                 "immich_quota": 0,
             }
+
+            # Preserve the existing local Immich administrator. Immich links an
+            # unclaimed local account to OIDC by exact email on first login;
+            # the Authentik admin identity intentionally uses a different
+            # recovery address, so expose this app-local legacy address only to
+            # Immich for the known admin UUID.
+            if str(request.user.uuid) == "c582b58e-fc7d-446e-9a18-7c75d97c8801":
+                claims.update({
+                    "email": "immich-admin@rcrumana.xyz",
+                    "email_verified": True,
+                })
+
+            return claims
 
       - model: authentik_providers_oauth2.scopemapping
         id: groups-scope
