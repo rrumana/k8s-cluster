@@ -1,12 +1,15 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: librechat-oidc-account-reset-20260805
+  name: librechat-oidc-account-reset-20260805-v2
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
   backoffLimit: 2
   template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
     spec:
       serviceAccountName: librechat
       restartPolicy: Never
