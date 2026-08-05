@@ -1,26 +1,18 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: uptime-kuma
+  name: uptime-kuma-auth
   namespace: productivity
   labels:
     security.rcrumana.xyz/exposure: public
     security.rcrumana.xyz/public-approved: "true"
     security.rcrumana.xyz/public-edge: direct
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/backend-protocol: "http"
-    haproxy-ingress.github.io/auth-url: "svc://productivity/authentik-forward-auth:80/outpost.goauthentik.io/auth/nginx"
-    haproxy-ingress.github.io/auth-signin: "https://uptime.rcrumana.xyz/outpost.goauthentik.io/start?rd=%[url]"
-    haproxy-ingress.github.io/auth-method: "GET"
-    haproxy-ingress.github.io/auth-headers-request: "cookie,x-forwarded-host,x-forwarded-proto,x-original-url,x-original-method,user-agent,accept"
-    haproxy-ingress.github.io/auth-headers-succeed: "x-authentik-username,x-authentik-groups,x-authentik-entitlements,x-authentik-email,x-authentik-name,x-authentik-uid,x-authentik-meta-app,x-authentik-meta-provider,x-authentik-meta-outpost,x-authentik-meta-version"
     haproxy-ingress.github.io/ssl-redirect: "true"
     haproxy-ingress.github.io/config-backend-early: |
-      http-request del-header X-Original-URI
       http-request set-header X-Forwarded-Host %[req.hdr(host)]
       http-request set-header X-Forwarded-Proto https
-      http-request set-header X-Original-Method %[method]
       http-request set-header X-Original-URL https://%[req.hdr(host)]%[url]
     haproxy-ingress.github.io/config-backend: |
       http-response set-header X-Robots-Tag "noindex, nofollow"
@@ -34,10 +26,10 @@ spec:
     - host: uptime.rcrumana.xyz
       http:
         paths:
-          - path: /
+          - path: /outpost.goauthentik.io
             pathType: Prefix
             backend:
               service:
-                name: uptime-kuma
+                name: authentik-embedded-outpost
                 port:
                   number: 80

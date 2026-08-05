@@ -48,6 +48,12 @@ data:
 
       - model: authentik_core.group
         identifiers:
+          name: app-uptime-kuma
+        attrs:
+          is_superuser: false
+
+      - model: authentik_core.group
+        identifiers:
           name: headscale-users
         attrs:
           is_superuser: false
@@ -227,6 +233,7 @@ data:
                 "app-hypermind",
                 "app-immich",
                 "app-nextcloud",
+                "app-uptime-kuma",
                 "headscale-users",
                 "platform-admins",
             }
@@ -909,6 +916,41 @@ data:
           group: !Find [authentik_core.group, [name, app-hypermind]]
           order: 0
 
+      - model: authentik_providers_proxy.proxyprovider
+        id: uptime-kuma-provider
+        identifiers:
+          name: Uptime Kuma
+        attrs:
+          authentication_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-authentication-flow]
+          authorization_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-authorization-implicit-consent]
+          invalidation_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-invalidation-flow]
+          external_host: https://uptime.rcrumana.xyz
+          mode: forward_single
+          intercept_header_auth: false
+          access_token_validity: hours=24
+          refresh_token_validity: days=30
+
+      - model: authentik_core.application
+        id: uptime-kuma-application
+        identifiers:
+          slug: uptime-kuma
+        attrs:
+          name: Uptime Kuma
+          provider: !KeyOf uptime-kuma-provider
+          policy_engine_mode: any
+
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf uptime-kuma-application
+          group: !Find [authentik_core.group, [name, app-uptime-kuma]]
+          order: 0
+
       - model: authentik_outposts.outpost
         identifiers:
           name: authentik Embedded Outpost
@@ -916,3 +958,4 @@ data:
           providers:
             - !KeyOf homepage-client-provider
             - !KeyOf hypermind-provider
+            - !KeyOf uptime-kuma-provider

@@ -9,6 +9,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - vpa.yaml
+  - networkpolicy.yaml
 
 commonLabels:
   app.kubernetes.io/name: uptime-kuma

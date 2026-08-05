@@ -26,6 +26,7 @@ resources:
   - sonarr.yaml
   - unifi.yaml
   - uptime-kuma.yaml
+  - uptime-kuma-auth.yaml
   - vaultwarden.yaml
   - whiteboard.yaml
   - portfolio.yaml
