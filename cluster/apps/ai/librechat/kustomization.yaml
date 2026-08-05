@@ -12,7 +12,6 @@ resources:
   - mongodb-pvc.yaml
   - mongodb-service.yaml
   - mongodb-statefulset.yaml
-  - oidc-account-reset-job.yaml
   - meilisearch-pvc.yaml
   - meilisearch-service.yaml
   - meilisearch-statefulset.yaml
