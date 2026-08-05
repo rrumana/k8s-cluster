@@ -121,7 +121,10 @@ spec:
               'identity',
               'media',
               'productivity'
-            ]
+            ] || (
+              request.namespace == 'ai' &&
+              object.metadata.name == 'librechat'
+            )
           : true
       message: Public Ingresses are not permitted in this namespace.
       reason: Forbidden
