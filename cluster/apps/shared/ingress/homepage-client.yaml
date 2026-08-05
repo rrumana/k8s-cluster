@@ -4,7 +4,9 @@ metadata:
   name: homepage-client
   namespace: productivity
   labels:
-    security.rcrumana.xyz/exposure: private
+    security.rcrumana.xyz/exposure: public
+    security.rcrumana.xyz/public-approved: "true"
+    security.rcrumana.xyz/public-edge: direct
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/affinity: "cookie"
@@ -17,7 +19,6 @@ metadata:
     haproxy-ingress.github.io/session-cookie-domain: "dashboard.rcrumana.xyz"
     haproxy-ingress.github.io/session-cookie-name: "homepage-client"
     haproxy-ingress.github.io/ssl-redirect: "true"
-    haproxy-ingress.github.io/allowlist-source-range: "192.168.0.0/16,172.16.0.0/12,10.0.0.0/8,100.64.0.0/10"
     haproxy-ingress.github.io/config-backend-early: |
       http-request set-header X-Forwarded-Host %[req.hdr(host)]
       http-request set-header X-Forwarded-Proto https
@@ -26,7 +27,7 @@ metadata:
     haproxy-ingress.github.io/config-backend: |
       http-response set-header X-Robots-Tag "noindex, nofollow"
 spec:
-  ingressClassName: haproxy-restricted
+  ingressClassName: haproxy
   tls:
     - hosts:
         - dashboard.rcrumana.xyz

@@ -200,9 +200,6 @@ data:
                 - field: diagnostics.heartbeatsReceived
                   label: Received
                   format: number
-                - field: diagnostics.heartbeatsRelayed
-                  label: Relayed
-                  format: number
               hideErrors: true
         - Uptime Kuma:
             icon: uptime-kuma.png
