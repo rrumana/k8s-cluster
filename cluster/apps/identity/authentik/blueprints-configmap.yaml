@@ -42,6 +42,12 @@ data:
 
       - model: authentik_core.group
         identifiers:
+          name: app-hypermind
+        attrs:
+          is_superuser: false
+
+      - model: authentik_core.group
+        identifiers:
           name: headscale-users
         attrs:
           is_superuser: false
@@ -218,6 +224,7 @@ data:
             requested = invitation.fixed_data.get("app_groups", [])
             allowed = {
                 "app-homepage-client",
+                "app-hypermind",
                 "app-immich",
                 "app-nextcloud",
                 "headscale-users",
@@ -867,9 +874,45 @@ data:
           group: !Find [authentik_core.group, [name, app-homepage-client]]
           order: 0
 
+      - model: authentik_providers_proxy.proxyprovider
+        id: hypermind-provider
+        identifiers:
+          name: Hypermind
+        attrs:
+          authentication_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-authentication-flow]
+          authorization_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-authorization-implicit-consent]
+          invalidation_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-invalidation-flow]
+          external_host: https://hypermind.rcrumana.xyz
+          mode: forward_single
+          intercept_header_auth: false
+          access_token_validity: hours=24
+          refresh_token_validity: days=30
+
+      - model: authentik_core.application
+        id: hypermind-application
+        identifiers:
+          slug: hypermind
+        attrs:
+          name: Hypermind
+          provider: !KeyOf hypermind-provider
+          policy_engine_mode: any
+
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf hypermind-application
+          group: !Find [authentik_core.group, [name, app-hypermind]]
+          order: 0
+
       - model: authentik_outposts.outpost
         identifiers:
           name: authentik Embedded Outpost
         attrs:
           providers:
             - !KeyOf homepage-client-provider
+            - !KeyOf hypermind-provider

@@ -12,6 +12,7 @@ resources:
   - homepage-client-auth-service.yaml
   - headscale.yaml
   - hypermind.yaml
+  - hypermind-auth-service.yaml
   - librechat.yaml
   - nextcloud.yaml
   - jellyfin.yaml
