@@ -38,7 +38,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: portfolio
-          image: harbor.rcrumana.xyz/apps-private/portfolio@sha256:f7fb376a4e762406cfa202cd0607e7409c70adfb04877138d6e11a1145be861f
+          image: harbor.rcrumana.xyz/apps-private/portfolio@sha256:db3d02472e5dfdf138fa4c79984c7e6716a646aff68fd6a9dbffa02dd3da2da2
           imagePullPolicy: Always
           securityContext:
             runAsNonRoot: true
