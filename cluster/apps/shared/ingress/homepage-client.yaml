@@ -9,7 +9,7 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/affinity: "cookie"
     haproxy-ingress.github.io/backend-protocol: "http"
-    haproxy-ingress.github.io/auth-url: "svc://identity/authentik-server:80/outpost.goauthentik.io/auth/nginx"
+    haproxy-ingress.github.io/auth-url: "svc://identity/authentik-server:9000/outpost.goauthentik.io/auth/nginx"
     haproxy-ingress.github.io/auth-signin: "https://dashboard.rcrumana.xyz/outpost.goauthentik.io/start?rd=https://dashboard.rcrumana.xyz%[url]"
     haproxy-ingress.github.io/auth-method: "GET"
     haproxy-ingress.github.io/auth-headers-request: "Cookie,X-Forwarded-Host,X-Forwarded-Proto,X-Original-URL,X-Original-Method,User-Agent,Accept"
