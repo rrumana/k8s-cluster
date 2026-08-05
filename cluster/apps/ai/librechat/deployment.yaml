@@ -45,13 +45,22 @@ spec:
               fi
 
               source_bundle="$1"
-              patched_bundle="/patched-client-dist/assets/$(basename "$source_bundle")"
+              source_name="$(basename "$source_bundle")"
+              patched_name="${source_name%.js}.silence-fix.js"
+              patched_bundle="/patched-client-dist/assets/$patched_name"
               cp -a /app/client/dist/. /patched-client-dist/
+              cp "/patched-client-dist/assets/$source_name" "$patched_bundle"
               sed -i \
                 's#src:`assets/silence.mp3`,allow:`autoplay`,id:`audio`,title:`audio-silence`#srcDoc:`<audio autoplay src="/assets/silence.mp3"></audio>`,allow:`autoplay`,id:`audio`,title:`audio-silence`#' \
                 "$patched_bundle"
+              sed -i "s#./assets/$source_name#./assets/$patched_name#" /patched-client-dist/index.html
 
               grep -qF 'srcDoc:`<audio autoplay src="/assets/silence.mp3"></audio>`' "$patched_bundle"
+              grep -qF "./assets/$patched_name" /patched-client-dist/index.html
+              if grep -qF "./assets/$source_name" /patched-client-dist/index.html; then
+                echo "LibreChat index still references its unpatched JavaScript bundle" >&2
+                exit 1
+              fi
               if grep -qF "$expected" "$patched_bundle"; then
                 echo "LibreChat silent-audio iframe patch did not replace its target" >&2
                 exit 1
