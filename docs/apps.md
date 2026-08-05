@@ -281,7 +281,8 @@ snapshot.
 ### Collabora
 
 - Runs as a standalone deployment exposed at `collabora.rcrumana.xyz`.
-- Configured for TLS termination at ingress and trusted integration with Nextcloud.
+- Configured for TLS termination at ingress and trusted WOPI integration with Nextcloud.
+- Browser editor traffic is public/direct; administration and metrics paths remain limited to LAN and Headscale.
 
 ### UniFi OS Server
 
@@ -303,9 +304,9 @@ snapshot.
 
 ### Whiteboard
 
-- Stateless single deployment of `lovasoa/wbo`.
-- Currently intended primarily for Nextcloud integration.
-- Exposed through restricted ingress at `whiteboard.rcrumana.xyz`.
+- Stateless single deployment of the official Nextcloud Whiteboard collaboration server.
+- Nextcloud and the backend share a Vault-backed JWT secret; boards remain stored by Nextcloud rather than the WebSocket server.
+- Browser WebSocket traffic is public/direct at `whiteboard.rcrumana.xyz`; sessions require Nextcloud-issued JWTs, while Cilium and Linkerd constrain backend callers.
 
 ### Elasticsearch
 
@@ -392,7 +393,7 @@ snapshot.
 | `argocd.rcrumana.xyz` | `/` | `argocd` | `argocd` | `haproxy-restricted` | `argocd-server:80` |
 | `ceph.rcrumana.xyz` | `/` | `rook-ceph` | `ceph-dashboard` | `haproxy-restricted` | `rook-ceph-mgr-dashboard:8443` |
 | `chat.rcrumana.xyz` | `/` | `ai` | `librechat` | `haproxy-restricted` | `librechat:80` |
-| `collabora.rcrumana.xyz` | `/` | `productivity` | `collabora` | `haproxy-restricted` | `collabora:9980` |
+| `collabora.rcrumana.xyz` | `/` | `productivity` | `collabora` | `haproxy` | `collabora:9980` |
 | `grafana.rcrumana.xyz` | `/` | `monitoring` | `grafana` | `haproxy-restricted` | `kube-prometheus-stack-grafana:80` |
 | `harbor.rcrumana.xyz` | `/` | `harbor` | `harbor` | `haproxy` | `harbor-portal:80`, plus `harbor-core:80` for API and registry paths |
 | `headscale.rcrumana.xyz` | `/` | `other` | `headscale-api` | `haproxy` | `headscale:80` |
@@ -402,7 +403,7 @@ snapshot.
 | `jellyfin.rcrumana.xyz` | `/` | `media` | `jellyfin` | `haproxy-restricted` | `jellyfin:8096` |
 | `jellyseerr.rcrumana.xyz` | `/` | `media` | `jellyseerr` | `haproxy-restricted` | `jellyseerr:80` |
 | `lidarr.rcrumana.xyz` | `/` | `media` | `lidarr` | `haproxy-restricted` | `lidarr:80` |
-| `nextcloud.rcrumana.xyz` | `/` | `productivity` | `nextcloud` | `haproxy-restricted` | `nextcloud:8080` |
+| `nextcloud.rcrumana.xyz` | `/` | `productivity` | `nextcloud` | `haproxy` | `nextcloud:8080` |
 | `plex.rcrumana.xyz` | `/` | `media` | `plex` | `haproxy-restricted` | `plex:32400` |
 | `prowlarr.rcrumana.xyz` | `/` | `media` | `prowlarr` | `haproxy-restricted` | `prowlarr:80` |
 | `qbit.rcrumana.xyz` | `/` | `media` | `qbit` | `haproxy-restricted` | `qbit:80` |
@@ -414,7 +415,7 @@ snapshot.
 | `unifi.rcrumana.xyz` | `/` | `productivity` | `unifi` | `haproxy-restricted` | `unifi-os-server-ui:11443` |
 | `uptime.rcrumana.xyz` | `/` | `productivity` | `uptime-kuma` | `haproxy-restricted` | `uptime-kuma:80` |
 | `vault.rcrumana.xyz` | `/` | `productivity` | `vaultwarden` | `haproxy-restricted` | `vaultwarden:80` |
-| `whiteboard.rcrumana.xyz` | `/` | `productivity` | `whiteboard` | `haproxy-restricted` | `whiteboard:80` |
+| `whiteboard.rcrumana.xyz` | `/` | `productivity` | `whiteboard` | `haproxy` | `whiteboard:80` |
 
 ## Appendix B: Direct `LoadBalancer` services (LAN IP map)
 

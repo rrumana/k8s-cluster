@@ -12,6 +12,8 @@ on.
 | `auth.rcrumana.xyz` | DNS-only/direct | Invited users |
 | `immich.rcrumana.xyz` | DNS-only/direct after OIDC cutover | `app-immich` |
 | `nextcloud.rcrumana.xyz` | DNS-only/direct after OIDC cutover | `app-nextcloud` |
+| `collabora.rcrumana.xyz` | DNS-only/direct | Nextcloud-issued WOPI sessions |
+| `whiteboard.rcrumana.xyz` | DNS-only/direct | Nextcloud-issued JWT sessions |
 | `headscale.rcrumana.xyz` | DNS-only/direct | Infrastructure users |
 | `harbor.rcrumana.xyz` | No public record | LAN and Headscale |
 | `rcrumana.xyz`, `staging.rcrumana.xyz` | Cloudflare proxy | Public visitors |
@@ -49,7 +51,7 @@ application or overlay:
 |---|---|
 | `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret` |
 | `apps/media/immich-identity` | `config.json` |
-| `apps/productivity/nextcloud-identity` | `client-id`, `client-secret` |
+| `apps/productivity/nextcloud-identity` | `client-id`, `client-secret`, `whiteboard-jwt-secret` |
 | `apps/productivity/nextcloud-mail` | `host`, `username`, `password` |
 | `apps/other/headscale-identity` | `client-id`, `client-secret` |
 
@@ -103,6 +105,8 @@ direct.rcrumana.xyz  A      <WAN IPv4>             DNS only, TTL 300
 auth.rcrumana.xyz    CNAME  direct.rcrumana.xyz    DNS only, TTL 300
 immich.rcrumana.xyz  CNAME  direct.rcrumana.xyz    DNS only, TTL 300
 nextcloud.rcrumana.xyz CNAME direct.rcrumana.xyz   DNS only, TTL 300
+collabora.rcrumana.xyz CNAME direct.rcrumana.xyz  DNS only, TTL 300
+whiteboard.rcrumana.xyz CNAME direct.rcrumana.xyz DNS only, TTL 300
 headscale.rcrumana.xyz CNAME direct.rcrumana.xyz   DNS only, TTL 300
 ```
 
@@ -215,6 +219,22 @@ public-share policy idempotently: link sharing, public uploads, resharing,
 federation, custom tokens, and view-without-download are available, while link
 passwords and expiry dates remain optional. User-enumeration controls are not
 relaxed by this policy.
+
+Collabora and the Whiteboard collaboration server are browser-facing parts of
+Nextcloud integrations, not standalone login surfaces. Do not place Authentik
+in front of either backend: Collabora validates Nextcloud-issued WOPI sessions,
+and Whiteboard validates Nextcloud-issued JWTs. Their public Ingresses use the
+direct edge. Collabora's administration and metrics paths remain restricted to
+LAN and Headscale sources. Cilium restricts both backend ports to the Nextcloud
+and HAProxy workloads; Linkerd separately authenticates Nextcloud's meshed
+traffic and HAProxy's cluster-network connection.
+
+Before enabling the Whiteboard deployment, run
+`scripts/seed-nextcloud-collaboration-secret.sh` from the Balthasar directory
+containing `vault-init.json`. The script adds the shared JWT property without
+printing it or rotating the existing OIDC client secret. Both Nextcloud and the
+official Whiteboard server consume independent Kubernetes Secrets synchronized
+from that one Vault property.
 
 Rollback by removing the supplemental values file and restoring the private
 Ingress.
