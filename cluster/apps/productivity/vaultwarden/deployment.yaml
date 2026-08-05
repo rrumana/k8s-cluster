@@ -30,12 +30,39 @@ spec:
           name: http
         env:
         - name: DOMAIN
-          value: "https://vault.k8s.rcrumana.xyz"
+          value: "https://vault.rcrumana.xyz"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: vaultwarden-db-shared
               key: DATABASE_URL
+        - name: SIGNUPS_ALLOWED
+          value: "false"
+        - name: SSO_ENABLED
+          value: "true"
+        # Keep the native email + master-password route during the client
+        # pilot. SSO_ONLY can be considered only after every client passes.
+        - name: SSO_ONLY
+          value: "false"
+        - name: SSO_SIGNUPS_MATCH_EMAIL
+          value: "true"
+        - name: SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION
+          value: "false"
+        - name: SSO_AUTHORITY
+          value: "https://auth.rcrumana.xyz/application/o/vaultwarden/"
+        - name: SSO_CLIENT_ID
+          value: "vaultwarden"
+        - name: SSO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-identity
+              key: SSO_CLIENT_SECRET
+        - name: SSO_SCOPES
+          value: "openid profile email offline_access"
+        - name: SSO_PKCE
+          value: "true"
+        - name: SSO_CLIENT_CACHE_EXPIRATION
+          value: "600"
         volumeMounts:
         - name: data
           mountPath: /data

@@ -35,7 +35,7 @@ global:
       maxUnavailable: 1
 
   podAnnotations:
-    identity.rcrumana.xyz/config-revision: "2026-08-05-librechat"
+    identity.rcrumana.xyz/config-revision: "2026-08-05-vaultwarden"
     linkerd.io/inject: enabled
     config.linkerd.io/skip-outbound-ports: "587"
 

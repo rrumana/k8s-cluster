@@ -49,10 +49,11 @@ application or overlay:
 
 | Vault path | Required properties |
 |---|---|
-| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret` |
+| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret`, `oidc-vaultwarden-client-secret` |
 | `apps/media/immich-identity` | `config.json` |
 | `apps/productivity/nextcloud-identity` | `client-id`, `client-secret`, `whiteboard-jwt-secret` |
 | `apps/productivity/nextcloud-mail` | `host`, `username`, `password` |
+| `apps/productivity/vaultwarden-identity` | `client-secret` |
 | `apps/other/headscale-identity` | `client-id`, `client-secret` |
 
 The script generates independent Authentik, PostgreSQL, and OIDC values. SMTP
@@ -75,6 +76,12 @@ system configuration, not merely the example committed beside the overlay.
 Merge the OIDC and new SMTP values into that export. Keep password login enabled
 during the pilot. The example exists to document the required identity fields
 and must not be used verbatim.
+
+For the Vaultwarden pilot, copy `scripts/seed-vaultwarden-identity-secret.sh`
+to the Balthasar directory containing `vault-init.json` and run it from that
+directory. It creates one random client secret and stores matching copies for
+Authentik and Vaultwarden. The script retains an existing value instead of
+rotating it and never prints secret material.
 
 ## OPNsense
 
