@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        homepage.rcrumana.xyz/config-revision: "2026-08-05-public-dashboard"
+        homepage.rcrumana.xyz/config-revision: "2026-08-05-jellyseerr-status"
         linkerd.io/inject: enabled
       labels:
         app: homepage-client

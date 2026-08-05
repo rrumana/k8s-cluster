@@ -133,6 +133,7 @@ data:
         - Jellyseerr:
             icon: jellyseerr.png
             href: https://jellyseerr.rcrumana.xyz
+            siteMonitor: http://jellyseerr.media.svc.cluster.local
             description: Media requests
             namespace: media
             podSelector: app=arr-stack
