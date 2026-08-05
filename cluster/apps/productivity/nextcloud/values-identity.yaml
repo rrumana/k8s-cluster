@@ -112,3 +112,16 @@ nextcloud:
         collabBackendUrl --type=string --value="https://whiteboard.rcrumana.xyz"
       php /var/www/html/occ --no-interaction config:app:set whiteboard \
         jwt_secret_key --type=string --sensitive --value="${WHITEBOARD_JWT_SECRET}"
+
+      # The former WBO integration mapped .whiteboard files to the legacy
+      # application/spacedeck MIME type. Repair the file-cache metadata once
+      # after mounting the official mapping so Nextcloud's viewer claims both
+      # existing and newly-created whiteboards.
+      whiteboard_mimetype_migration=$(php /var/www/html/occ config:app:get \
+        whiteboard mimetype_migration_version --default-value="")
+      if [ "${whiteboard_mimetype_migration}" != "excalidraw-v1" ]; then
+        php /var/www/html/occ maintenance:mimetype:update-js
+        php /var/www/html/occ maintenance:mimetype:update-db --repair-filecache
+        php /var/www/html/occ config:app:set whiteboard \
+          mimetype_migration_version --type=string --value="excalidraw-v1"
+      fi

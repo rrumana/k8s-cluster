@@ -35,6 +35,14 @@ nextcloud:
       apc.enable_cli=1
 
   configs:
+    # Replace the legacy WBO/Spacedeck override persisted by the previous
+    # integration. The official Nextcloud Whiteboard viewer registers this
+    # MIME type for .whiteboard files.
+    mimetypemapping.json: |-
+      {
+        "whiteboard": ["application/vnd.excalidraw+json"]
+      }
+
     zz-performance.config.php: |-
       <?php
       $CONFIG = array (
