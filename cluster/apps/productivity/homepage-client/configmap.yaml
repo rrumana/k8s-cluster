@@ -140,7 +140,7 @@ data:
               type: seerr
               url: http://jellyseerr.media.svc.cluster.local
               key: "{{HOMEPAGE_VAR_JELLYSEERR_API_KEY}}"
-              fields: ["pending", "approved", "processing", "issues"]
+              fields: ["pending", "approved", "processing"]
               hideErrors: true
         - Immich:
             icon: immich.png
