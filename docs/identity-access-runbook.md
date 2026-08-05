@@ -49,8 +49,9 @@ application or overlay:
 
 | Vault path | Required properties |
 |---|---|
-| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret`, `oidc-vaultwarden-client-secret` |
+| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret`, `oidc-vaultwarden-client-secret`, `oidc-jellyfin-client-secret` |
 | `apps/media/immich-identity` | `config.json` |
+| `apps/media/jellyfin-identity` | `client-secret` |
 | `apps/productivity/nextcloud-identity` | `client-id`, `client-secret`, `whiteboard-jwt-secret` |
 | `apps/productivity/nextcloud-mail` | `host`, `username`, `password` |
 | `apps/productivity/vaultwarden-identity` | `client-secret` |
@@ -82,6 +83,12 @@ to the Balthasar directory containing `vault-init.json` and run it from that
 directory. It creates one random client secret and stores matching copies for
 Authentik and Vaultwarden. The script retains an existing value instead of
 rotating it and never prints secret material.
+
+The Jellyfin pilot uses the same pattern. Copy
+`scripts/seed-jellyfin-identity-secret.sh` beside `vault-init.json` on
+Balthasar and run it there. The deployment reuses the existing Homepage
+Jellyfin API key only for its declarative plugin and login-button bootstrap; it
+does not create another Jellyfin service account.
 
 ## OPNsense
 

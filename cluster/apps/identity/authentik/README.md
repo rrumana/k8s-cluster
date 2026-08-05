@@ -21,6 +21,8 @@ Create `kv/apps/identity/authentik` with:
   `kv/apps/other/headscale-identity`
 - `oidc-vaultwarden-client-secret`: the same independent random value stored at
   `kv/apps/productivity/vaultwarden-identity`
+- `oidc-jellyfin-client-secret`: the same independent random value stored at
+  `kv/apps/media/jellyfin-identity`
 
 The namespace-local `harbor-pull-creds` Secret is populated from the existing
 shared Vault entry at `kv/apps/productivity/harbor-pull-creds`. No dedicated

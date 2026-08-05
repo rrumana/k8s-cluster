@@ -5,9 +5,11 @@ namespace: media
 
 resources:
   - pvc.yaml
+  - externalsecret.yaml
   - deployment.yaml
   - service.yaml
   - vpa.yaml
+  - identity-bootstrap-job.yaml
 
 commonLabels:
   app.kubernetes.io/name: jellyfin

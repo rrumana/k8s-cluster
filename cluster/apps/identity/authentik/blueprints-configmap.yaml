@@ -54,6 +54,12 @@ data:
 
       - model: authentik_core.group
         identifiers:
+          name: app-jellyfin
+        attrs:
+          is_superuser: false
+
+      - model: authentik_core.group
+        identifiers:
           name: app-uptime-kuma
         attrs:
           is_superuser: false
@@ -244,6 +250,7 @@ data:
                 "app-homepage-client",
                 "app-hypermind",
                 "app-immich",
+                "app-jellyfin",
                 "app-librechat",
                 "app-nextcloud",
                 "app-uptime-kuma",
@@ -669,6 +676,30 @@ data:
                 "nextcloud_uid": legacy_uids.get(authentik_uuid, authentik_uuid),
             }
 
+      - model: authentik_providers_oauth2.scopemapping
+        id: jellyfin-username-scope
+        identifiers:
+          name: Rcrumana Jellyfin username
+        attrs:
+          scope_name: jellyfin
+          description: Stable Jellyfin username with explicit legacy account links
+          expression: |
+            legacy_usernames = {
+                "b1ff6934-ecb9-4235-9260-cdaaf13e90a0": "Ryan + Kaylee",
+                "c582b58e-fc7d-446e-9a18-7c75d97c8801": "admin",
+            }
+            authentik_uuid = str(request.user.uuid)
+            configured_username = request.user.attributes.get(
+                "jellyfin_username",
+                request.user.username,
+            )
+            return {
+                "jellyfin_username": legacy_usernames.get(
+                    authentik_uuid,
+                    configured_username,
+                ),
+            }
+
       - model: authentik_providers_oauth2.oauth2provider
         id: immich-provider
         identifiers:
@@ -913,6 +944,61 @@ data:
         identifiers:
           target: !KeyOf vaultwarden-application
           group: !Find [authentik_core.group, [name, app-vaultwarden]]
+          order: 0
+
+      - model: authentik_providers_oauth2.oauth2provider
+        id: jellyfin-provider
+        identifiers:
+          name: Jellyfin
+        attrs:
+          authorization_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-authorization-implicit-consent]
+          invalidation_flow: !Find
+            - authentik_flows.flow
+            - [slug, default-provider-invalidation-flow]
+          client_type: confidential
+          client_id: jellyfin
+          client_secret: !Env AUTHENTIK_OIDC_JELLYFIN_CLIENT_SECRET
+          grant_types:
+            - authorization_code
+          redirect_uris:
+            - matching_mode: strict
+              url: https://jellyfin.rcrumana.xyz/sso/OID/redirect/authentik
+              redirect_uri_type: authorization
+          access_code_validity: minutes=1
+          access_token_validity: minutes=5
+          include_claims_in_id_token: true
+          sub_mode: user_uuid
+          issuer_mode: per_provider
+          property_mappings:
+            - !Find
+              - authentik_providers_oauth2.scopemapping
+              - [managed, goauthentik.io/providers/oauth2/scope-openid]
+            - !KeyOf verified-email-scope
+            - !Find
+              - authentik_providers_oauth2.scopemapping
+              - [managed, goauthentik.io/providers/oauth2/scope-profile]
+            - !KeyOf groups-scope
+            - !KeyOf jellyfin-username-scope
+          signing_key: !Find
+            - authentik_crypto.certificatekeypair
+            - [name, authentik Self-signed Certificate]
+
+      - model: authentik_core.application
+        id: jellyfin-application
+        identifiers:
+          slug: jellyfin
+        attrs:
+          name: Jellyfin
+          provider: !KeyOf jellyfin-provider
+          meta_launch_url: https://jellyfin.rcrumana.xyz/sso/OID/start/authentik
+          policy_engine_mode: any
+
+      - model: authentik_policies.policybinding
+        identifiers:
+          target: !KeyOf jellyfin-application
+          group: !Find [authentik_core.group, [name, app-jellyfin]]
           order: 0
 
       # Headscale remains on its current local-account configuration until the

@@ -15,6 +15,8 @@ spec:
       app: jellyfin
   template:
     metadata:
+      annotations:
+        media.rcrumana.xyz/identity-revision: "2026-08-05-sso-auth-4.0.0.4"
       labels:
         app: jellyfin
     spec:
@@ -37,6 +39,49 @@ spec:
         supplementalGroups:
           - 989
           - 985
+      initContainers:
+        - name: install-sso-plugin
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.21.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              version="4.0.0.4"
+              expected_sha256="c09f16ba31059a434ddd7f811e4f9608d4b4c4514cc80a5bf1ca33bee61e1107"
+              target="/config/data/plugins/SSO Authentication_${version}"
+
+              if [ -f "${target}/SSO-Auth.dll" ]; then
+                echo "install-sso-plugin: ${version} already installed"
+                exit 0
+              fi
+
+              archive="/tmp/sso-authentication.zip"
+              stage="/tmp/sso-authentication"
+              mkdir -p "$stage"
+              curl -fL --retry 5 --retry-delay 2 \
+                "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v${version}/sso-authentication_${version}.zip" \
+                -o "$archive"
+              printf '%s  %s\n' "$expected_sha256" "$archive" | sha256sum -c -
+              unzip -q "$archive" -d "$stage"
+              test -f "$stage/SSO-Auth.dll"
+
+              mkdir -p "$target"
+              cp -a "$stage/." "$target/"
+              test -f "${target}/SSO-Auth.dll"
+              chown -R 1000:1000 "$target"
+              echo "install-sso-plugin: installed ${version}"
+          volumeMounts:
+            - name: config
+              mountPath: /config
       containers:
         - name: jellyfin
           image: harbor.rcrumana.xyz/mirror/linuxserver/jellyfin:10.11.3ubu2404-ls9
@@ -50,7 +95,7 @@ spec:
             - name: TZ
               value: "America/Los_Angeles"
             - name: JELLYFIN_PublishedServerUrl
-              value: "https://jellyfin.k8s.rcrumana.xyz"
+              value: "https://jellyfin.rcrumana.xyz"
             - name: LIBVA_DRIVER_NAME
               value: radeonsi
           ports:

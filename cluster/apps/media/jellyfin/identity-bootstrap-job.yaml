@@ -1,0 +1,121 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jellyfin-identity-bootstrap
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app: jellyfin-identity-bootstrap
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: configure
+          image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.21.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jellyfin-identity
+                  key: OIDC_CLIENT_SECRET
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jellyfin-identity
+                  key: JELLYFIN_API_KEY
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              base_url="http://jellyfin.media.svc.cluster.local:8096"
+              attempts=0
+              provider_config=""
+
+              until provider_config=$(curl -fsS \
+                -H "X-Emby-Token: ${JELLYFIN_API_KEY}" \
+                "${base_url}/sso/OID/Get"); do
+                attempts=$((attempts + 1))
+                if [ "$attempts" -ge 60 ]; then
+                  echo "Jellyfin SSO plugin did not become ready" >&2
+                  exit 1
+                fi
+                sleep 2
+              done
+
+              if printf '%s' "$provider_config" | grep -q '"authentik"'; then
+                echo "Jellyfin Authentik provider already exists; retaining its canonical links"
+              else
+                provider_payload=$(printf '%s' '{
+                  "OidEndpoint":"https://auth.rcrumana.xyz/application/o/jellyfin/.well-known/openid-configuration",
+                  "OidClientId":"jellyfin",
+                  "OidSecret":"__OIDC_SECRET__",
+                  "Enabled":true,
+                  "EnableAuthorization":true,
+                  "EnableAllFolders":true,
+                  "EnabledFolders":[],
+                  "AdminRoles":["platform-admins"],
+                  "Roles":["app-jellyfin"],
+                  "EnableFolderRoles":false,
+                  "EnableLiveTvRoles":true,
+                  "EnableLiveTv":true,
+                  "EnableLiveTvManagement":false,
+                  "LiveTvRoles":["app-jellyfin"],
+                  "LiveTvManagementRoles":["platform-admins"],
+                  "FolderRoleMapping":[],
+                  "RoleClaim":"groups",
+                  "OidScopes":["email","groups","jellyfin"],
+                  "SchemeOverride":"https",
+                  "NewPath":true,
+                  "CanonicalLinks":{
+                    "Ryan + Kaylee":"26c9f504-52ef-4504-bfb5-3b4d59e5f135",
+                    "admin":"43d34115-103b-4d9c-ac69-1a25a1d36a00"
+                  },
+                  "DefaultUsernameClaim":"jellyfin_username",
+                  "DisableHttps":false,
+                  "DisablePushedAuthorization":false,
+                  "DoNotValidateEndpoints":false,
+                  "DoNotValidateIssuerName":false,
+                  "DoNotLoadProfile":false
+                }')
+                provider_payload=$(printf '%s' "$provider_payload" | \
+                  sed "s/__OIDC_SECRET__/${OIDC_CLIENT_SECRET}/")
+                curl -fsS -X POST \
+                  -H "Content-Type: application/json" \
+                  -H "X-Emby-Token: ${JELLYFIN_API_KEY}" \
+                  --data-binary "$provider_payload" \
+                  "${base_url}/sso/OID/Add/authentik"
+                unset provider_payload
+                echo "Jellyfin Authentik provider created"
+              fi
+              unset provider_config
+
+              branding_payload='{
+                "LoginDisclaimer":"<form action=\"https://jellyfin.rcrumana.xyz/sso/OID/start/authentik\"><button class=\"raised block emby-button button-submit\">Sign in with Authentik</button></form>",
+                "CustomCss":"a.raised.emby-button { padding: 0.9em 1em; color: inherit !important; } .disclaimerContainer { display: block; }",
+                "SplashscreenEnabled":false
+              }'
+              curl -fsS -X POST \
+                -H "Content-Type: application/json" \
+                -H "X-Emby-Token: ${JELLYFIN_API_KEY}" \
+                --data-binary "$branding_payload" \
+                "${base_url}/System/Configuration/Branding"
+              echo "Jellyfin SSO login button configured"
