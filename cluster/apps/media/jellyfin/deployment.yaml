@@ -44,8 +44,8 @@ spec:
           image: harbor.rcrumana.xyz/proxy-dockerhub/curlimages/curl:8.21.0
           imagePullPolicy: IfNotPresent
           securityContext:
-            runAsUser: 0
-            runAsGroup: 0
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             capabilities:
               drop:
