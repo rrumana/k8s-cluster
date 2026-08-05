@@ -15,6 +15,7 @@ spec:
       annotations:
         media.rcrumana.xyz/gluetun-credentials-version: "3"
         media.rcrumana.xyz/pf-sync-config-version: "3"
+        media.rcrumana.xyz/seerr-identity-revision: "2026-08-05-quick-connect"
       labels:
         app: arr-stack
         traffic-tier: bulk-seed
@@ -129,6 +130,41 @@ spec:
             - { name: gluetun,     mountPath: /gluetun }
             - { name: temp,        mountPath: /temp }
             - { name: jellyseerr-config, mountPath: /seerr-config }
+        - name: configure-seerr-identity
+          image: harbor.rcrumana.xyz/proxy-ghcr/seerr-team/seerr:v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              node <<'NODE'
+              const fs = require('fs');
+              const path = '/app/config/settings.json';
+              const temporaryPath = `${path}.identity.tmp`;
+              const settings = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+              settings.main.localLogin = false;
+              settings.main.mediaServerLogin = true;
+              settings.main.newPlexLogin = true;
+              settings.main.applicationUrl = 'https://jellyseerr.rcrumana.xyz';
+
+              fs.writeFileSync(temporaryPath, `${JSON.stringify(settings, null, 2)}\n`, {
+                mode: 0o600,
+              });
+              fs.renameSync(temporaryPath, path);
+              console.log('Seerr identity settings configured: Jellyfin and Quick Connect only');
+              NODE
+          volumeMounts:
+            - { name: jellyseerr-config, mountPath: /app/config }
         - name: install-vuetorrent
           image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
           securityContext:
@@ -292,7 +328,7 @@ spec:
             limits:   { cpu: "2", memory: "2Gi" }
 
         - name: jellyseerr
-          image: harbor.rcrumana.xyz/mirror/seerr-team/seerr:v3.1.0
+          image: harbor.rcrumana.xyz/proxy-ghcr/seerr-team/seerr:v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1
           env:
             - { name: TZ,   value: "America/Los_Angeles" }
             - { name: DB_TYPE, value: "postgres" }

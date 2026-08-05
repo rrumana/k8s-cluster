@@ -90,6 +90,14 @@ Balthasar and run it there. The deployment reuses the existing Homepage
 Jellyfin API key only for its declarative plugin and login-button bootstrap; it
 does not create another Jellyfin service account.
 
+Seerr remains on a stable upstream release rather than the experimental OIDC
+preview. Stable `v3.4.1` supports Jellyfin Quick Connect, so users authenticate
+to Jellyfin through Authentik and authorize the Seerr login code from their
+Jellyfin session. Local Seerr sign-in is disabled; direct Jellyfin credentials
+remain available as a compatibility fallback. This preserves Seerr's existing
+Jellyfin user IDs and request attribution without maintaining a vulnerable
+preview image or placing forward-auth in front of its API.
+
 ## OPNsense
 
 Export the OPNsense configuration before making changes.
