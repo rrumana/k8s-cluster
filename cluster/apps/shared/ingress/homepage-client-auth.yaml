@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage-client-auth
+  namespace: productivity
+  labels:
+    security.rcrumana.xyz/exposure: public
+    security.rcrumana.xyz/public-approved: "true"
+    security.rcrumana.xyz/public-edge: direct
+  annotations:
+    haproxy-ingress.github.io/backend-protocol: "http"
+    haproxy-ingress.github.io/ssl-redirect: "true"
+    haproxy-ingress.github.io/timeout-client: "600s"
+    haproxy-ingress.github.io/timeout-server: "600s"
+    haproxy-ingress.github.io/config-backend-early: |
+      http-request set-header X-Forwarded-Host %[req.hdr(host)]
+      http-request set-header X-Forwarded-Proto https
+      http-request set-header X-Original-URL https://%[req.hdr(host)]%[url]
+    haproxy-ingress.github.io/config-backend: |
+      http-response set-header X-Robots-Tag "noindex, nofollow"
+spec:
+  ingressClassName: haproxy
+  tls:
+    - hosts:
+        - dashboard.rcrumana.xyz
+      secretName: dashboard-rcrumana-xyz-tls
+  rules:
+    - host: dashboard.rcrumana.xyz
+      http:
+        paths:
+          - path: /outpost.goauthentik.io
+            pathType: Prefix
+            backend:
+              service:
+                name: authentik-embedded-outpost
+                port:
+                  number: 80

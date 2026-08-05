@@ -9,10 +9,17 @@ infrastructure administration surfaces.
 
 ## Access posture
 
-The initial Ingress remains on `haproxy-restricted` and is limited to LAN and
-Headscale source ranges. Keep that restriction until an Authentik forward-auth
-provider, application, outpost, and HAProxy integration have been validated.
-Only then should the Ingress be changed to the public direct-access posture.
+The application Ingress remains on `haproxy-restricted` and is limited to LAN
+and Headscale source ranges while the Authentik forward-auth integration is
+validated. A separate public direct-edge Ingress routes only
+`/outpost.goauthentik.io` to Authentik's embedded outpost because login,
+callback, and logout endpoints must remain reachable throughout the flow.
+
+Access requires membership in the GitOps-managed `app-homepage-client` group.
+After unauthenticated redirects and an authorized login have been validated,
+change the application Ingress to the public direct-access posture. Do not add
+the authentication annotations to the outpost-path Ingress or it will create an
+authentication loop.
 
 ## Runtime credentials
 

@@ -8,6 +8,8 @@ resources:
   - grafana.yaml
   - homepage.yaml
   - homepage-client.yaml
+  - homepage-client-auth.yaml
+  - homepage-client-auth-service.yaml
   - headscale.yaml
   - hypermind.yaml
   - librechat.yaml
