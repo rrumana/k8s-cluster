@@ -18,6 +18,7 @@ spec:
   template:
     metadata:
       annotations:
+        homelab.rcrumana.xyz/config-revision: "2026-08-06-headscale-0.29"
         linkerd.io/inject: enabled
       labels:
         app: headscale
