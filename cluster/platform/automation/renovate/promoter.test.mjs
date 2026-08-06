@@ -181,13 +181,13 @@ assert.equal(
 
 const guardedChart = {
   name: 'opensearch-operator',
-  allowedVersionPattern: '^2\\.8\\.[0-2]$',
-  versionPolicyReason: 'Charts 2.8.3 and newer target operator 3.0.0-alpha.',
+  allowedVersionPattern: '^2\\.8\\.0$',
+  versionPolicyReason: 'Charts newer than 2.8.0 are incompatible with the stable operator image.',
 };
-assert.doesNotThrow(() => assertChartVersionAllowed(guardedChart, '2.8.2'));
+assert.doesNotThrow(() => assertChartVersionAllowed(guardedChart, '2.8.0'));
 assert.throws(
-  () => assertChartVersionAllowed(guardedChart, '2.8.4'),
-  /blocked by its promotion version policy.*3\.0\.0-alpha/,
+  () => assertChartVersionAllowed(guardedChart, '2.8.1'),
+  /blocked by its promotion version policy.*incompatible with the stable operator image/,
 );
 
 assert.deepEqual(extractSeedImageReferences(`

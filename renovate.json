@@ -461,12 +461,12 @@
       "registryUrls": ["https://kubernetes-sigs.github.io/metrics-server/"]
     },
     {
-      "description": "Resolve mirrored OpenSearch operator chart upstream",
+      "description": "Resolve mirrored OpenSearch operator chart upstream while retaining the last chart compatible with the stable 2.8.0 operator image",
       "matchDatasources": ["helm"],
       "matchPackageNames": ["opensearch-operator", "harbor.rcrumana.xyz/thirdparty-charts/opensearch-operator"],
       "overridePackageName": "opensearch-operator",
       "registryUrls": ["https://opensearch-project.github.io/opensearch-k8s-operator"],
-      "allowedVersions": "<=2.8.2"
+      "allowedVersions": "/^2\\.8\\.0$/"
     },
     {
       "description": "Resolve mirrored Rook chart upstream",
