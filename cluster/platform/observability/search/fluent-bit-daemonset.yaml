@@ -30,7 +30,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: fluent-bit
-          image: harbor.rcrumana.xyz/mirror/fluent/fluent-bit:4.2.2
+          image: harbor.rcrumana.xyz/mirror/fluent/fluent-bit:4.2.8
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2020
