@@ -173,7 +173,7 @@ mapfile -t KPS_IMAGES < <(
 
 EXTRA_IMAGES=(
   "docker.io/opensearchproject/opensearch-operator:2.8.0"
-  "quay.io/brancz/kube-rbac-proxy:v0.15.0"
+  "quay.io/brancz/kube-rbac-proxy:v0.22.1"
   "quay.io/prometheus-operator/prometheus-config-reloader:v0.87.1"
   "docker.io/library/busybox:1.31.1"
   "docker.io/opensearchproject/opensearch:3.4.0"
