@@ -166,7 +166,7 @@ spec:
           volumeMounts:
             - { name: jellyseerr-config, mountPath: /app/config }
         - name: install-vuetorrent
-          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.3_v2.0.13-ls469
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -204,7 +204,7 @@ spec:
 
       containers:
         - name: gluetun
-          image: harbor.rcrumana.xyz/mirror/qmcgaw/gluetun:v3.41.1
+          image: harbor.rcrumana.xyz/mirror/qmcgaw/gluetun:v3.41.3
           securityContext:
             privileged: true
             capabilities: { add: ["NET_ADMIN"] }
@@ -251,7 +251,7 @@ spec:
             limits:   { cpu: "25m", memory: "64Mi" }
 
         - name: qbittorrent
-          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.0
+          image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.3_v2.0.13-ls469
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -276,7 +276,7 @@ spec:
             limits:   { cpu: "2", memory: "8Gi" }
 
         - name: sonarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.16.2944-ls298
+          image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.19.2979-ls320
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -289,7 +289,7 @@ spec:
             limits:   { cpu: "2", memory: "2Gi" }
 
         - name: radarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/radarr:6.0.4.10291-ls288
+          image: harbor.rcrumana.xyz/mirror/linuxserver/radarr:6.3.0.10514-ls313
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -302,7 +302,7 @@ spec:
             limits:   { cpu: "2", memory: "2Gi" }
 
         - name: lidarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/lidarr:3.1.0.4875-ls22
+          image: harbor.rcrumana.xyz/mirror/linuxserver/lidarr:3.1.0.4875-ls38
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -315,7 +315,7 @@ spec:
             limits:   { cpu: "2", memory: "2Gi" }
 
         - name: prowlarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/prowlarr:2.3.0.5236-ls139
+          image: harbor.rcrumana.xyz/mirror/linuxserver/prowlarr:2.5.2.5491-ls156
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }

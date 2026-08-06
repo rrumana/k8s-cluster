@@ -35,7 +35,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: plex
-          image: harbor.rcrumana.xyz/mirror/linuxserver/plex:1.42.2.10156-f737b826c-ls287
+          image: harbor.rcrumana.xyz/mirror/linuxserver/plex:1.43.3.10861-07dfddaeb-ls318
           env:
             - name: PUID
               value: "1000"
