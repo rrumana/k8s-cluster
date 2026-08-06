@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const IMAGE_PATTERN = /harbor\.rcrumana\.xyz\/(?:mirror|apps-private)\/[A-Za-z0-9._/-]+(?::[A-Za-z0-9._+%-]+)?(?:@sha256:[a-f0-9]{64})?/g;
 
@@ -241,6 +241,15 @@ export function isEligibleRenovatePullRequest(pr, options) {
   if (pr.state === 'open') return true;
   if (!pr.merged_at) return false;
   return Date.parse(pr.merged_at) >= options.recoveryCutoff;
+}
+
+export function isMainModule(moduleUrl, invokedPath) {
+  if (!invokedPath) return false;
+  try {
+    return fs.realpathSync(fileURLToPath(moduleUrl)) === fs.realpathSync(invokedPath);
+  } catch {
+    return false;
+  }
 }
 
 class Promoter {
@@ -501,7 +510,7 @@ async function main() {
   if (failed) process.exitCode = 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (isMainModule(import.meta.url, process.argv[1])) {
   main().catch((error) => {
     console.error(error.stack ?? error.message);
     process.exitCode = 1;

@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -12,6 +13,7 @@ import {
   extractSeedImageReferences,
   extractValueFiles,
   isEligibleRenovatePullRequest,
+  isMainModule,
   mapImageReference,
 } from './promoter.mjs';
 
@@ -146,5 +148,13 @@ assert.equal(isEligibleRenovatePullRequest({
   ...eligiblePr,
   user: { login: 'unexpected-user' },
 }, eligibilityOptions), false);
+
+const symlinkDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'renovate-promoter-test-'));
+const symlinkPath = path.join(symlinkDirectory, 'promoter.mjs');
+const promoterPath = path.join(directory, 'promoter.mjs');
+fs.symlinkSync(promoterPath, symlinkPath);
+assert.equal(isMainModule(new URL('./promoter.mjs', import.meta.url).href, symlinkPath), true);
+assert.equal(isMainModule(new URL('./promoter.mjs', import.meta.url).href, null), false);
+fs.rmSync(symlinkDirectory, { recursive: true });
 
 console.log('Harbor promoter parser tests passed.');
