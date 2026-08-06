@@ -5,12 +5,12 @@ though cluster workloads continue to pull from Harbor. The source-of-truth mappi
 is `artifact-sources.json`; `scripts/check-renovate-coverage.mjs` verifies that the
 matching Renovate rules and every checked-in Harbor mirror reference remain covered.
 
-During backlog draining, Renovate runs hourly at :15 America/Los_Angeles and limits
-the repository to five concurrent Renovate pull requests. Low-risk application
-updates can open pull requests immediately. Major and coordinated platform updates
-stay visible in the Dependency Dashboard until explicitly approved. Automerge is
-disabled. Return the CronJob to a daily cadence after the accumulated drift is
-cleared.
+During backlog draining, Renovate runs every 15 minutes in America/Los_Angeles and
+limits the repository to five concurrent Renovate pull requests. Low-risk
+application updates can open pull requests immediately. Major and coordinated
+platform updates stay visible in the Dependency Dashboard until explicitly
+approved. Automerge is disabled. Return the CronJob to a daily cadence after the
+accumulated drift is cleared.
 
 ## Promoter behavior
 
