@@ -38,31 +38,48 @@ spec:
               key: DATABASE_URL
         - name: SIGNUPS_ALLOWED
           value: "false"
+        - name: SIGNUPS_VERIFY
+          value: "true"
+        - name: INVITATIONS_ALLOWED
+          # Site administrators can still invite standalone accounts. Disable
+          # organization-admin invitations so client accounts cannot onboard
+          # additional users independently.
+          value: "false"
+        - name: INVITATION_EXPIRATION_HOURS
+          value: "72"
+        - name: INVITATION_ORG_NAME
+          value: "Rcrumana Vault"
+        - name: ORG_CREATION_USERS
+          value: "none"
+        - name: SHOW_PASSWORD_HINT
+          value: "false"
         - name: SSO_ENABLED
-          value: "true"
-        # Keep the native email + master-password route during the client
-        # pilot. SSO_ONLY can be considered only after every client passes.
-        - name: SSO_ONLY
           value: "false"
-        - name: SSO_SIGNUPS_MATCH_EMAIL
-          value: "true"
-        - name: SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION
-          value: "false"
-        - name: SSO_AUTHORITY
-          value: "https://auth.rcrumana.xyz/application/o/vaultwarden/"
-        - name: SSO_CLIENT_ID
-          value: "vaultwarden"
-        - name: SSO_CLIENT_SECRET
+        - name: ADMIN_TOKEN
           valueFrom:
             secretKeyRef:
-              name: vaultwarden-identity
-              key: SSO_CLIENT_SECRET
-        - name: SSO_SCOPES
-          value: "openid profile email offline_access"
-        - name: SSO_PKCE
-          value: "true"
-        - name: SSO_CLIENT_CACHE_EXPIRATION
-          value: "600"
+              name: vaultwarden-access
+              key: ADMIN_TOKEN
+        - name: SMTP_HOST
+          value: "smtp.mailgun.org"
+        - name: SMTP_PORT
+          value: "587"
+        - name: SMTP_SECURITY
+          value: "starttls"
+        - name: SMTP_FROM
+          value: "vaultwarden@mail.rcrumana.xyz"
+        - name: SMTP_FROM_NAME
+          value: "Rcrumana Vault"
+        - name: SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-access
+              key: SMTP_USERNAME
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-access
+              key: SMTP_PASSWORD
         volumeMounts:
         - name: data
           mountPath: /data

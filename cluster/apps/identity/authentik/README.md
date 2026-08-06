@@ -19,8 +19,6 @@ Create `kv/apps/identity/authentik` with:
   `kv/apps/productivity/nextcloud-identity`
 - `oidc-headscale-client-secret`: the same independent random value stored at
   `kv/apps/other/headscale-identity`
-- `oidc-vaultwarden-client-secret`: the same independent random value stored at
-  `kv/apps/productivity/vaultwarden-identity`
 - `oidc-jellyfin-client-secret`: the same independent random value stored at
   `kv/apps/media/jellyfin-identity`
 

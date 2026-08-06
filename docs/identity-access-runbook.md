@@ -31,11 +31,13 @@ Cloudflare and private/Headscale networks.
 4. Rotate the Mailgun SMTP credential that was reused by an operational
    account. Rotate every other account that shared the old value and invalidate
    it.
-5. Create separate Mailgun SMTP users for Authentik, Immich, and Nextcloud.
+5. Create separate Mailgun SMTP users for Authentik, Immich, Nextcloud, and
+   Vaultwarden.
    Standardize the From addresses as:
    - `auth@mail.rcrumana.xyz`
    - `immich@mail.rcrumana.xyz`
    - `nextcloud@mail.rcrumana.xyz`
+   - `vaultwarden@mail.rcrumana.xyz`
 6. Send test messages from the existing Immich and Nextcloud installations.
    Verify Mailgun acceptance plus SPF and DKIM before enabling invitation mail.
 
@@ -49,12 +51,12 @@ application or overlay:
 
 | Vault path | Required properties |
 |---|---|
-| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret`, `oidc-vaultwarden-client-secret`, `oidc-jellyfin-client-secret` |
+| `apps/identity/authentik` | `secret-key`, `postgresql-username`, `postgresql-password`, `smtp-username`, `smtp-password`, `oidc-immich-client-secret`, `oidc-nextcloud-client-secret`, `oidc-headscale-client-secret`, `oidc-jellyfin-client-secret` |
 | `apps/media/immich-identity` | `config.json` |
 | `apps/media/jellyfin-identity` | `client-secret` |
 | `apps/productivity/nextcloud-identity` | `client-id`, `client-secret`, `whiteboard-jwt-secret` |
 | `apps/productivity/nextcloud-mail` | `host`, `username`, `password` |
-| `apps/productivity/vaultwarden-identity` | `client-secret` |
+| `apps/productivity/vaultwarden-access` | `admin-token`, `smtp-username`, `smtp-password` |
 | `apps/other/headscale-identity` | `client-id`, `client-secret` |
 
 The script generates independent Authentik, PostgreSQL, and OIDC values. SMTP
@@ -78,11 +80,22 @@ Merge the OIDC and new SMTP values into that export. Keep password login enabled
 during the pilot. The example exists to document the required identity fields
 and must not be used verbatim.
 
-For the Vaultwarden pilot, copy `scripts/seed-vaultwarden-identity-secret.sh`
-to the Balthasar directory containing `vault-init.json` and run it from that
-directory. It creates one random client secret and stores matching copies for
-Authentik and Vaultwarden. The script retains an existing value instead of
-rotating it and never prints secret material.
+For Vaultwarden, copy `scripts/seed-vaultwarden-access.sh` to the Balthasar
+directory containing `vault-init.json` and run it from that directory. It
+prompts for the dedicated Mailgun credential and an administrator password,
+stores only an Argon2id hash of the administrator password, and creates
+`apps/productivity/vaultwarden-access` without printing secret material. It
+refuses to overwrite an existing path so a rerun cannot silently rotate access.
+
+Vaultwarden intentionally uses native invitation, master-password, and MFA
+authentication rather than Authentik. Public registration remains disabled.
+The `/admin` path is additionally restricted to LAN and Headscale sources even
+after the main Vaultwarden Ingress is made public.
+
+Use the Vaultwarden administrator page for user invitations and diagnostics.
+Do not save application configuration through that page unless the same change
+is first represented in GitOps: `/data/config.json` values override environment
+variables and can otherwise make the live configuration diverge from this repo.
 
 The Jellyfin pilot uses the same pattern. Copy
 `scripts/seed-jellyfin-identity-secret.sh` beside `vault-init.json` on

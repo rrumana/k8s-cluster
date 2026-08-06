@@ -120,10 +120,4 @@ ensure_matching_pair \
   apps/media/jellyfin-identity \
   client-secret
 
-ensure_matching_pair \
-  apps/identity/authentik \
-  oidc-vaultwarden-client-secret \
-  apps/productivity/vaultwarden-identity \
-  client-secret
-
-echo "Jellyfin and Vaultwarden identity prerequisites created successfully"
+echo "Jellyfin identity prerequisite created successfully"
