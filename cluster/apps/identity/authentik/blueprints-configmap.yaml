@@ -124,15 +124,15 @@ data:
             name: Default - Provider invalidation flow
           required: true
 
-      # Invitation-only enrollment. Per-invitation fixed_data must contain an
-      # email and one or more names in app_groups.
+      # Invitation-only client enrollment. Per-invitation fixed_data contains
+      # only the invited email; application access is fixed by policy below.
       - model: authentik_flows.flow
         id: invitation-enrollment-flow
         identifiers:
           slug: rcrumana-invitation-enrollment
         attrs:
-          name: Rcrumana invitation enrollment
-          title: Complete your invitation
+          name: Rcrumana client invitation enrollment
+          title: Set up your Rcrumana account
           designation: enrollment
           authentication: require_unauthenticated
 
@@ -210,6 +210,53 @@ data:
           zxcvbn_score_threshold: 2
           error_message: Use at least 12 characters and avoid common or predictable passwords.
 
+      - model: authentik_policies_expression.expressionpolicy
+        id: client-username-policy
+        identifiers:
+          name: rcrumana-client-username-validation
+        attrs:
+          expression: |
+            from authentik.core.models import User
+
+            prompt = request.context.get("prompt_data", {})
+            username = str(prompt.get("username", "")).strip()
+
+            if username != username.lower():
+                ak_message("Username must use lowercase letters.")
+                return False
+
+            if not regex_match(username, r"^[a-z][a-z0-9._-]{2,31}$"):
+                ak_message(
+                    "Username must be 3-32 characters, begin with a letter, "
+                    "and contain only lowercase letters, numbers, periods, "
+                    "underscores, or hyphens."
+                )
+                return False
+
+            reserved = {
+                "admin",
+                "administrator",
+                "akadmin",
+                "anonymous",
+                "authentik",
+                "operator",
+                "root",
+                "rcrumana",
+                "service",
+                "support",
+                "system",
+                "vaultwarden",
+            }
+            if username in reserved:
+                ak_message("That username is reserved. Choose another username.")
+                return False
+
+            if User.objects.filter(username__iexact=username).exists():
+                ak_message("That username is already in use. Choose another username.")
+                return False
+
+            return True
+
       - model: authentik_stages_prompt.promptstage
         id: enrollment-prompt
         identifiers:
@@ -223,11 +270,19 @@ data:
             - !KeyOf enrollment-password-repeat
           validation_policies:
             - !KeyOf account-password-policy
+            - !KeyOf client-username-policy
+
+      # Remove the earlier selectable-group policy and its cascaded binding
+      # before creating the fixed client-bundle replacement.
+      - model: authentik_policies_expression.expressionpolicy
+        state: absent
+        identifiers:
+          name: rcrumana-invitation-fixed-email-and-groups
 
       - model: authentik_policies_expression.expressionpolicy
         id: invitation-policy
         identifiers:
-          name: rcrumana-invitation-fixed-email-and-groups
+          name: rcrumana-client-invitation-policy
         attrs:
           expression: |
             from authentik.core.models import Group, User
@@ -235,17 +290,32 @@ data:
             invitation = request.context.get("invitation")
             prompt = request.context.get("prompt_data", {})
             if invitation is None:
+                ak_message("A valid client invitation is required.")
                 return False
 
-            invited_email = str(invitation.fixed_data.get("email", "")).strip().lower()
+            fixed_data = invitation.fixed_data
+            if not isinstance(fixed_data, dict):
+                ak_message("The invitation is malformed. Ask the operator for a new invitation.")
+                return False
+
+            unexpected_fields = set(fixed_data) - {"email"}
+            if unexpected_fields:
+                ak_message("The invitation contains unsupported fields. Ask the operator for a new invitation.")
+                return False
+
+            invited_email = str(fixed_data.get("email", "")).strip().lower()
             submitted_email = str(prompt.get("email", "")).strip().lower()
-            if not invited_email or submitted_email != invited_email:
+            if not invited_email:
+                ak_message("The invitation does not contain an email address.")
+                return False
+            if submitted_email != invited_email:
+                ak_message("The submitted email does not match the invitation.")
                 return False
             if User.objects.filter(email__iexact=invited_email).exists():
+                ak_message("An account already exists for this email address.")
                 return False
 
-            requested = invitation.fixed_data.get("app_groups", [])
-            allowed = {
+            client_group_names = {
                 "app-homepage-client",
                 "app-hypermind",
                 "app-immich",
@@ -253,21 +323,15 @@ data:
                 "app-librechat",
                 "app-nextcloud",
                 "app-uptime-kuma",
-                "headscale-users",
-                "platform-admins",
             }
-            if not isinstance(requested, list) or not requested:
-                return False
-            requested = list(dict.fromkeys(requested))
-            if any(group not in allowed for group in requested):
-                return False
-
-            groups = list(Group.objects.filter(name__in=requested))
-            if len(groups) != len(requested):
+            groups = list(Group.objects.filter(name__in=client_group_names))
+            if len(groups) != len(client_group_names):
+                ak_message("Client enrollment is temporarily unavailable. Contact the operator.")
                 return False
 
             flow_plan = request.context.get("flow_plan")
             if flow_plan is None:
+                ak_message("Client enrollment could not be initialized. Try the invitation again.")
                 return False
             flow_plan.context["groups"] = groups
             return True
@@ -283,7 +347,7 @@ data:
           # sessions, and recovery credentials. Group membership, not user
           # type, controls administrative access.
           user_type: internal
-          user_path_template: users/invited
+          user_path_template: users/clients
 
       - model: authentik_stages_email.emailstage
         id: enrollment-email-verification

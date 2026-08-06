@@ -166,13 +166,19 @@ forced update test and alerting.
 4. Store the break-glass administrator credential offline. Do not use it for
    routine administration.
 5. Confirm the declarative groups exist:
+   - `app-homepage-client`
+   - `app-hypermind`
    - `app-immich`
+   - `app-jellyfin`
+   - `app-librechat`
    - `app-nextcloud`
+   - `app-uptime-kuma`
    - `headscale-users`
    - `platform-admins`
 6. Confirm public enrollment is disabled.
-7. Send an invitation to a test address. It must be single-use, fixed to that
-   address, and expire in 72 hours.
+7. Send a client invitation to a test address using only the fixed `email`
+   field. It must be single-use and expire in 72 hours. Application groups are
+   assigned by policy; `app_groups` is intentionally rejected.
 8. Complete email verification, password setup, passkey registration, TOTP
    authenticator registration, and recovery-code generation.
 9. Verify passkey-first login and password plus TOTP, email OTP, and recovery
@@ -181,6 +187,9 @@ forced update test and alerting.
    enrolled method.
 10. Verify `/if/admin/` is unavailable from a public source but available
     through Headscale.
+
+Use `docs/client-identity-operations.md` for the complete operator checklist
+and send `docs/client-onboarding.md` to invited clients.
 
 Only after these checks should `auth.rcrumana.xyz` be published as DNS-only.
 

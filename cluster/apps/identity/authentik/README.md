@@ -37,21 +37,24 @@ separate `/if/admin/` Ingress must remain private.
 
 ## Bootstrap boundary
 
-The mounted blueprints create the brand, authorization groups, invitation-only
-enrollment, passkey/TOTP/recovery-code setup, passkey-first login, MFA recovery,
-and the Immich/Nextcloud/Headscale OIDC providers. Invitation enrollment also
-confirms the fixed email address for account recovery and OIDC claims. Normal
-authentication is passkey-first, with password plus TOTP, email OTP, or a static
-recovery code available as progressively weaker fallbacks. Invitations
-are created per recipient in the admin UI with a 72-hour expiry,
-`single_use: true`, and fixed data such as:
+The mounted blueprints create the brand, authorization groups, client-only
+invitation enrollment, passkey/TOTP/recovery-code setup, passkey-first login,
+MFA recovery, and the Immich/Nextcloud/Headscale OIDC providers. Invitation
+enrollment also confirms the fixed email address for account recovery and OIDC
+claims. Normal authentication is passkey-first, with password plus TOTP, email
+OTP, or a static recovery code available as progressively weaker fallbacks.
+
+Client invitations are created per recipient in the admin UI with a 72-hour
+expiry, `single_use: true`, and exactly this fixed data:
 
 ```yaml
 email: person@example.com
-app_groups:
-  - app-immich
-  - app-nextcloud
 ```
 
-The enrollment policy rejects missing/unknown groups, duplicate email
-addresses, and changes to the fixed invitation email.
+The enrollment policy assigns the complete non-administrative client bundle;
+invitation authors cannot select groups. It rejects extra fixed-data fields,
+duplicate email addresses, changes to the fixed invitation email, reserved or
+duplicate usernames, and usernames that are unsafe across downstream clients.
+New client identities are placed under `users/clients`. See
+`docs/client-identity-operations.md` for the operator procedure and
+`docs/client-onboarding.md` for the user handoff.
