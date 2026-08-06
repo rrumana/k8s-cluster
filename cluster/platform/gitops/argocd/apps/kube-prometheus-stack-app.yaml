@@ -22,6 +22,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: kube-prometheus-stack
+      # renovate: datasource=helm depName=kube-prometheus-stack versioning=helm registryUrl=https://prometheus-community.github.io/helm-charts
       targetRevision: "80.13.3"
       helm:
         releaseName: kube-prometheus-stack

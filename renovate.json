@@ -9,12 +9,16 @@
     "renovate"
   ],
   "dependencyDashboard": true,
+  "automerge": false,
   "commitHourlyLimit": 0,
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
   "rangeStrategy": "pin",
   "ignorePaths": [
-    "snapshots/**"
+    "snapshots/**",
+    "cluster/platform/base/data/data-operators/postgres-operator/cnpg-*.yaml",
+    "cluster/platform/base/data/data-definitions/valkey/queue/storage-migration-copy-job.yaml",
+    "cluster/platform/registry/harbor/vendor/**"
   ],
   "argocd": {
     "managerFilePatterns": [
@@ -26,21 +30,613 @@
       "/cluster/.+\\.ya?ml$/"
     ]
   },
-  "packageRules": [
+  "customManagers": [
     {
-      "matchManagers": [
-        "argocd"
+      "customType": "regex",
+      "description": "Track explicitly annotated version values outside supported managers",
+      "managerFilePatterns": [
+        "/(^|/).+\\.(?:ya?ml|sh|md)$/",
+        "/(^|/)Dockerfile$/"
       ],
-      "groupName": "Argo CD chart updates"
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?(?: registryUrl=(?<registryUrl>\\S+))?\\s+(?:[A-Za-z0-9_.-]+:\\s*[\\\"']?|[A-Za-z0-9_]+=[\\\"']?)(?<currentValue>v?[0-9][A-Za-z0-9._+-]*)(?:[\\\"']|\\s|$)",
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+-\\s+https://raw\\.githubusercontent\\.com/[^/]+/[^/]+/(?<currentValue>v?[0-9][A-Za-z0-9._+-]*)/[^\\s]+"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}"
     },
     {
-      "matchManagers": [
-        "kubernetes"
+      "customType": "regex",
+      "description": "Track upstream images hardcoded in the observability seeding script",
+      "managerFilePatterns": [
+        "/^scripts/seed-observability-prereqs\\.sh$/"
       ],
-      "matchDatasources": [
-        "docker"
+      "matchStrings": [
+        "[\\\"](?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io|registry\\.k8s\\.io|cr\\.fluentbit\\.io)/[^:\\\"@]+):(?<currentValue>[^\\\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"]"
       ],
-      "groupName": "Container image updates"
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Keep the kubectl helper aligned with the Kubernetes bootstrap version",
+      "managerFilePatterns": [
+        "/^cluster/platform/base/networking/egress-qos/configmap\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\s+: \\\"\\$\\{KUBECTL_VERSION:=(?<currentValue>v[0-9.]+)\\}\\\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Disable Harbor-only OCI chart lookups; annotated custom managers use the true upstream source",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/thirdparty-charts/**"],
+      "enabled": false
+    },
+    {
+      "description": "Do not update private image tags by querying Harbor",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/apps-private/**"],
+      "enabled": false
+    },
+    {
+      "description": "Track custom compatibility builds only through the manual dependency manifest",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/lemker/unifi-os-server",
+        "harbor.rcrumana.xyz/mirror/mostlygeek/llama-swap",
+        "harbor.rcrumana.xyz/mirror/lklynet/hypermind",
+        "harbor.rcrumana.xyz/mirror/library/nextcloud",
+        "harbor.rcrumana.xyz/proxy-ghcr/berriai/litellm"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Never update only the CNPG image override without replacing its vendored manifest",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["cluster/platform/base/data/data-operators/postgres-operator/kustomization.yaml"],
+      "enabled": false
+    },
+    {
+      "description": "Never update only the snapshot-controller image without replacing its vendored release bundle",
+      "matchDatasources": ["docker"],
+      "matchFileNames": ["cluster/platform/base/kube-system/snapshot-controller/deployment-patch.yaml"],
+      "enabled": false
+    },
+    {
+      "description": "Resolve the Harbor GHCR proxy against upstream GHCR",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/proxy-ghcr/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/proxy-ghcr/' 'ghcr.io/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Resolve the Harbor Docker Hub proxy against upstream Docker Hub",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/proxy-dockerhub/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/proxy-dockerhub/' 'docker.io/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Pin Uptime Kuma's mutable rootless channel to an immutable digest",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/proxy-dockerhub/louislam/uptime-kuma"],
+      "pinDigests": true
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/linuxserver/ -> lscr.io/linuxserver/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/linuxserver/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/linuxserver/' 'lscr.io/linuxserver/' packageName}}",
+      "registryUrls": ["https://lscr.io"],
+      "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?[^-]*(?:-(?:[^-]+-)?ls(?<revision>\\d+))?$"
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/cloudnative-pg/ -> ghcr.io/cloudnative-pg/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/cloudnative-pg/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/cloudnative-pg/' 'ghcr.io/cloudnative-pg/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Keep Jellyfin on its current LinuxServer Ubuntu compatibility line",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/linuxserver/jellyfin",
+        "lscr.io/linuxserver/jellyfin"
+      ],
+      "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>ubu\\d+)-ls(?<revision>\\d+)$"
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/tensorchord/ -> ghcr.io/tensorchord/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/tensorchord/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/tensorchord/' 'ghcr.io/tensorchord/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/goauthentik/ -> ghcr.io/goauthentik/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/goauthentik/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/goauthentik/' 'ghcr.io/goauthentik/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/headscale/ -> ghcr.io/juanfont/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/headscale/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/headscale/' 'ghcr.io/juanfont/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/mostlygeek/ -> ghcr.io/mostlygeek/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/mostlygeek/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/mostlygeek/' 'ghcr.io/mostlygeek/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/external-secrets/ -> ghcr.io/external-secrets/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/external-secrets/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/external-secrets/' 'ghcr.io/external-secrets/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/lemker/ -> ghcr.io/lemker/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/lemker/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/lemker/' 'ghcr.io/lemker/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/lklynet/ -> ghcr.io/lklynet/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/lklynet/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/lklynet/' 'ghcr.io/lklynet/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/jkroepke/ -> ghcr.io/jkroepke/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/jkroepke/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/jkroepke/' 'ghcr.io/jkroepke/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/rook/ -> quay.io/rook/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/rook/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/rook/' 'quay.io/rook/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/cephcsi/ -> quay.io/cephcsi/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/cephcsi/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/cephcsi/' 'quay.io/cephcsi/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/metallb/ -> quay.io/metallb/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/metallb/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/metallb/' 'quay.io/metallb/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/frrouting/ -> quay.io/frrouting/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/frrouting/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/frrouting/' 'quay.io/frrouting/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/backube/ -> quay.io/backube/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/backube/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/backube/' 'quay.io/backube/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/brancz/ -> quay.io/brancz/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/brancz/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/brancz/' 'quay.io/brancz/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/jcmoraisjr/ -> quay.io/jcmoraisjr/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/jcmoraisjr/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/jcmoraisjr/' 'quay.io/jcmoraisjr/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/jetstack/ -> quay.io/jetstack/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/jetstack/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/jetstack/' 'quay.io/jetstack/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/kiwigrid/ -> quay.io/kiwigrid/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/kiwigrid/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/kiwigrid/' 'quay.io/kiwigrid/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/prometheus-operator/ -> quay.io/prometheus-operator/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/prometheus-operator/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/prometheus-operator/' 'quay.io/prometheus-operator/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/prometheus/ -> quay.io/prometheus/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/prometheus/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/prometheus/' 'quay.io/prometheus/' packageName}}",
+      "registryUrls": ["https://quay.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/sig-storage/ -> registry.k8s.io/sig-storage/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/sig-storage/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/sig-storage/' 'registry.k8s.io/sig-storage/' packageName}}",
+      "registryUrls": ["https://registry.k8s.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/autoscaling/ -> registry.k8s.io/autoscaling/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/autoscaling/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/autoscaling/' 'registry.k8s.io/autoscaling/' packageName}}",
+      "registryUrls": ["https://registry.k8s.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/metrics-server/ -> registry.k8s.io/metrics-server/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/metrics-server/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/metrics-server/' 'registry.k8s.io/metrics-server/' packageName}}",
+      "registryUrls": ["https://registry.k8s.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/descheduler/ -> registry.k8s.io/descheduler/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/descheduler/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/descheduler/' 'registry.k8s.io/descheduler/' packageName}}",
+      "registryUrls": ["https://registry.k8s.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/kube-state-metrics/ -> registry.k8s.io/kube-state-metrics/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/kube-state-metrics/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/kube-state-metrics/' 'registry.k8s.io/kube-state-metrics/' packageName}}",
+      "registryUrls": ["https://registry.k8s.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/linkerd/ -> cr.l5d.io/linkerd/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/linkerd/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/linkerd/' 'cr.l5d.io/linkerd/' packageName}}",
+      "registryUrls": ["https://cr.l5d.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/fluent/ -> cr.fluentbit.io/fluent/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/fluent/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/fluent/' 'cr.fluentbit.io/fluent/' packageName}}",
+      "registryUrls": ["https://cr.fluentbit.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/elasticsearch/ -> docker.elastic.co/elasticsearch/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/elasticsearch/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/elasticsearch/' 'docker.elastic.co/elasticsearch/' packageName}}",
+      "registryUrls": ["https://docker.elastic.co"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/crisu1710/ -> docker.io/crisu1710/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/crisu1710/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/crisu1710/' 'docker.io/crisu1710/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/grafana/ -> docker.io/grafana/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/grafana/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/grafana/' 'docker.io/grafana/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/bats/ -> docker.io/bats/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/bats/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/bats/' 'docker.io/bats/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/library/ -> docker.io/library/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/library/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/library/' 'docker.io/library/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/hashicorp/ -> docker.io/hashicorp/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/hashicorp/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/hashicorp/' 'docker.io/hashicorp/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/opensearchproject/ -> docker.io/opensearchproject/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/opensearchproject/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/opensearchproject/' 'docker.io/opensearchproject/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/bitnami/ -> docker.io/bitnami/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/bitnami/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/bitnami/' 'docker.io/bitnami/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/qmcgaw/ -> docker.io/qmcgaw/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/qmcgaw/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/qmcgaw/' 'docker.io/qmcgaw/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Resolve mirrored cert-manager chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["cert-manager", "harbor.rcrumana.xyz/thirdparty-charts/cert-manager"],
+      "overridePackageName": "cert-manager",
+      "registryUrls": ["https://charts.jetstack.io"]
+    },
+    {
+      "description": "Resolve mirrored descheduler chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["descheduler", "harbor.rcrumana.xyz/thirdparty-charts/descheduler"],
+      "overridePackageName": "descheduler",
+      "registryUrls": ["https://kubernetes-sigs.github.io/descheduler/"]
+    },
+    {
+      "description": "Resolve mirrored External Secrets chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["external-secrets", "harbor.rcrumana.xyz/thirdparty-charts/external-secrets"],
+      "overridePackageName": "external-secrets",
+      "registryUrls": ["https://charts.external-secrets.io"]
+    },
+    {
+      "description": "Resolve mirrored HAProxy Ingress chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["haproxy-ingress", "harbor.rcrumana.xyz/thirdparty-charts/haproxy-ingress"],
+      "overridePackageName": "haproxy-ingress",
+      "registryUrls": ["https://haproxy-ingress.github.io/charts"]
+    },
+    {
+      "description": "Resolve mirrored kube-prometheus-stack chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["kube-prometheus-stack", "harbor.rcrumana.xyz/thirdparty-charts/kube-prometheus-stack"],
+      "overridePackageName": "kube-prometheus-stack",
+      "registryUrls": ["https://prometheus-community.github.io/helm-charts"]
+    },
+    {
+      "description": "Resolve mirrored Linkerd edge charts upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["linkerd-control-plane", "linkerd-crds", "linkerd-viz", "linkerd2-cni", "harbor.rcrumana.xyz/thirdparty-charts/linkerd-control-plane", "harbor.rcrumana.xyz/thirdparty-charts/linkerd-crds", "harbor.rcrumana.xyz/thirdparty-charts/linkerd-viz", "harbor.rcrumana.xyz/thirdparty-charts/linkerd2-cni"],
+      "registryUrls": ["https://helm.linkerd.io/edge"]
+    },
+    {
+      "description": "Resolve mirrored MetalLB chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["metallb", "harbor.rcrumana.xyz/thirdparty-charts/metallb"],
+      "overridePackageName": "metallb",
+      "registryUrls": ["https://metallb.github.io/metallb"]
+    },
+    {
+      "description": "Resolve mirrored metrics-server chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["metrics-server", "harbor.rcrumana.xyz/thirdparty-charts/metrics-server"],
+      "overridePackageName": "metrics-server",
+      "registryUrls": ["https://kubernetes-sigs.github.io/metrics-server/"]
+    },
+    {
+      "description": "Resolve mirrored OpenSearch operator chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["opensearch-operator", "harbor.rcrumana.xyz/thirdparty-charts/opensearch-operator"],
+      "overridePackageName": "opensearch-operator",
+      "registryUrls": ["https://opensearch-project.github.io/opensearch-k8s-operator"]
+    },
+    {
+      "description": "Resolve mirrored Rook chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["rook-ceph", "harbor.rcrumana.xyz/thirdparty-charts/rook-ceph"],
+      "overridePackageName": "rook-ceph",
+      "registryUrls": ["https://charts.rook.io/release"]
+    },
+    {
+      "description": "Resolve mirrored Valkey OCI chart upstream",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["registry-1.docker.io/bitnamicharts/valkey"],
+      "registryUrls": ["https://registry-1.docker.io"]
+    },
+    {
+      "description": "Resolve mirrored Vault chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["vault", "harbor.rcrumana.xyz/thirdparty-charts/vault"],
+      "overridePackageName": "vault",
+      "registryUrls": ["https://helm.releases.hashicorp.com"]
+    },
+    {
+      "description": "Resolve mirrored VolSync chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["volsync", "harbor.rcrumana.xyz/thirdparty-charts/volsync"],
+      "overridePackageName": "volsync",
+      "registryUrls": ["https://backube.github.io/helm-charts/"]
+    },
+    {
+      "description": "Group media application updates",
+      "matchFileNames": ["cluster/apps/media/**"],
+      "groupName": "Media application updates",
+      "groupSlug": "media-applications"
+    },
+    {
+      "description": "Group general application updates",
+      "matchFileNames": ["cluster/apps/productivity/**", "cluster/apps/other/**", "cluster/apps/web/**", "cluster/apps/ai/**"],
+      "groupName": "Application updates",
+      "groupSlug": "applications"
+    },
+    {
+      "description": "Coordinate observability and search updates",
+      "matchFileNames": ["cluster/platform/observability/search/**", "scripts/seed-observability-prereqs.sh"],
+      "groupName": "Observability and search updates",
+      "groupSlug": "observability-search",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate monitoring updates",
+      "matchFileNames": ["cluster/platform/observability/monitoring/**", "cluster/platform/gitops/argocd/apps/kube-prometheus-stack-app.yaml"],
+      "groupName": "Monitoring stack updates",
+      "groupSlug": "monitoring-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep scheduling charts and their explicitly pinned images together",
+      "matchFileNames": ["cluster/platform/scheduling/**", "cluster/platform/gitops/argocd/apps/descheduler-app.yaml", "cluster/platform/gitops/argocd/apps/metrics-server-app.yaml"],
+      "groupName": "Scheduling platform updates",
+      "groupSlug": "scheduling-platform"
+    },
+    {
+      "description": "Coordinate MetalLB chart and runtime images",
+      "matchFileNames": ["cluster/platform/base/networking/metallb/**", "cluster/platform/gitops/argocd/apps/metallb-app.yaml"],
+      "groupName": "MetalLB stack updates",
+      "groupSlug": "metallb-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate VolSync chart and runtime image",
+      "matchFileNames": ["cluster/platform/base/backup/volsync/**", "cluster/platform/gitops/argocd/apps/volsync-app.yaml"],
+      "groupName": "Backup stack updates",
+      "groupSlug": "backup-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate HAProxy Ingress chart and values",
+      "matchFileNames": ["cluster/platform/ingress/haproxy/**", "cluster/platform/gitops/argocd/apps/haproxy-app.yaml"],
+      "groupName": "Ingress stack updates",
+      "groupSlug": "ingress-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep the monitoring chart and observability seed version together",
+      "matchPackageNames": ["kube-prometheus-stack"],
+      "groupName": "Monitoring stack updates",
+      "groupSlug": "monitoring-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep the OpenSearch operator chart and seed version together",
+      "matchPackageNames": ["opensearch-operator"],
+      "groupName": "Observability and search updates",
+      "groupSlug": "observability-search",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate storage, Rook, Ceph, and CSI updates",
+      "matchFileNames": ["cluster/platform/base/storage/**", "cluster/platform/gitops/argocd/apps/rook-ceph-operator-app.yaml"],
+      "groupName": "Storage stack updates",
+      "groupSlug": "storage-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep storage images coordinated even when they are referenced outside the storage directory",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/rook/ceph",
+        "quay.io/rook/ceph",
+        "harbor.rcrumana.xyz/mirror/cephcsi/cephcsi",
+        "quay.io/cephcsi/cephcsi",
+        "harbor.rcrumana.xyz/mirror/sig-storage/**",
+        "registry.k8s.io/sig-storage/**",
+        "quay.io/ceph/ceph"
+      ],
+      "groupName": "Storage stack updates",
+      "groupSlug": "storage-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate CNPG and PostgreSQL updates",
+      "matchFileNames": ["cluster/platform/base/data/data-operators/postgres-operator/**", "cluster/platform/base/data/data-definitions/postgres/**"],
+      "groupName": "PostgreSQL stack updates",
+      "groupSlug": "postgresql-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate Linkerd updates",
+      "matchFileNames": ["cluster/platform/service-mesh/linkerd/**", "cluster/platform/gitops/argocd/apps/linkerd*.yaml"],
+      "groupName": "Linkerd stack updates",
+      "groupSlug": "linkerd-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate identity and security updates",
+      "matchFileNames": ["cluster/apps/identity/**", "cluster/platform/base/security/**", "cluster/platform/gitops/argocd/apps/vault-app.yaml", "cluster/platform/gitops/argocd/apps/cert-manager-app.yaml", "cluster/platform/gitops/argocd/apps/external-secrets-app.yaml"],
+      "groupName": "Identity and security updates",
+      "groupSlug": "identity-security",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate Valkey chart and runtime updates",
+      "matchFileNames": ["cluster/platform/gitops/argocd/apps/valkey-*.yaml", "cluster/platform/base/data/data-definitions/valkey/**"],
+      "groupName": "Valkey stack updates",
+      "groupSlug": "valkey-stack",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Gate every dependency involved in the custom Nextcloud build",
+      "matchFileNames": ["cluster/apps/productivity/nextcloud/image/Dockerfile", "cluster/platform/gitops/argocd/apps/nextcloud-app.yaml"],
+      "groupName": "Nextcloud custom image inputs",
+      "groupSlug": "nextcloud-custom-image",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate Kubernetes bootstrap and node-tool updates",
+      "matchFileNames": ["cluster/bootstrap/**", "cluster/platform/base/networking/egress-qos/**"],
+      "groupName": "Kubernetes bootstrap updates",
+      "groupSlug": "kubernetes-bootstrap",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Gate updates to the artifact promotion toolchain",
+      "matchFileNames": ["cluster/platform/automation/renovate/promoter-*"],
+      "groupName": "Renovate promoter toolchain",
+      "groupSlug": "renovate-promoter-toolchain",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep promoter binary updates together",
+      "matchPackageNames": ["google/go-containerregistry", "helm/helm"],
+      "groupName": "Renovate promoter toolchain",
+      "groupSlug": "renovate-promoter-toolchain",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Require dashboard approval for every major update",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep manual compatibility tracks visible but gated",
+      "matchFileNames": ["dependencies/renovate-manual-tracks.yaml"],
+      "dependencyDashboardApproval": true
     }
   ]
 }

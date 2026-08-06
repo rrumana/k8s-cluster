@@ -18,6 +18,7 @@ spec:
     # Source 1: HAProxy Helm Chart
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: haproxy-ingress
+      # renovate: datasource=helm depName=haproxy-ingress versioning=helm registryUrl=https://haproxy-ingress.github.io/charts
       targetRevision: "0.16.0"
       helm:
         releaseName: haproxy-ingress

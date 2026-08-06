@@ -13,6 +13,7 @@ spec:
 
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      # renovate: datasource=helm depName=rook-ceph versioning=helm registryUrl=https://charts.rook.io/release
       targetRevision: "v1.19.3"
       chart: rook-ceph
       helm:

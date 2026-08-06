@@ -12,6 +12,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: linkerd-control-plane
+      # renovate: datasource=helm depName=linkerd-control-plane versioning=helm registryUrl=https://helm.linkerd.io/edge
       targetRevision: "2026.3.3"
       helm:
         releaseName: linkerd-control-plane

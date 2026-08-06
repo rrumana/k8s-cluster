@@ -13,6 +13,7 @@ spec:
   
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      # renovate: datasource=helm depName=metallb versioning=helm registryUrl=https://metallb.github.io/metallb
       targetRevision: "0.15.3"
       chart: metallb
       helm:

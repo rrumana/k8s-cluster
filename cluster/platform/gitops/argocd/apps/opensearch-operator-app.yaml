@@ -10,6 +10,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: opensearch-operator
+      # renovate: datasource=helm depName=opensearch-operator versioning=helm registryUrl=https://opensearch-project.github.io/opensearch-k8s-operator
       targetRevision: "2.8.0"
       helm:
         releaseName: opensearch-operator

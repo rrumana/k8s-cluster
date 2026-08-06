@@ -12,6 +12,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: volsync
+      # renovate: datasource=helm depName=volsync versioning=helm registryUrl=https://backube.github.io/helm-charts/
       targetRevision: "0.15.0"
       helm:
         releaseName: volsync

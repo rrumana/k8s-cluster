@@ -10,6 +10,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: valkey
+      # renovate: datasource=docker depName=registry-1.docker.io/bitnamicharts/valkey versioning=docker registryUrl=https://registry-1.docker.io
       targetRevision: "5.4.9"
       helm:
         releaseName: valkey-cache

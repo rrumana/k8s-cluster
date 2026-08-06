@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "harborHost": "harbor.rcrumana.xyz",
+  "imageMappings": [
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/linuxserver/", "sourcePrefix": "lscr.io/linuxserver/", "registryUrl": "https://lscr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/cloudnative-pg/", "sourcePrefix": "ghcr.io/cloudnative-pg/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/tensorchord/", "sourcePrefix": "ghcr.io/tensorchord/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/goauthentik/", "sourcePrefix": "ghcr.io/goauthentik/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/headscale/", "sourcePrefix": "ghcr.io/juanfont/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/mostlygeek/", "sourcePrefix": "ghcr.io/mostlygeek/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/external-secrets/", "sourcePrefix": "ghcr.io/external-secrets/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/lemker/", "sourcePrefix": "ghcr.io/lemker/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/lklynet/", "sourcePrefix": "ghcr.io/lklynet/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/jkroepke/", "sourcePrefix": "ghcr.io/jkroepke/", "registryUrl": "https://ghcr.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/rook/", "sourcePrefix": "quay.io/rook/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/cephcsi/", "sourcePrefix": "quay.io/cephcsi/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/metallb/", "sourcePrefix": "quay.io/metallb/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/frrouting/", "sourcePrefix": "quay.io/frrouting/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/backube/", "sourcePrefix": "quay.io/backube/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/brancz/", "sourcePrefix": "quay.io/brancz/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/jcmoraisjr/", "sourcePrefix": "quay.io/jcmoraisjr/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/jetstack/", "sourcePrefix": "quay.io/jetstack/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/kiwigrid/", "sourcePrefix": "quay.io/kiwigrid/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/prometheus-operator/", "sourcePrefix": "quay.io/prometheus-operator/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/prometheus/", "sourcePrefix": "quay.io/prometheus/", "registryUrl": "https://quay.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/sig-storage/", "sourcePrefix": "registry.k8s.io/sig-storage/", "registryUrl": "https://registry.k8s.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/autoscaling/", "sourcePrefix": "registry.k8s.io/autoscaling/", "registryUrl": "https://registry.k8s.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/metrics-server/", "sourcePrefix": "registry.k8s.io/metrics-server/", "registryUrl": "https://registry.k8s.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/descheduler/", "sourcePrefix": "registry.k8s.io/descheduler/", "registryUrl": "https://registry.k8s.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/kube-state-metrics/", "sourcePrefix": "registry.k8s.io/kube-state-metrics/", "registryUrl": "https://registry.k8s.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/linkerd/", "sourcePrefix": "cr.l5d.io/linkerd/", "registryUrl": "https://cr.l5d.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/fluent/", "sourcePrefix": "cr.fluentbit.io/fluent/", "registryUrl": "https://cr.fluentbit.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/elasticsearch/", "sourcePrefix": "docker.elastic.co/elasticsearch/", "registryUrl": "https://docker.elastic.co" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/crisu1710/", "sourcePrefix": "docker.io/crisu1710/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/grafana/", "sourcePrefix": "docker.io/grafana/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/bats/", "sourcePrefix": "docker.io/bats/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/library/", "sourcePrefix": "docker.io/library/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/hashicorp/", "sourcePrefix": "docker.io/hashicorp/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/opensearchproject/", "sourcePrefix": "docker.io/opensearchproject/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/bitnami/", "sourcePrefix": "docker.io/bitnami/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/qmcgaw/", "sourcePrefix": "docker.io/qmcgaw/", "registryUrl": "https://index.docker.io" }
+  ],
+  "charts": [
+    { "name": "cert-manager", "applicationPath": "cluster/platform/gitops/argocd/apps/cert-manager-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://charts.jetstack.io" },
+    { "name": "descheduler", "applicationPath": "cluster/platform/gitops/argocd/apps/descheduler-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://kubernetes-sigs.github.io/descheduler/" },
+    { "name": "external-secrets", "applicationPath": "cluster/platform/gitops/argocd/apps/external-secrets-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://charts.external-secrets.io" },
+    { "name": "haproxy-ingress", "applicationPath": "cluster/platform/gitops/argocd/apps/haproxy-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://haproxy-ingress.github.io/charts" },
+    { "name": "kube-prometheus-stack", "applicationPath": "cluster/platform/gitops/argocd/apps/kube-prometheus-stack-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://prometheus-community.github.io/helm-charts" },
+    { "name": "linkerd-control-plane", "applicationPath": "cluster/platform/gitops/argocd/apps/linkerd-control-plane-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.linkerd.io/edge" },
+    { "name": "linkerd-crds", "applicationPath": "cluster/platform/gitops/argocd/apps/linkerd-crds-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.linkerd.io/edge" },
+    { "name": "linkerd-viz", "applicationPath": "cluster/platform/gitops/argocd/apps/linkerd-viz-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.linkerd.io/edge" },
+    { "name": "linkerd2-cni", "applicationPath": "cluster/platform/gitops/argocd/apps/linkerd2-cni-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.linkerd.io/edge" },
+    { "name": "metallb", "applicationPath": "cluster/platform/gitops/argocd/apps/metallb-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://metallb.github.io/metallb" },
+    { "name": "metrics-server", "applicationPath": "cluster/platform/gitops/argocd/apps/metrics-server-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://kubernetes-sigs.github.io/metrics-server/" },
+    { "name": "opensearch-operator", "applicationPath": "cluster/platform/gitops/argocd/apps/opensearch-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://opensearch-project.github.io/opensearch-k8s-operator" },
+    { "name": "rook-ceph", "applicationPath": "cluster/platform/gitops/argocd/apps/rook-ceph-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://charts.rook.io/release" },
+    { "name": "valkey", "applicationPath": "cluster/platform/gitops/argocd/apps/valkey-cache-app.yaml", "additionalApplicationPaths": ["cluster/platform/gitops/argocd/apps/valkey-queue-app.yaml"], "upstreamType": "oci", "upstreamRepository": "oci://registry-1.docker.io/bitnamicharts/valkey" },
+    { "name": "vault", "applicationPath": "cluster/platform/gitops/argocd/apps/vault-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.releases.hashicorp.com" },
+    { "name": "volsync", "applicationPath": "cluster/platform/gitops/argocd/apps/volsync-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://backube.github.io/helm-charts/" }
+  ],
+  "manualImages": [
+    {
+      "destinationRepository": "harbor.rcrumana.xyz/apps-private/nextcloud",
+      "reason": "OIDC-enabled image must be rebuilt and tested before its immutable digest changes."
+    },
+    {
+      "destinationRepository": "harbor.rcrumana.xyz/mirror/lemker/unifi-os-server",
+      "reason": "Known-working snapshot; upstream tags are not byte-compatible with the deployed artifact."
+    },
+    {
+      "destinationRepository": "harbor.rcrumana.xyz/mirror/lklynet/hypermind",
+      "reason": "The deployed snapshot no longer exists in upstream GHCR."
+    },
+    {
+      "destinationRepository": "harbor.rcrumana.xyz/mirror/mostlygeek/llama-swap",
+      "reason": "The Vulkan variant is locally constructed and has no equivalent upstream tag."
+    }
+  ],
+  "mutableTagExceptions": [
+    {
+      "reference": "harbor.rcrumana.xyz/proxy-dockerhub/louislam/uptime-kuma:2-rootless",
+      "reason": "Temporary compatibility channel; Renovate tracks digest changes and conversion to an immutable release remains manual."
+    },
+    {
+      "reference": "harbor.rcrumana.xyz/apps-private/portfolio:latest",
+      "reason": "First-party deployment is managed by its private build workflow and is outside third-party promotion."
+    }
+  ]
+}

@@ -10,6 +10,7 @@ spec:
   source:
     repoURL: harbor.rcrumana.xyz/thirdparty-charts
     chart: vault
+    # renovate: datasource=helm depName=vault versioning=helm registryUrl=https://helm.releases.hashicorp.com
     targetRevision: "0.32.0"
     helm:
       values: |

@@ -8,3 +8,13 @@ resources:
   - externalsecret.yaml
   - harbor-pull-creds.yaml
   - cronjob.yaml
+  - promoter-cronjob.yaml
+
+configMapGenerator:
+  - name: renovate-promoter
+    files:
+      - promoter.mjs
+      - artifact-sources.json
+
+generatorOptions:
+  disableNameSuffixHash: true

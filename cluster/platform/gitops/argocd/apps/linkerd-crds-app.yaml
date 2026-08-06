@@ -12,6 +12,7 @@ spec:
   source:
     repoURL: harbor.rcrumana.xyz/thirdparty-charts
     chart: linkerd-crds
+    # renovate: datasource=helm depName=linkerd-crds versioning=helm registryUrl=https://helm.linkerd.io/edge
     targetRevision: "2026.3.3"
     helm:
       releaseName: linkerd-crds

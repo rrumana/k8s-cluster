@@ -12,6 +12,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: linkerd2-cni
+      # renovate: datasource=helm depName=linkerd2-cni versioning=helm registryUrl=https://helm.linkerd.io/edge
       targetRevision: "2026.3.3"
       helm:
         releaseName: linkerd2-cni

@@ -1,0 +1,76 @@
+# Dependencies whose deployed artifacts cannot be updated safely by changing a
+# tag alone. Renovate keeps these visible in the Dependency Dashboard. An
+# approved PR is a starting point for the documented regenerate/rebuild and
+# compatibility work; merging only this file does not deploy anything.
+dependencies:
+  cloudnativePg:
+    deployedArtifact: cluster/platform/base/data/data-operators/postgres-operator/cnpg-1.27.1.yaml
+    # renovate: datasource=github-releases depName=cloudnative-pg/cloudnative-pg versioning=loose
+    currentVersion: v1.27.1
+    action: Replace the complete upstream manifest, CRDs, controller image, and kustomization references together.
+
+  snapshotController:
+    deployedArtifact: cluster/platform/base/kube-system/snapshot-controller/upstream
+    # renovate: datasource=github-releases depName=kubernetes-csi/external-snapshotter versioning=loose
+    currentVersion: v8.5.0
+    action: Replace the complete upstream RBAC, CRDs, controller manifest, and Harbor image patch together.
+
+  nextcloudBase:
+    deployedArtifact: cluster/apps/productivity/nextcloud/image/Dockerfile
+    # renovate: datasource=docker depName=docker.io/library/nextcloud versioning=docker
+    currentVersion: 33.0.0-apache
+    action: Rebuild, test, and publish the apps-private Nextcloud image with a new immutable digest.
+
+  nextcloudUserOidc:
+    deployedArtifact: cluster/apps/productivity/nextcloud/image/Dockerfile
+    # renovate: datasource=github-releases depName=nextcloud-releases/user_oidc versioning=loose
+    currentVersion: v8.10.1
+    action: Update the release checksum, rebuild, test, and publish the apps-private Nextcloud image.
+
+  unifiOsServer:
+    deployedArtifact: harbor.rcrumana.xyz/mirror/lemker/unifi-os-server:2026-03-31
+    # renovate: datasource=docker depName=ghcr.io/lemker/unifi-os-server versioning=docker
+    currentVersion: 1.0.0
+    action: Validate upstream image behavior against the known-working local snapshot before changing the deployment.
+
+  llamaSwap:
+    deployedArtifact: harbor.rcrumana.xyz/mirror/mostlygeek/llama-swap:v174-vulkan
+    # renovate: datasource=github-releases depName=mostlygeek/llama-swap versioning=loose
+    currentVersion: v174
+    action: Build and validate an equivalent Vulkan variant before updating all three llama-swap consumers.
+
+  liteLlm:
+    deployedArtifact: harbor.rcrumana.xyz/proxy-ghcr/berriai/litellm:v1.81.14-stable.gpt-5.4-patch7
+    # renovate: datasource=github-releases depName=BerriAI/litellm versioning=loose
+    currentVersion: v1.81.14
+    action: Rebase the GPT-5.4 patch, rebuild, and validate compatibility before changing the deployment.
+
+  hypermind:
+    deployedArtifact: harbor.rcrumana.xyz/mirror/lklynet/hypermind:2026-03-31
+    # renovate: datasource=github-releases depName=lklynet/hypermind versioning=loose
+    currentVersion: v1.0.1
+    action: The upstream GHCR tag is no longer available; review source releases and rebuild the snapshot explicitly.
+
+  vueTorrent:
+    deployedArtifact: cluster/apps/media/arr/deployment.yaml
+    # renovate: datasource=github-releases depName=VueTorrent/VueTorrent versioning=loose
+    currentVersion: v2.31.0
+    action: Update the embedded archive version and SHA-256 checksum together, then validate the qBittorrent web UI.
+
+  jellyfinSsoPlugin:
+    deployedArtifact: cluster/apps/media/jellyfin/deployment.yaml
+    # renovate: datasource=github-releases depName=9p4/jellyfin-plugin-sso versioning=loose
+    currentVersion: v4.0.0.4
+    action: Update the embedded plugin version and SHA-256 checksum together, then validate OIDC login and break-glass access.
+
+  harborVendoredChart:
+    deployedArtifact: cluster/platform/registry/harbor/vendor/harbor/Chart.yaml
+    # renovate: datasource=helm depName=harbor versioning=helm registryUrl=https://helm.goharbor.io
+    currentVersion: 1.18.3
+    action: Pull and review the complete chart into the vendor directory; never update only Chart.yaml.
+
+  ciliumBootstrapChart:
+    deployedArtifact: cluster/bootstrap/cilium/README.md
+    # renovate: datasource=helm depName=cilium versioning=helm registryUrl=https://helm.cilium.io
+    currentVersion: 1.18.4
+    action: Review Kubernetes compatibility and regenerate the bootstrap procedure before a control-plane upgrade.

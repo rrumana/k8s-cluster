@@ -1,0 +1,96 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate-promoter
+spec:
+  schedule: "*/30 * * * *"
+  timeZone: America/Los_Angeles
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          annotations:
+            linkerd.io/inject: disabled
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          imagePullSecrets:
+            - name: harbor-pull-creds
+          containers:
+            - name: promoter
+              image: harbor.rcrumana.xyz/proxy-ghcr/renovatebot/renovate:43.288.0
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+                - -ec
+              args:
+                - |-
+                  # renovate: datasource=github-releases depName=google/go-containerregistry versioning=semver-coerced
+                  CRANE_VERSION="0.20.6"
+                  CRANE_SHA256="c1d593d01551f2c9a3df5ca0a0be4385a839bd9b86d4a76e18d7b17d16559127"
+                  # renovate: datasource=github-releases depName=helm/helm versioning=semver-coerced
+                  HELM_VERSION="3.18.6"
+                  TOOLS_DIR=$(mktemp -d /tmp/renovate-promoter-tools.XXXXXX)
+
+                  curl --fail --location --show-error --silent --retry 3 \
+                    --output "${TOOLS_DIR}/crane.tgz" \
+                    "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz"
+                  echo "${CRANE_SHA256}  ${TOOLS_DIR}/crane.tgz" | sha256sum --check
+                  tar --extract --gzip --file "${TOOLS_DIR}/crane.tgz" --directory "${TOOLS_DIR}" crane
+                  chmod 0755 "${TOOLS_DIR}/crane"
+
+                  install-tool helm "${HELM_VERSION}"
+                  export PATH="${TOOLS_DIR}:${PATH}"
+                  exec node /etc/renovate-promoter/promoter.mjs
+              env:
+                - name: GITHUB_REPOSITORY
+                  value: rrumana/k8s-cluster
+                - name: GITHUB_ALLOWED_AUTHOR
+                  value: rrumana
+                - name: ARTIFACT_CATALOG
+                  value: /etc/renovate-promoter/artifact-sources.json
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-secrets
+                      key: RENOVATE_TOKEN
+                - name: HARBOR_DOCKER_CONFIG
+                  value: /etc/harbor-auth/config.json
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              volumeMounts:
+                - name: promoter-config
+                  mountPath: /etc/renovate-promoter
+                  readOnly: true
+                - name: harbor-auth
+                  mountPath: /etc/harbor-auth
+                  readOnly: true
+          volumes:
+            - name: promoter-config
+              configMap:
+                name: renovate-promoter
+            - name: harbor-auth
+              secret:
+                secretName: harbor-pull-creds
+                defaultMode: 0444
+                items:
+                  - key: .dockerconfigjson
+                    path: config.json

@@ -12,6 +12,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       chart: linkerd-viz
+      # renovate: datasource=helm depName=linkerd-viz versioning=helm registryUrl=https://helm.linkerd.io/edge
       targetRevision: "2026.3.3"
       helm:
         releaseName: linkerd-viz
