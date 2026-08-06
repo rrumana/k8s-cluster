@@ -12,7 +12,7 @@ spec:
     repoURL: harbor.rcrumana.xyz/thirdparty-charts
     chart: cert-manager
     # renovate: datasource=helm depName=cert-manager versioning=helm registryUrl=https://charts.jetstack.io
-    targetRevision: "v1.20.0"
+    targetRevision: "v1.21.1"
     helm:
       values: |
         installCRDs: true
