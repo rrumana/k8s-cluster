@@ -12,7 +12,7 @@
   "automerge": false,
   "commitHourlyLimit": 0,
   "prHourlyLimit": 0,
-  "prConcurrentLimit": 0,
+  "prConcurrentLimit": 5,
   "rangeStrategy": "pin",
   "ignorePaths": [
     "snapshots/**",
@@ -65,6 +65,18 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\s+: \\\"\\$\\{KUBECTL_VERSION:=(?<currentValue>v[0-9.]+)\\}\\\""
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Track PostgreSQL images in CloudNativePG Cluster resources",
+      "managerFilePatterns": [
+        "/^cluster/platform/base/data/data-definitions/postgres/[^/]+/cluster\\.yaml$/"
+      ],
+      "matchStrings": [
+        "imageName:\\s*[\\\"']?(?<depName>[^\\s\\\"'@:]+(?:/[^\\s\\\"'@:]+)+):(?<currentValue>[^\\s\\\"'@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"']?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "packageRules": [
@@ -489,16 +501,8 @@
       "groupSlug": "media-applications"
     },
     {
-      "description": "Group general application updates",
-      "matchFileNames": ["cluster/apps/productivity/**", "cluster/apps/other/**", "cluster/apps/web/**", "cluster/apps/ai/**"],
-      "groupName": "Application updates",
-      "groupSlug": "applications"
-    },
-    {
-      "description": "Coordinate observability and search updates",
+      "description": "Gate observability and search updates while keeping independent components separate",
       "matchFileNames": ["cluster/platform/observability/search/**", "scripts/seed-observability-prereqs.sh"],
-      "groupName": "Observability and search updates",
-      "groupSlug": "observability-search",
       "dependencyDashboardApproval": true
     },
     {
@@ -543,10 +547,45 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Keep the OpenSearch operator chart and seed version together",
-      "matchPackageNames": ["opensearch-operator"],
-      "groupName": "Observability and search updates",
-      "groupSlug": "observability-search",
+      "description": "Keep the OpenSearch operator chart and runtime images together",
+      "matchPackageNames": [
+        "opensearch-operator",
+        "harbor.rcrumana.xyz/thirdparty-charts/opensearch-operator",
+        "harbor.rcrumana.xyz/mirror/opensearchproject/opensearch-operator",
+        "docker.io/opensearchproject/opensearch-operator"
+      ],
+      "groupName": "OpenSearch operator updates",
+      "groupSlug": "opensearch-operator",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep OpenSearch data-plane image references together",
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/opensearchproject/opensearch",
+        "docker.io/opensearchproject/opensearch"
+      ],
+      "groupName": "OpenSearch cluster updates",
+      "groupSlug": "opensearch-cluster",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Validate Data Prepper independently from OpenSearch and Fluent Bit",
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/opensearchproject/data-prepper",
+        "docker.io/opensearchproject/data-prepper"
+      ],
+      "groupName": "Data Prepper updates",
+      "groupSlug": "data-prepper",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Validate Fluent Bit independently from the rest of the search stack",
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/fluent/fluent-bit",
+        "cr.fluentbit.io/fluent/fluent-bit"
+      ],
+      "groupName": "Fluent Bit updates",
+      "groupSlug": "fluent-bit",
       "dependencyDashboardApproval": true
     },
     {
@@ -573,10 +612,34 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Coordinate CNPG and PostgreSQL updates",
-      "matchFileNames": ["cluster/platform/base/data/data-operators/postgres-operator/**", "cluster/platform/base/data/data-definitions/postgres/**"],
-      "groupName": "PostgreSQL stack updates",
-      "groupSlug": "postgresql-stack",
+      "description": "Gate the complete vendored CloudNativePG operator upgrade separately",
+      "matchFileNames": ["cluster/platform/base/data/data-operators/postgres-operator/**"],
+      "groupName": "CloudNativePG operator updates",
+      "groupSlug": "cloudnative-pg-operator",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Put the manual CloudNativePG release track in the operator upgrade group",
+      "matchPackageNames": ["cloudnative-pg/cloudnative-pg"],
+      "groupName": "CloudNativePG operator updates",
+      "groupSlug": "cloudnative-pg-operator",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate ordinary CloudNativePG database image updates",
+      "matchFileNames": ["cluster/platform/base/data/data-definitions/postgres/**"],
+      "groupName": "PostgreSQL database image updates",
+      "groupSlug": "postgresql-database-images",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Validate the VectorChord PostgreSQL image separately",
+      "matchPackageNames": [
+        "harbor.rcrumana.xyz/mirror/tensorchord/cloudnative-vectorchord",
+        "ghcr.io/tensorchord/cloudnative-vectorchord"
+      ],
+      "groupName": "VectorChord PostgreSQL image updates",
+      "groupSlug": "vectorchord-postgresql-image",
       "dependencyDashboardApproval": true
     },
     {
@@ -587,10 +650,51 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "Coordinate identity and security updates",
-      "matchFileNames": ["cluster/apps/identity/**", "cluster/platform/base/security/**", "cluster/platform/gitops/argocd/apps/vault-app.yaml", "cluster/platform/gitops/argocd/apps/cert-manager-app.yaml", "cluster/platform/gitops/argocd/apps/external-secrets-app.yaml"],
-      "groupName": "Identity and security updates",
-      "groupSlug": "identity-security",
+      "description": "Gate identity and security updates without forcing unrelated components into one PR",
+      "matchFileNames": [
+        "cluster/apps/identity/**",
+        "cluster/platform/base/security/**",
+        "cluster/platform/gitops/argocd/apps/authentik-app.yaml",
+        "cluster/platform/gitops/argocd/apps/vault-app.yaml",
+        "cluster/platform/gitops/argocd/apps/vault-app-replicated-app.yaml",
+        "cluster/platform/gitops/argocd/apps/cert-manager*.yaml",
+        "cluster/platform/gitops/argocd/apps/external-secrets*.yaml"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Validate Authentik updates independently",
+      "matchFileNames": ["cluster/apps/identity/authentik/**", "cluster/platform/gitops/argocd/apps/authentik-app.yaml"],
+      "groupName": "Authentik updates",
+      "groupSlug": "authentik",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep the live replicated Vault deployment separate from the legacy chart",
+      "matchFileNames": ["cluster/platform/base/security/vault-app-replicated/**", "cluster/platform/gitops/argocd/apps/vault-app-replicated-app.yaml"],
+      "groupName": "Vault server updates",
+      "groupSlug": "vault-server",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Gate the legacy Vault chart independently from the live Vault StatefulSet",
+      "matchFileNames": ["cluster/platform/gitops/argocd/apps/vault-app.yaml"],
+      "groupName": "Legacy Vault chart updates",
+      "groupSlug": "legacy-vault-chart",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate cert-manager chart changes",
+      "matchFileNames": ["cluster/platform/gitops/argocd/apps/cert-manager*.yaml"],
+      "groupName": "cert-manager updates",
+      "groupSlug": "cert-manager",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate External Secrets chart changes",
+      "matchFileNames": ["cluster/platform/base/security/external-secrets/**", "cluster/platform/gitops/argocd/apps/external-secrets*.yaml"],
+      "groupName": "External Secrets updates",
+      "groupSlug": "external-secrets",
       "dependencyDashboardApproval": true
     },
     {

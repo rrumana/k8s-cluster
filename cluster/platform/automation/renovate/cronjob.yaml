@@ -3,7 +3,8 @@ kind: CronJob
 metadata:
   name: renovate
 spec:
-  schedule: "15 9 * * *"
+  # Temporary backlog-drain cadence. Return to daily once update drift is cleared.
+  schedule: "15 * * * *"
   timeZone: America/Los_Angeles
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
