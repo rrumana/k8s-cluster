@@ -184,8 +184,15 @@ class GitHubClient {
     return options.raw ? response.text() : response.json();
   }
 
-  async listOpenPullRequests() {
-    return this.request(`/repos/${this.repository}/pulls?state=open&per_page=100`);
+  async listPullRequests(state) {
+    return this.request(
+      `/repos/${this.repository}/pulls?state=${encodeURIComponent(state)}&sort=updated&direction=desc&per_page=100`,
+    );
+  }
+
+  async getPromotionStatus(sha) {
+    const result = await this.request(`/repos/${this.repository}/commits/${sha}/status`);
+    return result.statuses.find((status) => status.context === 'renovate/artifacts-promoted')?.state ?? null;
   }
 
   async listChangedFiles(number) {
@@ -222,6 +229,18 @@ class GitHubClient {
       },
     });
   }
+}
+
+export function isEligibleRenovatePullRequest(pr, options) {
+  const sameRepositoryBranch =
+    pr.user.login === options.allowedAuthor &&
+    pr.head.ref.startsWith('renovate/') &&
+    pr.base.ref === 'main' &&
+    pr.head.repo?.full_name === options.repository;
+  if (!sameRepositoryBranch) return false;
+  if (pr.state === 'open') return true;
+  if (!pr.merged_at) return false;
+  return Date.parse(pr.merged_at) >= options.recoveryCutoff;
 }
 
 class Promoter {
@@ -440,12 +459,34 @@ async function main() {
   promoter.authenticate();
 
   const allowedAuthor = process.env.GITHUB_ALLOWED_AUTHOR ?? 'rrumana';
-  const pullRequests = (await github.listOpenPullRequests()).filter((pr) =>
-    pr.user.login === allowedAuthor &&
-    pr.head.ref.startsWith('renovate/') &&
-    pr.base.ref === 'main' &&
-    pr.head.repo?.full_name === process.env.GITHUB_REPOSITORY,
-  );
+  const recoveryHours = Number.parseInt(process.env.MERGED_PR_RECOVERY_HOURS ?? '24', 10);
+  if (!Number.isInteger(recoveryHours) || recoveryHours < 0) {
+    throw new Error('MERGED_PR_RECOVERY_HOURS must be a non-negative integer');
+  }
+  const options = {
+    allowedAuthor,
+    repository: process.env.GITHUB_REPOSITORY,
+    recoveryCutoff: Date.now() - recoveryHours * 60 * 60 * 1000,
+  };
+  const openPullRequests = await github.listPullRequests('open');
+  const recentlyClosedPullRequests = recoveryHours > 0 ? await github.listPullRequests('closed') : [];
+  const candidates = [...openPullRequests, ...recentlyClosedPullRequests]
+    .filter((pr) => isEligibleRenovatePullRequest(pr, options));
+
+  const pullRequests = [];
+  for (const pr of candidates) {
+    const promotionStatus = await github.getPromotionStatus(pr.head.sha);
+    if (promotionStatus === 'success') {
+      console.log(`skipping Renovate PR #${pr.number}: artifacts already promoted for ${pr.head.sha.slice(0, 12)}`);
+      continue;
+    }
+    if (pr.state !== 'open') {
+      console.log(`recovering merged Renovate PR #${pr.number}: promotion status is ${promotionStatus ?? 'missing'}`);
+    }
+    pullRequests.push(pr);
+  }
+
+  if (pullRequests.length === 0) console.log('no Renovate PR artifacts require promotion');
 
   let failed = false;
   for (const pr of pullRequests) {

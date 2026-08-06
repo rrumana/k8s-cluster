@@ -14,11 +14,18 @@ cleared.
 
 ## Promoter behavior
 
-`renovate-promoter` runs every 30 minutes and processes only open pull requests that:
+During backlog draining, `renovate-promoter` runs every five minutes. It processes
+open pull requests and also retries Renovate pull requests merged within the last
+24 hours when their head commit does not have a successful promotion status. This
+recovery window prevents an early merge from permanently skipping artifact copying.
+Eligible pull requests must:
 
 - belong to `rrumana/k8s-cluster` and target `main`;
 - have a same-repository branch beginning with `renovate/`; and
 - are authored by the configured `GITHUB_ALLOWED_AUTHOR` account.
+
+Successful PR heads are skipped on later runs. Failed or missing promotion statuses
+are retried while the PR remains open or inside the merged-PR recovery window.
 
 It reads changed files through the GitHub API and never checks out or executes pull
 request code. Images are copied by digest and verified after upload. Existing tags

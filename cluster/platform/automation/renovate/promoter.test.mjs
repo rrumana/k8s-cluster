@@ -11,6 +11,7 @@ import {
   extractRegistryCredentials,
   extractSeedImageReferences,
   extractValueFiles,
+  isEligibleRenovatePullRequest,
   mapImageReference,
 } from './promoter.mjs';
 
@@ -109,5 +110,41 @@ EXTRA_IMAGES=(
   'docker.io/library/busybox:1.38',
   'quay.io/prometheus-operator/prometheus-config-reloader:v0.88.0',
 ]);
+
+const eligiblePr = {
+  state: 'open',
+  merged_at: null,
+  user: { login: 'rrumana' },
+  head: {
+    ref: 'renovate/media-applications',
+    repo: { full_name: 'rrumana/k8s-cluster' },
+  },
+  base: { ref: 'main' },
+};
+const eligibilityOptions = {
+  allowedAuthor: 'rrumana',
+  repository: 'rrumana/k8s-cluster',
+  recoveryCutoff: Date.parse('2026-08-06T08:00:00Z'),
+};
+assert.equal(isEligibleRenovatePullRequest(eligiblePr, eligibilityOptions), true);
+assert.equal(isEligibleRenovatePullRequest({
+  ...eligiblePr,
+  state: 'closed',
+  merged_at: '2026-08-06T09:00:00Z',
+}, eligibilityOptions), true);
+assert.equal(isEligibleRenovatePullRequest({
+  ...eligiblePr,
+  state: 'closed',
+  merged_at: '2026-08-05T09:00:00Z',
+}, eligibilityOptions), false);
+assert.equal(isEligibleRenovatePullRequest({
+  ...eligiblePr,
+  state: 'closed',
+  merged_at: null,
+}, eligibilityOptions), false);
+assert.equal(isEligibleRenovatePullRequest({
+  ...eligiblePr,
+  user: { login: 'unexpected-user' },
+}, eligibilityOptions), false);
 
 console.log('Harbor promoter parser tests passed.');

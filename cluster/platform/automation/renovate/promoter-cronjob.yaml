@@ -3,7 +3,8 @@ kind: CronJob
 metadata:
   name: renovate-promoter
 spec:
-  schedule: "*/30 * * * *"
+  # Backlog-drain cadence; the promoter is idempotent and skips successful PR heads.
+  schedule: "*/5 * * * *"
   timeZone: America/Los_Angeles
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
@@ -52,6 +53,8 @@ spec:
                   value: rrumana/k8s-cluster
                 - name: GITHUB_ALLOWED_AUTHOR
                   value: rrumana
+                - name: MERGED_PR_RECOVERY_HOURS
+                  value: "24"
                 - name: ARTIFACT_CATALOG
                   value: /etc/renovate-promoter/artifact-sources.json
                 - name: GITHUB_TOKEN
