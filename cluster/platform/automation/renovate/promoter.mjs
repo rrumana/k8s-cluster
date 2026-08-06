@@ -96,6 +96,16 @@ export function extractSeedImageReferences(contents) {
   return [...references].sort();
 }
 
+export function extractChangedImageReferences(contents, previousContents, includeSeedImages = false) {
+  const currentReferences = new Set(extractImageReferences(contents));
+  const previousReferences = new Set(extractImageReferences(previousContents));
+  if (includeSeedImages) {
+    for (const image of extractSeedImageReferences(contents)) currentReferences.add(image);
+    for (const image of extractSeedImageReferences(previousContents)) previousReferences.add(image);
+  }
+  return [...currentReferences].filter((image) => !previousReferences.has(image)).sort();
+}
+
 export function extractRegistryCredentials(dockerConfigContents, registry) {
   const dockerConfig = JSON.parse(dockerConfigContents);
   const entry = dockerConfig.auths?.[registry];
@@ -414,9 +424,13 @@ class Promoter {
       const images = new Set();
       for (const [file, contents] of contentsByPath.entries()) {
         if (file === 'dependencies/renovate-manual-tracks.yaml') continue;
-        for (const image of extractImageReferences(contents)) images.add(image);
-        if (file === 'scripts/seed-observability-prereqs.sh') {
-          for (const image of extractSeedImageReferences(contents)) images.add(image);
+        const previousContents = await this.github.getFile(file, pr.base.sha) ?? '';
+        for (const image of extractChangedImageReferences(
+          contents,
+          previousContents,
+          file === 'scripts/seed-observability-prereqs.sh',
+        )) {
+          images.add(image);
         }
       }
       for (const image of [...images].sort()) this.promoteImage(image);

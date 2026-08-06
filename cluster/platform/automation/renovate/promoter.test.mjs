@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  extractChangedImageReferences,
   extractChartVersion,
   extractImageReferences,
   extractRenderedImages,
@@ -111,6 +112,22 @@ EXTRA_IMAGES=(
 `), [
   'docker.io/library/busybox:1.38',
   'quay.io/prometheus-operator/prometheus-config-reloader:v0.88.0',
+]);
+
+assert.deepEqual(extractChangedImageReferences(`
+initContainers:
+  - image: harbor.rcrumana.xyz/mirror/library/busybox:1.38
+image:
+  repository: harbor.rcrumana.xyz/mirror/library/nextcloud
+  tag: 33.0.0-apache
+`, `
+initContainers:
+  - image: harbor.rcrumana.xyz/mirror/library/busybox:1.36
+image:
+  repository: harbor.rcrumana.xyz/mirror/library/nextcloud
+  tag: 33.0.0-apache
+`), [
+  'harbor.rcrumana.xyz/mirror/library/busybox:1.38',
 ]);
 
 const eligiblePr = {
