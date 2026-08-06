@@ -15,7 +15,7 @@ spec:
     setVMMaxMapCount: true
     drainDataNodes: true
   initHelper:
-    image: harbor.rcrumana.xyz/mirror/library/busybox:1.36
+    image: harbor.rcrumana.xyz/mirror/library/busybox:1.38
     version: "1.36"
   dashboards:
     enable: false

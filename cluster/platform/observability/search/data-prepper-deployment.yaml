@@ -30,7 +30,7 @@ spec:
               app.kubernetes.io/name: data-prepper
       containers:
         - name: data-prepper
-          image: harbor.rcrumana.xyz/mirror/opensearchproject/data-prepper:2.13.0
+          image: harbor.rcrumana.xyz/mirror/opensearchproject/data-prepper:2.16.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2021
