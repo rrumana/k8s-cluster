@@ -14,7 +14,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       # renovate: datasource=helm depName=descheduler versioning=helm registryUrl=https://kubernetes-sigs.github.io/descheduler/
-      targetRevision: "0.35.1"
+      targetRevision: "0.36.0"
       chart: descheduler
       helm:
         releaseName: descheduler
