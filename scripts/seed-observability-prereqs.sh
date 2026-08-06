@@ -175,9 +175,9 @@ EXTRA_IMAGES=(
   "docker.io/opensearchproject/opensearch-operator:2.8.0"
   "quay.io/brancz/kube-rbac-proxy:v0.22.1"
   "quay.io/prometheus-operator/prometheus-config-reloader:v0.93.0"
-  "docker.io/library/busybox:1.31.1"
+  "docker.io/library/busybox:1.38.0"
   "docker.io/opensearchproject/opensearch:3.4.0"
-  "docker.io/library/busybox:1.36"
+  "docker.io/library/busybox:1.38"
   "docker.io/opensearchproject/data-prepper:2.13.0"
   "cr.fluentbit.io/fluent/fluent-bit:4.2.2"
 )
