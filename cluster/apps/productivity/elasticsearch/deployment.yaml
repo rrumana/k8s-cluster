@@ -23,7 +23,7 @@ spec:
       serviceAccountName: elasticsearch
       containers:
         - name: elasticsearch
-          image: harbor.rcrumana.xyz/mirror/elasticsearch/elasticsearch:9.3.2
+          image: harbor.rcrumana.xyz/mirror/elasticsearch/elasticsearch:9.5.0
           imagePullPolicy: IfNotPresent
           env:
             - name: discovery.type

@@ -26,7 +26,7 @@ spec:
       serviceAccountName: headscale
       containers:
         - name: headscale
-          image: harbor.rcrumana.xyz/mirror/headscale/headscale:v0.28.0
+          image: harbor.rcrumana.xyz/mirror/headscale/headscale:v0.29.3
           imagePullPolicy: IfNotPresent
           command: ["headscale"]
           args: ["serve", "--config", "/etc/headscale/config.yaml"]
