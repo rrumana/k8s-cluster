@@ -6,7 +6,7 @@ HARBOR_HOST=${HARBOR_HOST:-harbor.rcrumana.xyz}
 HARBOR_CHARTS_REPO="oci://${HARBOR_HOST}/thirdparty-charts"
 HARBOR_MIRROR_PREFIX="${HARBOR_HOST}/mirror"
 # renovate: datasource=helm depName=kube-prometheus-stack versioning=helm registryUrl=https://prometheus-community.github.io/helm-charts
-KPS_CHART_VERSION="80.13.3"
+KPS_CHART_VERSION="80.14.4"
 # renovate: datasource=helm depName=opensearch-operator versioning=helm registryUrl=https://opensearch-project.github.io/opensearch-k8s-operator
 OPENSEARCH_OPERATOR_CHART_VERSION="2.8.0"
 KPS_VALUES_FILE=${KPS_VALUES_FILE:-${REPO_ROOT}/cluster/platform/observability/monitoring/values.yaml}
