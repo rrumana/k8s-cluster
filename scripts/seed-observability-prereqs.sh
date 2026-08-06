@@ -177,6 +177,7 @@ EXTRA_IMAGES=(
   "quay.io/prometheus-operator/prometheus-config-reloader:v0.93.0"
   "docker.io/library/busybox:1.38.0"
   "docker.io/opensearchproject/opensearch:3.4.0"
+  "docker.io/opensearchproject/data-prepper:2.16.0"
   "docker.io/library/busybox:1.38"
   "docker.io/opensearchproject/data-prepper:2.13.0"
   "cr.fluentbit.io/fluent/fluent-bit:4.2.8"
