@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: harbor.rcrumana.xyz/thirdparty-charts
       # renovate: datasource=helm depName=metrics-server versioning=helm registryUrl=https://kubernetes-sigs.github.io/metrics-server/
-      targetRevision: "3.13.0"
+      targetRevision: "3.13.1"
       chart: metrics-server
       helm:
         releaseName: metrics-server
