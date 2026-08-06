@@ -52,7 +52,7 @@ The dashboard links to each available service:
 - **Nextcloud:** normal web login redirects to Authentik. Desktop and mobile
   clients should use `https://nextcloud.rcrumana.xyz` as the server address and
   complete the browser authorization.
-- **LibreChat:** choose **Continue with Rcrumana**. Your account is created on
+- **LibreChat:** choose **Continue with Authentik**. Your account is created on
   first login.
 - **Jellyfin:** use Authentik in a browser. Television and streaming clients can
   display a Quick Connect code that you approve from an already authenticated

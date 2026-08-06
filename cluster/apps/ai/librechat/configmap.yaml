@@ -25,7 +25,7 @@ data:
   OPENID_CLIENT_ID: "librechat"
   OPENID_SCOPE: "openid profile email groups"
   OPENID_CALLBACK_URL: "/oauth/openid/callback"
-  OPENID_BUTTON_LABEL: "Continue with Rcrumana"
+  OPENID_BUTTON_LABEL: "Continue with Authentik"
   OPENID_USE_PKCE: "true"
   OPENID_GENERATE_NONCE: "true"
   OPENID_REQUIRED_ROLE: "app-librechat"
