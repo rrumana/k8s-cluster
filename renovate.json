@@ -350,11 +350,11 @@
       "registryUrls": ["https://docker.elastic.co"]
     },
     {
-      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/crisu1710/ -> docker.io/crisu1710/",
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/crisu1710/ -> ghcr.io/crisu1710/",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["harbor.rcrumana.xyz/mirror/crisu1710/**"],
-      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/crisu1710/' 'docker.io/crisu1710/' packageName}}",
-      "registryUrls": ["https://index.docker.io"]
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/crisu1710/' 'ghcr.io/crisu1710/' packageName}}",
+      "registryUrls": ["https://ghcr.io"]
     },
     {
       "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/grafana/ -> docker.io/grafana/",
@@ -465,7 +465,8 @@
       "matchDatasources": ["helm"],
       "matchPackageNames": ["opensearch-operator", "harbor.rcrumana.xyz/thirdparty-charts/opensearch-operator"],
       "overridePackageName": "opensearch-operator",
-      "registryUrls": ["https://opensearch-project.github.io/opensearch-k8s-operator"]
+      "registryUrls": ["https://opensearch-project.github.io/opensearch-k8s-operator"],
+      "allowedVersions": "<=2.8.2"
     },
     {
       "description": "Resolve mirrored Rook chart upstream",

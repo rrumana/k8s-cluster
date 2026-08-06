@@ -6,6 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  areImagesEquivalentForPlatforms,
+  assertChartVersionAllowed,
   extractChangedImageReferences,
   extractChartVersion,
   extractImageReferences,
@@ -13,9 +15,11 @@ import {
   extractRegistryCredentials,
   extractSeedImageReferences,
   extractValueFiles,
+  findPlatformDescriptor,
   isEligibleRenovatePullRequest,
   isMainModule,
   mapImageReference,
+  parsePlatform,
 } from './promoter.mjs';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
@@ -49,6 +53,14 @@ assert.deepEqual(
 );
 
 assert.equal(mapImageReference('ghcr.io/unknown/example:1.0.0', catalog), null);
+
+assert.deepEqual(
+  mapImageReference('harbor.rcrumana.xyz/mirror/crisu1710/kube-syslog-sidecar:0.2.0', catalog),
+  {
+    source: 'ghcr.io/crisu1710/kube-syslog-sidecar:0.2.0',
+    destination: 'harbor.rcrumana.xyz/mirror/crisu1710/kube-syslog-sidecar:0.2.0',
+  },
+);
 
 assert.deepEqual(
   extractRegistryCredentials(JSON.stringify({
@@ -103,6 +115,80 @@ assert.deepEqual(extractRenderedImages(rendered), [
   'harbor.rcrumana.xyz/proxy-dockerhub/library/busybox:1.38',
   'quay.io/prometheus/prometheus:v3.7.0',
 ]);
+
+const renderedCrds = `
+properties:
+  image:
+    description: Container image configuration.
+containers:
+  - image: quay.io/prometheus/prometheus:v3.7.0
+`;
+assert.deepEqual(extractRenderedImages(renderedCrds), [
+  'quay.io/prometheus/prometheus:v3.7.0',
+]);
+
+assert.deepEqual(parsePlatform('linux/amd64'), { os: 'linux', architecture: 'amd64' });
+assert.deepEqual(parsePlatform('linux/arm64/v8'), {
+  os: 'linux',
+  architecture: 'arm64',
+  variant: 'v8',
+});
+assert.throws(() => parsePlatform('amd64'), /invalid required platform/);
+
+const multiPlatformManifest = {
+  manifests: [
+    {
+      digest: 'sha256:amd64',
+      platform: { os: 'linux', architecture: 'amd64' },
+    },
+    {
+      digest: 'sha256:arm64',
+      platform: { os: 'linux', architecture: 'arm64', variant: 'v8' },
+    },
+  ],
+};
+assert.equal(
+  findPlatformDescriptor(multiPlatformManifest, 'linux/amd64')?.digest,
+  'sha256:amd64',
+);
+assert.equal(findPlatformDescriptor(multiPlatformManifest, 'linux/s390x'), null);
+
+const sourceImage = 'ghcr.io/example/application:1.0.0';
+const destinationImage = 'harbor.rcrumana.xyz/mirror/example/application:1.0.0';
+const manifests = new Map([
+  [sourceImage, multiPlatformManifest],
+  ['ghcr.io/example/application@sha256:amd64', { config: { digest: 'sha256:config' } }],
+  [destinationImage, { config: { digest: 'sha256:config' } }],
+]);
+assert.equal(
+  areImagesEquivalentForPlatforms(
+    sourceImage,
+    destinationImage,
+    ['linux/amd64'],
+    (reference) => manifests.get(reference) ?? null,
+  ),
+  true,
+);
+assert.equal(
+  areImagesEquivalentForPlatforms(
+    sourceImage,
+    destinationImage,
+    ['linux/amd64', 'linux/arm64/v8'],
+    (reference) => manifests.get(reference) ?? null,
+  ),
+  false,
+);
+
+const guardedChart = {
+  name: 'opensearch-operator',
+  allowedVersionPattern: '^2\\.8\\.[0-2]$',
+  versionPolicyReason: 'Charts 2.8.3 and newer target operator 3.0.0-alpha.',
+};
+assert.doesNotThrow(() => assertChartVersionAllowed(guardedChart, '2.8.2'));
+assert.throws(
+  () => assertChartVersionAllowed(guardedChart, '2.8.4'),
+  /blocked by its promotion version policy.*3\.0\.0-alpha/,
+);
 
 assert.deepEqual(extractSeedImageReferences(`
 EXTRA_IMAGES=(
