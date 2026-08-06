@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "harborHost": "harbor.rcrumana.xyz",
+  "requiredPlatforms": ["linux/amd64"],
   "imageMappings": [
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/linuxserver/", "sourcePrefix": "lscr.io/linuxserver/", "registryUrl": "https://lscr.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/cloudnative-pg/", "sourcePrefix": "ghcr.io/cloudnative-pg/", "registryUrl": "https://ghcr.io" },
@@ -31,7 +32,7 @@
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/linkerd/", "sourcePrefix": "cr.l5d.io/linkerd/", "registryUrl": "https://cr.l5d.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/fluent/", "sourcePrefix": "cr.fluentbit.io/fluent/", "registryUrl": "https://cr.fluentbit.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/elasticsearch/", "sourcePrefix": "docker.elastic.co/elasticsearch/", "registryUrl": "https://docker.elastic.co" },
-    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/crisu1710/", "sourcePrefix": "docker.io/crisu1710/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/crisu1710/", "sourcePrefix": "ghcr.io/crisu1710/", "registryUrl": "https://ghcr.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/grafana/", "sourcePrefix": "docker.io/grafana/", "registryUrl": "https://index.docker.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/bats/", "sourcePrefix": "docker.io/bats/", "registryUrl": "https://index.docker.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/library/", "sourcePrefix": "docker.io/library/", "registryUrl": "https://index.docker.io" },
@@ -52,7 +53,7 @@
     { "name": "linkerd2-cni", "applicationPath": "cluster/platform/gitops/argocd/apps/linkerd2-cni-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.linkerd.io/edge" },
     { "name": "metallb", "applicationPath": "cluster/platform/gitops/argocd/apps/metallb-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://metallb.github.io/metallb" },
     { "name": "metrics-server", "applicationPath": "cluster/platform/gitops/argocd/apps/metrics-server-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://kubernetes-sigs.github.io/metrics-server/" },
-    { "name": "opensearch-operator", "applicationPath": "cluster/platform/gitops/argocd/apps/opensearch-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://opensearch-project.github.io/opensearch-k8s-operator" },
+    { "name": "opensearch-operator", "applicationPath": "cluster/platform/gitops/argocd/apps/opensearch-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://opensearch-project.github.io/opensearch-k8s-operator", "allowedVersionPattern": "^2\\.8\\.[0-2]$", "versionPolicyReason": "Charts 2.8.3 and 2.8.4 declare appVersion 3.0.0-alpha; the operator 3 migration is out of scope." },
     { "name": "rook-ceph", "applicationPath": "cluster/platform/gitops/argocd/apps/rook-ceph-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://charts.rook.io/release" },
     { "name": "valkey", "applicationPath": "cluster/platform/gitops/argocd/apps/valkey-cache-app.yaml", "additionalApplicationPaths": ["cluster/platform/gitops/argocd/apps/valkey-queue-app.yaml"], "upstreamType": "oci", "upstreamRepository": "oci://registry-1.docker.io/bitnamicharts/valkey" },
     { "name": "vault", "applicationPath": "cluster/platform/gitops/argocd/apps/vault-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.releases.hashicorp.com" },

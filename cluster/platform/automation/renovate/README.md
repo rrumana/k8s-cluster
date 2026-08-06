@@ -29,9 +29,13 @@ are retried while the PR remains open or inside the merged-PR recovery window.
 
 It reads changed files through the GitHub API and never checks out or executes pull
 request code. Images are copied by digest and verified after upload. Existing tags
-with different content are never overwritten. Mirrored Helm charts are pulled from
-their cataloged upstream, rendered with the pull request's value files, and have all
-mapped transitive images promoted before the chart is pushed.
+with different content are never overwritten. A legacy single-platform Harbor image
+is accepted as equivalent to an upstream multi-platform tag only when its immutable
+image config digest matches every platform listed in `requiredPlatforms`; this
+cluster currently requires `linux/amd64`. Mirrored Helm charts are pulled from their
+cataloged upstream, rendered with the pull request's value files, and have all mapped
+transitive images promoted before the chart is pushed. Cataloged chart version
+policies are enforced again by the promoter as a merge-safety backstop.
 
 The promoter publishes the commit status `renovate/artifacts-promoted`. Configure
 that status as a required check before merging Renovate pull requests.

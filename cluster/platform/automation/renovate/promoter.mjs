@@ -80,11 +80,60 @@ export function extractImageReferences(contents) {
 
 export function extractRenderedImages(contents) {
   const references = new Set();
-  const pattern = /^\s*(?:-\s*)?(?:image|imageName):\s*["']?([^\s"'#]+)["']?/gm;
+  const pattern = /^[ \t]*(?:-[ \t]*)?(?:image|imageName):[ \t]*["']?([^\s"'#]+)["']?/gm;
   for (const match of contents.matchAll(pattern)) {
     if (!match[1].includes('{{') && hasVersion(match[1])) references.add(match[1]);
   }
   return [...references].sort();
+}
+
+export function parsePlatform(value) {
+  const [osName, architecture, variant, ...extra] = value.split('/');
+  if (!osName || !architecture || extra.length > 0) {
+    throw new Error(`invalid required platform ${value}; expected os/architecture[/variant]`);
+  }
+  return { os: osName, architecture, ...(variant ? { variant } : {}) };
+}
+
+export function findPlatformDescriptor(manifest, platform) {
+  if (!Array.isArray(manifest?.manifests)) return null;
+  const required = typeof platform === 'string' ? parsePlatform(platform) : platform;
+  return manifest.manifests.find((descriptor) =>
+    descriptor.platform?.os === required.os &&
+    descriptor.platform?.architecture === required.architecture &&
+    (!required.variant || descriptor.platform?.variant === required.variant),
+  ) ?? null;
+}
+
+export function platformConfigDigest(reference, platform, loadManifest) {
+  let manifest = loadManifest(reference);
+  if (!manifest) return null;
+  if (Array.isArray(manifest.manifests)) {
+    const descriptor = findPlatformDescriptor(manifest, platform);
+    if (!descriptor?.digest) return null;
+    manifest = loadManifest(`${repositoryOnly(reference)}@${descriptor.digest}`);
+  }
+  return manifest?.config?.digest ?? null;
+}
+
+export function areImagesEquivalentForPlatforms(
+  source,
+  destination,
+  requiredPlatforms,
+  loadManifest,
+) {
+  return requiredPlatforms.length > 0 && requiredPlatforms.every((platform) => {
+    const sourceConfig = platformConfigDigest(source, platform, loadManifest);
+    const destinationConfig = platformConfigDigest(destination, platform, loadManifest);
+    return sourceConfig !== null && sourceConfig === destinationConfig;
+  });
+}
+
+export function assertChartVersionAllowed(chart, version) {
+  if (!chart.allowedVersionPattern) return;
+  if (new RegExp(chart.allowedVersionPattern).test(version)) return;
+  const reason = chart.versionPolicyReason ? `: ${chart.versionPolicyReason}` : '';
+  throw new Error(`chart ${chart.name}:${version} is blocked by its promotion version policy${reason}`);
 }
 
 export function extractSeedImageReferences(contents) {
@@ -289,6 +338,21 @@ class Promoter {
     return result.status === 0 ? result.stdout.trim() : null;
   }
 
+  manifest(reference, allowFailure = false) {
+    const result = command('crane', ['manifest', reference], { allowFailure });
+    return result.status === 0 ? JSON.parse(result.stdout) : null;
+  }
+
+  isEquivalentForRequiredPlatforms(source, destination) {
+    const requiredPlatforms = this.catalog.requiredPlatforms ?? [];
+    return areImagesEquivalentForPlatforms(
+      source,
+      destination,
+      requiredPlatforms,
+      (reference) => this.manifest(reference, true),
+    );
+  }
+
   promoteImage(reference) {
     const manualImage = this.catalog.manualImages?.find((candidate) =>
       repositoryOnly(reference) === candidate.destinationRepository,
@@ -330,6 +394,16 @@ class Promoter {
       console.log(`image already promoted: ${mapped.destination}`);
       return;
     }
+    if (
+      destinationDigest &&
+      !expectedDigest &&
+      this.isEquivalentForRequiredPlatforms(mapped.source, destinationWithoutDigest)
+    ) {
+      console.log(
+        `image already promoted for ${this.catalog.requiredPlatforms.join(', ')}: ${mapped.destination}`,
+      );
+      return;
+    }
 
     let copyDestination = destinationHasTag
       ? destinationWithoutDigest
@@ -354,6 +428,7 @@ class Promoter {
   }
 
   async promoteChart(chart, version, appContents, headSha) {
+    assertChartVersionAllowed(chart, version);
     const taskDirectory = fs.mkdtempSync(path.join(os.tmpdir(), `renovate-${chart.name}-`));
     const upstreamDirectory = path.join(taskDirectory, 'upstream');
     const existingDirectory = path.join(taskDirectory, 'existing');
