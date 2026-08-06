@@ -1,0 +1,35 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: arr-stack-ingress
+spec:
+  # Jellyseerr shares this network namespace with the Servarr and Gluetun
+  # containers, so ingress isolation must cover every declared web UI.
+  endpointSelector:
+    matchLabels:
+      app: arr-stack
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: ingress-haproxy
+            k8s:app.kubernetes.io/name: haproxy-ingress
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+            k8s:app: homepage
+      toPorts:
+        - ports:
+            - { protocol: TCP, port: "8020" }
+            - { protocol: TCP, port: "8989" }
+            - { protocol: TCP, port: "7878" }
+            - { protocol: TCP, port: "8686" }
+            - { protocol: TCP, port: "9696" }
+            - { protocol: TCP, port: "8191" }
+            - { protocol: TCP, port: "5055" }
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+            k8s:app: homepage-client
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "5055"

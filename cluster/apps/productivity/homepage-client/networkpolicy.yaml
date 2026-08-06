@@ -1,0 +1,26 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: homepage-client-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: homepage-client
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: ingress-haproxy
+            k8s:app.kubernetes.io/name: haproxy-ingress
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "3000"
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: service-mesh
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "4191"

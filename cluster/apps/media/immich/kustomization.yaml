@@ -9,6 +9,7 @@ resources:
   - server-deployment.yaml
   - ml-deployment.yaml
   - services.yaml
+  - networkpolicy.yaml
   - configmap.yaml
   - pvc.yaml
   - vpa.yaml

@@ -19,6 +19,7 @@ resources:
   - rag-api-deployment.yaml
   - service.yaml
   - deployment.yaml
+  - networkpolicy.yaml
   - pdb.yaml
   - vpa.yaml
 

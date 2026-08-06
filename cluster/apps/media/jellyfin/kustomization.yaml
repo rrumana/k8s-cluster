@@ -8,6 +8,7 @@ resources:
   - externalsecret.yaml
   - deployment.yaml
   - service.yaml
+  - networkpolicy.yaml
   - vpa.yaml
   - identity-bootstrap-job.yaml
 

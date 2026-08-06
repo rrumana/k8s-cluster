@@ -10,6 +10,7 @@ resources:
   - pf-sync-configmap.yaml
   - deployment.yaml
   - service.yaml
+  - networkpolicy.yaml
   - vpa.yaml
 
 commonLabels:

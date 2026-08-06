@@ -1,0 +1,37 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: jellyfin-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: jellyfin
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: ingress-haproxy
+            k8s:app.kubernetes.io/name: haproxy-ingress
+        - matchExpressions:
+            - key: k8s:app
+              operator: In
+              values:
+                - homepage
+                - homepage-client
+          matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "8096"
+    # Preserve the existing direct LAN LoadBalancer and discovery paths.
+    - fromCIDR:
+        - 192.168.0.0/16
+        - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "8096"
+            - protocol: TCP
+              port: "8920"
+            - protocol: UDP
+              port: "7359"

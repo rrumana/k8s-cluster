@@ -1,0 +1,26 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vaultwarden-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: vaultwarden
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: ingress-haproxy
+            k8s:app.kubernetes.io/name: haproxy-ingress
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "80"
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: service-mesh
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "4191"

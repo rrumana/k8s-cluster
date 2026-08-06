@@ -5,6 +5,7 @@ namespace: productivity
 
 resources:
   - linkerd-policy.yaml
+  - networkpolicy.yaml
   - externalsecret.yaml
   - identity-externalsecret.yaml
   - pvc.yaml

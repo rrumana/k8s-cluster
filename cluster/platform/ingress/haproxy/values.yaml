@@ -29,6 +29,20 @@ controller:
     default-ssl-certificate: "ingress-haproxy/wildcard-k8s-rcrumana-xyz-tls"
     ssl-options: "no-sslv3 no-tlsv10 no-tlsv11"
     ssl-ciphers: "ECDHE+AESGCM:ECDHE+AES256:ECDHE+AES128:!DHE:!RSA:!AES128:!RC4:!DES:!3DES:!MD5:!DSS"
+    # Apply a narrow per-source limit only to public identity entry points.
+    # Normal application traffic, media streams, file synchronization, and
+    # photo uploads do not match these ACLs and remain unlimited.
+    config-frontend-early: |
+      stick-table type ip size 100k expire 10m store http_req_rate(10s)
+      acl is_private_identity_client src 192.168.0.0/16 172.16.0.0/12 10.0.0.0/8 100.64.0.0/10
+      acl is_authentik_host hdr(host),field(1,:),lower -m str auth.rcrumana.xyz
+      acl is_authentik_flow path_beg -i /if/flow/default-authentication-flow/ /if/flow/rcrumana-recovery/ /if/flow/rcrumana-invitation-enrollment/ /api/v3/flows/executor/default-authentication-flow/ /api/v3/flows/executor/rcrumana-recovery/ /api/v3/flows/executor/rcrumana-invitation-enrollment/
+      acl is_forward_auth_host hdr(host),field(1,:),lower -m str dashboard.rcrumana.xyz hypermind.rcrumana.xyz uptime.rcrumana.xyz
+      acl is_forward_auth_start path_beg -i /outpost.goauthentik.io/start
+      http-request track-sc0 src if !is_private_identity_client is_authentik_host is_authentik_flow
+      http-request track-sc0 src if !is_private_identity_client is_forward_auth_host is_forward_auth_start
+      http-request deny deny_status 429 if !is_private_identity_client is_authentik_host is_authentik_flow { sc_http_req_rate(0) gt 20 }
+      http-request deny deny_status 429 if !is_private_identity_client is_forward_auth_host is_forward_auth_start { sc_http_req_rate(0) gt 20 }
     syslog-endpoint: "stdout"
     syslog-format: "raw"
     syslog-tag: "haproxy"
