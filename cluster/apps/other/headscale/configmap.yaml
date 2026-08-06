@@ -18,6 +18,10 @@ data:
       v6: fd7a:115c:a1e0::/48
       allocation: sequential
 
+    node:
+      ephemeral:
+        inactivity_timeout: 30m
+
     derp:
       server:
         enabled: false
@@ -67,8 +71,6 @@ data:
     unix_socket_permission: "0770"
 
     disable_check_updates: false
-    ephemeral_node_inactivity_timeout: 30m
-    randomize_client_port: false
   policy.hujson: |-
     {
       "Groups": {
