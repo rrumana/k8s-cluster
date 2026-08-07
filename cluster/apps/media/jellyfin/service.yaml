@@ -7,7 +7,7 @@ metadata:
   annotations:
     metallb.io/address-pool: default-pool
     metallb.io/allow-shared-ip: "true"
-    media.rcrumana.xyz/identity-bootstrap-revision: "2026-08-06-user-hardening"
+    media.rcrumana.xyz/identity-bootstrap-revision: "2026-08-06-user-hardening-v2"
 spec:
   type: LoadBalancer
   loadBalancerIP: 192.168.1.233

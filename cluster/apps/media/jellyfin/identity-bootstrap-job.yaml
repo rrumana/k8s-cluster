@@ -176,18 +176,21 @@ spec:
               lockout_reset = 0
               for user in users:
                   user_id = urllib.parse.quote(user["Id"], safe="")
-                  configuration = user["Configuration"]
                   policy = user["Policy"]
+                  policy_changed = False
 
-                  if configuration.get("HideThisUserFromLoginScreens") is not True:
-                      configuration["HideThisUserFromLoginScreens"] = True
-                      api(f"/Users/Configuration?userId={user_id}", configuration)
+                  if policy.get("IsHidden") is not True:
+                      policy["IsHidden"] = True
                       hidden += 1
+                      policy_changed = True
 
-                  if policy.get("LoginAttemptsBeforeLockout") != 0:
+                  if policy.get("LoginAttemptsBeforeLockout") == -1:
                       policy["LoginAttemptsBeforeLockout"] = 0
-                      api(f"/Users/{user_id}/Policy", policy)
                       lockout_reset += 1
+                      policy_changed = True
+
+                  if policy_changed:
+                      api(f"/Users/{user_id}/Policy", policy)
 
               print(
                   f"Jellyfin user hardening complete: users={len(users)} "
