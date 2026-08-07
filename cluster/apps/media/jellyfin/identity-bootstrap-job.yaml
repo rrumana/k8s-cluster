@@ -119,3 +119,77 @@ spec:
                 --data-binary "$branding_payload" \
                 "${base_url}/System/Configuration/Branding"
               echo "Jellyfin SSO login button configured"
+        - name: harden-users
+          image: harbor.rcrumana.xyz/proxy-dockerhub/library/python:3.14-slim
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jellyfin-identity
+                  key: JELLYFIN_API_KEY
+          command:
+            - /usr/local/bin/python
+            - -c
+          args:
+            - |
+              import json
+              import os
+              import time
+              import urllib.error
+              import urllib.parse
+              import urllib.request
+
+              base_url = "http://jellyfin.media.svc.cluster.local:8096"
+              headers = {
+                  "Content-Type": "application/json",
+                  "X-Emby-Token": os.environ["JELLYFIN_API_KEY"],
+              }
+
+              def api(path, payload=None):
+                  data = None if payload is None else json.dumps(payload).encode()
+                  request = urllib.request.Request(
+                      f"{base_url}{path}",
+                      data=data,
+                      headers=headers,
+                      method="GET" if payload is None else "POST",
+                  )
+                  with urllib.request.urlopen(request, timeout=10) as response:
+                      body = response.read()
+                  return None if not body else json.loads(body)
+
+              for attempt in range(60):
+                  try:
+                      users = api("/Users")
+                      break
+                  except (TimeoutError, urllib.error.URLError):
+                      if attempt == 59:
+                          raise
+                      time.sleep(2)
+
+              hidden = 0
+              lockout_reset = 0
+              for user in users:
+                  user_id = urllib.parse.quote(user["Id"], safe="")
+                  configuration = user["Configuration"]
+                  policy = user["Policy"]
+
+                  if configuration.get("HideThisUserFromLoginScreens") is not True:
+                      configuration["HideThisUserFromLoginScreens"] = True
+                      api(f"/Users/Configuration?userId={user_id}", configuration)
+                      hidden += 1
+
+                  if policy.get("LoginAttemptsBeforeLockout") != 0:
+                      policy["LoginAttemptsBeforeLockout"] = 0
+                      api(f"/Users/{user_id}/Policy", policy)
+                      lockout_reset += 1
+
+              print(
+                  f"Jellyfin user hardening complete: users={len(users)} "
+                  f"hidden={hidden} lockout_reset={lockout_reset}"
+              )

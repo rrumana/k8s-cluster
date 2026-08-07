@@ -6,11 +6,15 @@ Cloudflare is not in the authenticated request path.
 ## Identity rate limit
 
 HAProxy tracks requests by source address over ten seconds and returns `429`
-after more than twenty requests to one of these public identity entry points:
+when a public identity entry point exceeds its threshold. Authentik and
+forward-auth entry points allow twenty requests per window:
 
 - Authentik authentication, recovery, and client-enrollment flow pages
 - The corresponding Authentik flow-executor API paths
 - Forward-auth initiation for Dashboard, HyperMind, and Uptime Kuma
+
+Jellyfin password authentication has a lower threshold of five requests per
+window.
 
 LAN, cluster, and Headscale source ranges are exempt. The rule intentionally
 does not match OIDC callbacks, ordinary application requests, Jellyfin media,
@@ -32,6 +36,11 @@ pod to HAProxy. Explicit exceptions retain:
 The policies are ingress-only and do not alter application egress. This is
 especially important for Seerr: it remains beside Radarr and Sonarr and keeps
 its existing loopback and Gluetun behavior.
+
+The Jellyfin PostSync hook also hides every local profile from anonymous login
+screens and sets `LoginAttemptsBeforeLockout` to `0`. Jellyfin therefore uses
+its inherited lockout defaults while Quick Connect and manual username entry
+remain available to native clients.
 
 HyperMind remains the deliberate exception. Its upstream Hyperswarm/DHT design
 uses `hostNetwork`, and Cilium host-firewall enforcement is not enabled on this

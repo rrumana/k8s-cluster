@@ -39,10 +39,14 @@ controller:
       acl is_authentik_flow path_beg -i /if/flow/default-authentication-flow/ /if/flow/rcrumana-recovery/ /if/flow/rcrumana-invitation-enrollment/ /api/v3/flows/executor/default-authentication-flow/ /api/v3/flows/executor/rcrumana-recovery/ /api/v3/flows/executor/rcrumana-invitation-enrollment/
       acl is_forward_auth_host hdr(host),field(1,:),lower -m str dashboard.rcrumana.xyz hypermind.rcrumana.xyz uptime.rcrumana.xyz
       acl is_forward_auth_start path_beg -i /outpost.goauthentik.io/start
+      acl is_jellyfin_host hdr(host),field(1,:),lower -m str jellyfin.rcrumana.xyz
+      acl is_jellyfin_password_login path -i /Users/AuthenticateByName
       http-request track-sc0 src if !is_private_identity_client is_authentik_host is_authentik_flow
       http-request track-sc0 src if !is_private_identity_client is_forward_auth_host is_forward_auth_start
+      http-request track-sc0 src if !is_private_identity_client is_jellyfin_host is_jellyfin_password_login
       http-request deny deny_status 429 if !is_private_identity_client is_authentik_host is_authentik_flow { sc_http_req_rate(0) gt 20 }
       http-request deny deny_status 429 if !is_private_identity_client is_forward_auth_host is_forward_auth_start { sc_http_req_rate(0) gt 20 }
+      http-request deny deny_status 429 if !is_private_identity_client is_jellyfin_host is_jellyfin_password_login { sc_http_req_rate(0) gt 5 }
     syslog-endpoint: "stdout"
     syslog-format: "raw"
     syslog-tag: "haproxy"
