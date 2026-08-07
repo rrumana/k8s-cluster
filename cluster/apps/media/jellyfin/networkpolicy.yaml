@@ -11,6 +11,9 @@ spec:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: ingress-haproxy
             k8s:app.kubernetes.io/name: haproxy-ingress
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: media
+            k8s:app: jellyfin-identity-bootstrap
         - matchExpressions:
             - key: k8s:app
               operator: In

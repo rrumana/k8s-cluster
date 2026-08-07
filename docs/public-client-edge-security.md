@@ -25,6 +25,7 @@ pod to HAProxy. Explicit exceptions retain:
 
 - Homepage and client-dashboard widget calls
 - Linkerd and Prometheus administration/metrics traffic
+- The narrowly selected Jellyfin identity-bootstrap Job on Jellyfin's HTTP port
 - Jellyfin's existing direct LAN/Headscale LoadBalancer and discovery access
 - Every private web listener in the shared Gluetun/Servarr/Seerr pod
 
