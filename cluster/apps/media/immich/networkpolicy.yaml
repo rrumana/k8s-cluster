@@ -24,6 +24,21 @@ spec:
         - ports:
             - protocol: TCP
               port: "2283"
+    # Dashboard traffic to a meshed backend is delivered to Linkerd's inbound
+    # proxy before the proxy forwards it to the application port.
+    - fromEndpoints:
+        - matchExpressions:
+            - key: k8s:app
+              operator: In
+              values:
+                - homepage
+                - homepage-client
+          matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+      toPorts:
+        - ports:
+            - protocol: TCP
+              port: "4143"
     - fromEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: monitoring
