@@ -1,0 +1,34 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: valkey-gitea
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: valkey-gitea.availability
+      rules:
+        - alert: GiteaValkeyExporterTargetsMissing
+          expr: count(redis_up{namespace="databases",pod=~"valkey-gitea-node-.*",component="valkey"} == 1) < 3
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Fewer than three Gitea Valkey nodes are being scraped
+            description: The dedicated Gitea Valkey/Sentinel quorum is incomplete or its exporters are unavailable.
+        - alert: GiteaValkeyRejectedConnections
+          expr: increase(redis_rejected_connections_total{namespace="databases",pod=~"valkey-gitea-node-.*",component="valkey"}[10m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Gitea Valkey is rejecting connections
+            description: Check client pressure, memory limits, and Sentinel health before repository traffic is affected.
+        - alert: GiteaValkeyReplicationDegraded
+          expr: max(redis_connected_slaves{namespace="databases",pod=~"valkey-gitea-node-.*",component="valkey"}) < 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Gitea Valkey primary has no connected replica
+            description: Writes are protected by min-replicas-to-write and may stop until replication recovers.

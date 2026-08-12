@@ -138,7 +138,7 @@ export function assertChartVersionAllowed(chart, version) {
 
 export function extractSeedImageReferences(contents) {
   const references = new Set();
-  const pattern = /["']((?:docker\.io|quay\.io|ghcr\.io|registry\.k8s\.io|cr\.fluentbit\.io)\/[A-Za-z0-9._/-]+(?::[A-Za-z0-9._+-]+)?(?:@sha256:[a-f0-9]{64})?)["']/g;
+  const pattern = /["']((?:docker\.io|docker\.gitea\.com|quay\.io|ghcr\.io|registry\.k8s\.io|cr\.fluentbit\.io)\/[A-Za-z0-9._/-]+(?::[A-Za-z0-9._+-]+)?(?:@sha256:[a-f0-9]{64})?)["']/g;
   for (const match of contents.matchAll(pattern)) {
     if (hasVersion(match[1])) references.add(match[1]);
   }
@@ -503,7 +503,7 @@ class Promoter {
         for (const image of extractChangedImageReferences(
           contents,
           previousContents,
-          file === 'scripts/seed-observability-prereqs.sh',
+          /^scripts\/seed-(?:observability|gitea)-prereqs\.sh$/.test(file),
         )) {
           images.add(image);
         }

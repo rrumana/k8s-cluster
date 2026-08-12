@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea-actions
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  project: default
+  sources:
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      chart: actions
+      # renovate: datasource=helm depName=actions registryUrl=https://dl.gitea.com/charts/
+      targetRevision: "0.1.2"
+      helm:
+        releaseName: gitea-actions
+        valueFiles:
+          - $values/cluster/apps/development/gitea-runner/values.yaml
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/apps/development/gitea-runner
+      kustomize: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ci
+  # Intentionally manual. Create a trusted organization-scoped runner token in
+  # Gitea, write it to Vault, then sync this application explicitly.
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

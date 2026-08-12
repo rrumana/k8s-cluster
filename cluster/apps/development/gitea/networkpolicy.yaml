@@ -1,0 +1,130 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gitea-default-deny
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: gitea
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gitea-allowed-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: gitea
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-haproxy
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: haproxy-ingress
+      ports:
+        - protocol: TCP
+          port: 3000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ci
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: gitea-actions
+      ports:
+        - protocol: TCP
+          port: 3000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gitea-allowed-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: gitea
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: databases
+          podSelector:
+            matchLabels:
+              cnpg.io/cluster: pg-platform
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: databases
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: valkey-gitea
+              app.kubernetes.io/component: node
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 26379
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: search
+          podSelector:
+            matchLabels:
+              opster.io/opensearch-cluster: opensearch-logs
+      ports:
+        - protocol: TCP
+          port: 9200
+    - to:
+        - ipBlock:
+            cidr: 192.168.1.230/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

@@ -53,6 +53,17 @@ spec:
         connectionLimit: 100
         passwordSecret:
           name: authentik-postgres-role
+      - name: gitea
+        ensure: present
+        comment: Gitea source control platform
+        login: true
+        superuser: false
+        createdb: false
+        createrole: false
+        replication: false
+        connectionLimit: 60
+        passwordSecret:
+          name: gitea-postgres-role
 
   monitoring:
     enablePodMonitor: true

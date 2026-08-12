@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-actions-metrics
+  labels:
+    app.kubernetes.io/name: actions-runner
+    app.kubernetes.io/instance: gitea-actions
+spec:
+  selector:
+    app.kubernetes.io/name: actions-runner
+    app.kubernetes.io/instance: gitea-actions
+  ports:
+    - name: metrics
+      port: 9101
+      targetPort: 9101
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gitea-actions
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: actions-runner
+      app.kubernetes.io/instance: gitea-actions
+  endpoints:
+    - port: metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gitea-actions
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: gitea-actions.availability
+      rules:
+        - alert: GiteaActionsRunnerDown
+          expr: absent(up{namespace="ci",service="gitea-actions-metrics"} == 1)
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: The trusted Gitea Actions runner is unavailable
+            description: Organization workflows will queue until the single-capacity runner recovers.

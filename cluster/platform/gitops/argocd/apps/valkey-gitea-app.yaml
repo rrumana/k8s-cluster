@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: valkey-gitea
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  sources:
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      chart: valkey
+      # renovate: datasource=docker depName=registry-1.docker.io/bitnamicharts/valkey versioning=docker registryUrl=https://registry-1.docker.io
+      targetRevision: "5.4.9"
+      helm:
+        releaseName: valkey-gitea
+        valueFiles:
+          - $values/cluster/platform/base/data/data-definitions/valkey/gitea/values.yaml
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/platform/base/data/data-definitions/valkey/gitea
+      kustomize: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

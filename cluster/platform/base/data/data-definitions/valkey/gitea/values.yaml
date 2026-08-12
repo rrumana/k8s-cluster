@@ -1,0 +1,152 @@
+global:
+  imageRegistry: harbor.rcrumana.xyz/mirror
+  imagePullSecrets:
+    - valkey-gitea-harbor-pull-creds
+  security:
+    allowInsecureImages: true
+
+fullnameOverride: valkey-gitea
+
+architecture: replication
+
+image:
+  repository: bitnami/valkey
+  tag: latest
+  digest: sha256:8ec3a39c0d650d76164688d6b0463e1760d4c0a7f09473587828c49b928a06a6
+  pullPolicy: IfNotPresent
+
+auth:
+  enabled: true
+  sentinel: true
+  existingSecret: valkey-gitea-auth
+  existingSecretPasswordKey: password
+  usePasswordFiles: true
+  usePasswordFileFromSecret: true
+
+commonConfiguration: |-
+  appendonly yes
+  appendfsync everysec
+  aof-use-rdb-preamble yes
+  save ""
+  maxmemory 1gb
+  maxmemory-policy noeviction
+  min-replicas-to-write 1
+  min-replicas-max-lag 10
+
+primary:
+  persistence:
+    enabled: false
+
+replica:
+  replicaCount: 3
+  automountServiceAccountToken: false
+  nodeSelector:
+    homelab.rcrumana.xyz/node-plane: control
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: valkey-gitea
+              app.kubernetes.io/component: node
+          topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: valkey-gitea
+          app.kubernetes.io/component: node
+  persistence:
+    enabled: true
+    storageClass: ceph-block-app-replicated
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations:
+      helm.sh/resource-policy: keep
+      argocd.argoproj.io/sync-options: Prune=false
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenScaled: Retain
+    whenDeleted: Retain
+  pdb:
+    create: true
+    maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+sentinel:
+  enabled: true
+  primarySet: gitea
+  quorum: 2
+  downAfterMilliseconds: 15000
+  failoverTimeout: 120000
+  parallelSyncs: 1
+  automateClusterRecovery: false
+  valkeyShutdownWaitFailover: true
+  terminationGracePeriodSeconds: 120
+  persistence:
+    enabled: false
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenScaled: Retain
+    whenDeleted: Retain
+  image:
+    repository: bitnami/valkey-sentinel
+    tag: latest
+    digest: sha256:e28132b5d4e6507c40afe6b0b6ec43bdf64870e0bb51a5ab938ef3757518c4cf
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+networkPolicy:
+  enabled: false
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: false
+
+metrics:
+  enabled: true
+  image:
+    repository: bitnami/redis-exporter
+    tag: latest
+    digest: sha256:5b10891636c5c53f475e8989130e5128a9d46aebf528bdea6e43b9409d538041
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    additionalLabels:
+      release: kube-prometheus-stack
+    metricRelabelings:
+      - targetLabel: component
+        replacement: valkey
+    additionalEndpoints:
+      - interval: 30s
+        path: /scrape
+        port: http-metrics
+        params:
+          target:
+            - localhost:26379
+        metricRelabelings:
+          - targetLabel: component
+            replacement: sentinel

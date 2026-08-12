@@ -37,3 +37,27 @@ metadata:
   name: identity
   annotations:
     config.linkerd.io/default-inbound-policy: all-unauthenticated
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: development
+  annotations:
+    config.linkerd.io/default-inbound-policy: all-unauthenticated
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ci
+  annotations:
+    # The Actions runner uses privileged rootless Docker-in-Docker. Keep the
+    # service mesh and its init containers out of this trust boundary.
+    linkerd.io/inject: disabled
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

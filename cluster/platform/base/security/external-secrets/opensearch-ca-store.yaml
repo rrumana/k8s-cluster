@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opensearch-ca-reader
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: opensearch-ca-reader
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["opensearch-logs-ca"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: opensearch-ca-reader
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: opensearch-ca-reader
+subjects:
+  - kind: ServiceAccount
+    name: opensearch-ca-reader
+    namespace: search
+---
+# ESO needs permission to mint the short-lived reader token used by the
+# Kubernetes provider. It cannot read any Secret directly through this role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: opensearch-ca-token-requester
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    resourceNames: ["opensearch-ca-reader"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: opensearch-ca-token-requester
+  namespace: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: opensearch-ca-token-requester
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: security
+---
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: opensearch-ca
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: search
+      server:
+        url: https://kubernetes.default.svc
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          namespace: search
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: opensearch-ca-reader
+          namespace: search

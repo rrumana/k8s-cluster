@@ -1,0 +1,220 @@
+global:
+  imagePullSecrets:
+    - harbor-pull-creds
+
+replicaCount: 2
+
+image:
+  registry: harbor.rcrumana.xyz
+  repository: mirror/gitea/gitea
+  tag: 1.27.0
+  digest: sha256:caa57d932c7b78eb19b638dc38fd7c2f5512d4f90d8369c680a73bebf1b1de28
+  pullPolicy: IfNotPresent
+  rootless: true
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+podDisruptionBudget:
+  minAvailable: 1
+
+serviceAccount:
+  create: true
+  name: gitea
+  automountServiceAccountToken: false
+  imagePullSecrets:
+    - name: harbor-pull-creds
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+    clusterIP: None
+  ssh:
+    type: ClusterIP
+    port: 22
+    clusterIP: None
+
+persistence:
+  enabled: true
+  create: true
+  mount: true
+  claimName: gitea-shared-storage
+  size: 100Gi
+  accessModes:
+    - ReadWriteMany
+  storageClass: cephfs-replicated
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false
+
+extraVolumes:
+  - name: opensearch-ca
+    secret:
+      secretName: gitea-opensearch-ca
+
+extraContainerVolumeMounts:
+  - name: opensearch-ca
+    mountPath: /etc/gitea/opensearch
+    readOnly: true
+
+extraInitVolumeMounts:
+  - name: opensearch-ca
+    mountPath: /etc/gitea/opensearch
+    readOnly: true
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+initContainers:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+nodeSelector:
+  homelab.rcrumana.xyz/node-plane: control
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: gitea
+        topologyKey: kubernetes.io/hostname
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/instance: gitea
+
+deployment:
+  terminationGracePeriodSeconds: 120
+  env:
+    # Preserve the system trust store while adding the operator-generated
+    # OpenSearch CA for Gitea's Go HTTP client.
+    - name: SSL_CERT_DIR
+      value: /etc/ssl/certs:/etc/gitea/opensearch
+
+gitea:
+  admin:
+    existingSecret: gitea-admin
+    email: ryan.rumana@gmail.com
+    passwordMode: keepUpdated
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      additionalLabels:
+        release: kube-prometheus-stack
+  oauth:
+    - name: authentik
+      provider: openidConnect
+      existingSecret: gitea-oidc
+      autoDiscoverUrl: https://auth.rcrumana.xyz/application/o/gitea/.well-known/openid-configuration
+  additionalConfigSources:
+    - secret:
+        secretName: gitea-app-ini-secrets
+  config:
+    APP_NAME: Rcrumana Git
+    RUN_MODE: prod
+    server:
+      DOMAIN: git.rcrumana.xyz
+      ROOT_URL: https://git.rcrumana.xyz/
+      PROTOCOL: http
+      HTTP_PORT: 3000
+      APP_DATA_PATH: /data/gitea
+      DISABLE_SSH: true
+      START_SSH_SERVER: false
+      SSH_PORT: 22
+      SSH_LISTEN_PORT: 2222
+      LFS_START_SERVER: true
+      OFFLINE_MODE: true
+    service:
+      DISABLE_REGISTRATION: true
+      ALLOW_ONLY_EXTERNAL_REGISTRATION: true
+      REQUIRE_SIGNIN_VIEW: true
+      DEFAULT_ALLOW_CREATE_ORGANIZATION: false
+      ENABLE_NOTIFY_MAIL: false
+    oauth2_client:
+      ENABLE_AUTO_REGISTRATION: true
+      OPENID_CONNECT_SCOPES: profile email groups
+      ACCOUNT_LINKING: login
+      USERNAME: preferred_username
+      UPDATE_AVATAR: true
+    repository:
+      ROOT: /data/git/gitea-repositories
+      DEFAULT_PRIVATE: last
+      DEFAULT_BRANCH: main
+      ENABLE_PUSH_CREATE_USER: false
+      ENABLE_PUSH_CREATE_ORG: false
+    storage:
+      STORAGE_TYPE: local
+    actions:
+      ENABLED: true
+      DEFAULT_ACTIONS_URL: github
+      ARTIFACT_RETENTION_DAYS: 30
+    indexer:
+      ISSUE_INDEXER_TYPE: elasticsearch
+      ISSUE_INDEXER_NAME: gitea_issues
+      REPO_INDEXER_ENABLED: true
+      REPO_INDEXER_TYPE: elasticsearch
+      REPO_INDEXER_NAME: gitea_codes
+    session:
+      COOKIE_SECURE: true
+      SAME_SITE: lax
+    log:
+      MODE: console
+      LEVEL: Info
+
+valkey-cluster:
+  enabled: false
+
+valkey:
+  enabled: false
+
+postgresql-ha:
+  enabled: false
+
+postgresql:
+  enabled: false
+
+test:
+  enabled: false

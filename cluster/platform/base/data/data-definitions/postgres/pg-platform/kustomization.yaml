@@ -8,3 +8,5 @@ resources:
   - backup.yaml
   - authentik-role-secret.yaml
   - authentik-database.yaml
+  - gitea-role-secret.yaml
+  - gitea-database.yaml

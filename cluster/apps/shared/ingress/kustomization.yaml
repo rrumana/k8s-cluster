@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - argocd.yaml
+  - gitea.yaml
   - ceph-dashboard.yaml
   - collabora.yaml
   - grafana.yaml

@@ -1,0 +1,128 @@
+enabled: true
+
+global:
+  imagePullSecrets:
+    - harbor-pull-creds
+  storageClass: ceph-block-app-replicated
+
+giteaRootURL: http://gitea-http.development.svc.cluster.local:3000
+
+existingSecret: gitea-actions-token
+existingSecretKey: token
+
+statefulset:
+  replicas: 1
+  timezone: America/Los_Angeles
+  serviceAccountName: gitea-runner
+  nodeSelector:
+    homelab.rcrumana.xyz/node-plane: control
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  persistence:
+    size: 10Gi
+  extraVolumes:
+    - name: harbor-docker-config
+      secret:
+        secretName: harbor-pull-creds
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+        defaultMode: 0440
+    - name: docker-data
+      emptyDir:
+        sizeLimit: 40Gi
+  runner:
+    registry: harbor.rcrumana.xyz
+    repository: mirror/gitea/runner
+    tag: 2.0.1
+    digest: sha256:3acd61cdcfe5dc05dda0a66029af457ac2ff803b8ae95ab13701f22b1136903e
+    pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    extraVolumeMounts:
+      - name: harbor-docker-config
+        mountPath: /etc/docker-config
+        readOnly: true
+    extraEnvs:
+      - name: HOME
+        value: /data
+      - name: DOCKER_CONFIG
+        value: /etc/docker-config
+      - name: DOCKER_HOST
+        value: unix:///var/run/docker.sock
+    config: |-
+      log:
+        level: info
+      runner:
+        file: /data/.runner
+        capacity: 1
+        timeout: 3h
+        shutdown_timeout: 10m
+        insecure: false
+        fetch_timeout: 5s
+        fetch_interval: 2s
+        fetch_interval_max: 5s
+        action_shallow_clone: true
+        labels:
+          - "ubuntu-latest:docker://harbor.rcrumana.xyz/mirror/gitea/runner-images:ubuntu-latest@sha256:cd31050dc1563b8aef5ea7b8d6704301ef92d908faed98c97ec0f2d82f559041"
+      cache:
+        enabled: true
+        dir: /data/cache
+        offline_mode: false
+      container:
+        network: ""
+        privileged: false
+        valid_volumes: []
+        docker_host: unix:///var/run/docker.sock
+        force_pull: true
+        force_rebuild: false
+        require_docker: true
+        docker_timeout: 5m
+        bind_workdir: false
+      host:
+        workdir_parent: ""
+      metrics:
+        enabled: true
+        addr: ":9101"
+  dind:
+    rootless: true
+    uid: 1000
+    registry: harbor.rcrumana.xyz
+    repository: mirror/library/docker
+    tag: 29.5.2-dind-rootless
+    digest: sha256:dc9035ef22486e1acddcc01602d5b6302dfd73b1c353df7f724bd0537ad0df63
+    pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+        ephemeral-storage: 10Gi
+      limits:
+        cpu: "3"
+        memory: 6Gi
+        ephemeral-storage: 40Gi
+    extraVolumeMounts:
+      - name: docker-data
+        mountPath: /home/rootless/.local/share/docker
+    extraEnvs:
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
+
+init:
+  image:
+    registry: harbor.rcrumana.xyz
+    repository: mirror/library/busybox
+    tag: 1.38.0
+    digest: sha256:1cfa4e2b09e127b9c4ed43578d3f3c18e7d44ea47b9ea98475c0cbe9086525f8
+    pullPolicy: IfNotPresent

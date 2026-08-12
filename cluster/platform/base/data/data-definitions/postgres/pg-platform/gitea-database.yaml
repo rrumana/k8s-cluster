@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  name: gitea
+  owner: gitea
+  cluster:
+    name: pg-platform
+  ensure: present
+  allowConnections: true
+  databaseReclaimPolicy: retain

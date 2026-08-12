@@ -67,11 +67,14 @@ resources:
   - postgres-operator-app.yaml
   - valkey-cache-app.yaml
   - valkey-queue-app.yaml
+  - valkey-gitea-app.yaml
   - pg-platform-app.yaml
   - pg-media-app.yaml
   - pg-ai-app.yaml
   - pg-productivity-app.yaml
   - pg-other-app.yaml
+  - gitea-app.yaml
+  - gitea-actions-app.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd

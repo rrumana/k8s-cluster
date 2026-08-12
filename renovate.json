@@ -46,12 +46,12 @@
     },
     {
       "customType": "regex",
-      "description": "Track upstream images hardcoded in the observability seeding script",
+      "description": "Track upstream images hardcoded in prerequisite seeding scripts",
       "managerFilePatterns": [
-        "/^scripts/seed-observability-prereqs\\.sh$/"
+        "/^scripts/seed-(?:observability|gitea)-prereqs\\.sh$/"
       ],
       "matchStrings": [
-        "[\\\"](?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io|registry\\.k8s\\.io|cr\\.fluentbit\\.io)/[^:\\\"@]+):(?<currentValue>[^\\\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"]"
+        "[\\\"](?<depName>(?:docker\\.io|docker\\.gitea\\.com|quay\\.io|ghcr\\.io|registry\\.k8s\\.io|cr\\.fluentbit\\.io)/[^:\\\"@]+):(?<currentValue>[^\\\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"]"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
@@ -173,6 +173,13 @@
       "matchPackageNames": ["harbor.rcrumana.xyz/mirror/goauthentik/**"],
       "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/goauthentik/' 'ghcr.io/goauthentik/' packageName}}",
       "registryUrls": ["https://ghcr.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/gitea/ -> docker.gitea.com/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/gitea/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/gitea/' 'docker.gitea.com/' packageName}}",
+      "registryUrls": ["https://docker.gitea.com"]
     },
     {
       "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/headscale/ -> ghcr.io/juanfont/",
@@ -425,6 +432,20 @@
       "matchPackageNames": ["external-secrets", "harbor.rcrumana.xyz/thirdparty-charts/external-secrets"],
       "overridePackageName": "external-secrets",
       "registryUrls": ["https://charts.external-secrets.io"]
+    },
+    {
+      "description": "Resolve mirrored Gitea chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["gitea", "harbor.rcrumana.xyz/thirdparty-charts/gitea"],
+      "overridePackageName": "gitea",
+      "registryUrls": ["https://dl.gitea.com/charts/"]
+    },
+    {
+      "description": "Resolve mirrored Gitea Actions chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["actions", "harbor.rcrumana.xyz/thirdparty-charts/actions"],
+      "overridePackageName": "actions",
+      "registryUrls": ["https://dl.gitea.com/charts/"]
     },
     {
       "description": "Resolve mirrored HAProxy Ingress chart upstream",

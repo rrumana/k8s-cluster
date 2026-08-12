@@ -1,0 +1,394 @@
+# These one-shot generators seed durable values into Vault. IfNotExists keeps
+# reconciliation and disaster recovery from rotating established credentials.
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-postgresql-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: hex
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-postgresql-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-postgresql-password
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-postgresql
+          property: password
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-valkey-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: hex
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-valkey-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-valkey-password
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-valkey
+          property: password
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-admin-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: hex
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-admin-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-admin-password
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-admin
+          property: password
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-oidc-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: hex
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-oidc-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-oidc-secret
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-oidc
+          property: secret
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-secret-key
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 64
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: raw
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-secret-key
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-secret-key
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-secret-key
+          property: value
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-internal-token
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 64
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: raw
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-internal-token
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-internal-token
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-internal-token
+          property: value
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-lfs-jwt-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  # Gitea requires a 32-byte, unpadded base64url JWT secret.
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: base64url
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-lfs-jwt-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  template:
+    engineVersion: v2
+    data:
+      # ESO uses padded URL encoding; Gitea expects RawURLEncoding.
+      value: '{{ trimSuffix "=" .password }}'
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-lfs-jwt-secret
+  data:
+    - match:
+        secretKey: value
+        remoteRef:
+          remoteKey: apps/development/gitea-lfs-jwt
+          property: value
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-oauth2-jwt-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  # Gitea requires a 32-byte, unpadded base64url JWT secret.
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: base64url
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-oauth2-jwt-secret
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  template:
+    engineVersion: v2
+    data:
+      # ESO uses padded URL encoding; Gitea expects RawURLEncoding.
+      value: '{{ trimSuffix "=" .password }}'
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-oauth2-jwt-secret
+  data:
+    - match:
+        secretKey: value
+        remoteRef:
+          remoteKey: apps/development/gitea-oauth2-jwt
+          property: value
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: gitea-opensearch-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  length: 32
+  digits: 10
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  encoding: hex
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: gitea-opensearch-password
+  namespace: security
+  annotations:
+    argocd.argoproj.io/sync-wave: "-29"
+spec:
+  refreshInterval: 1h
+  updatePolicy: IfNotExists
+  deletionPolicy: None
+  template:
+    engineVersion: v2
+    data:
+      password: "{{ .password }}"
+      # Generate the salted bcrypt value only during the initial Vault write;
+      # storing it avoids a new hash (and OpenSearch reload) every refresh.
+      passwordHash: '{{ trimPrefix "gitea:" (htpasswd "gitea" .password "bcrypt") }}'
+  secretStoreRefs:
+    - name: vault
+      kind: ClusterSecretStore
+  selector:
+    generatorRef:
+      apiVersion: generators.external-secrets.io/v1alpha1
+      kind: Password
+      name: gitea-opensearch-password
+  data:
+    - match:
+        secretKey: password
+        remoteRef:
+          remoteKey: apps/development/gitea-opensearch
+          property: password
+    - match:
+        secretKey: passwordHash
+        remoteRef:
+          remoteKey: apps/development/gitea-opensearch
+          property: passwordHash

@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  project: default
+  sources:
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      chart: gitea
+      # renovate: datasource=helm depName=gitea registryUrl=https://dl.gitea.com/charts/
+      targetRevision: "12.7.0"
+      helm:
+        releaseName: gitea
+        valueFiles:
+          - $values/cluster/apps/development/gitea/values.yaml
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/apps/development/gitea
+      kustomize: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: development
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

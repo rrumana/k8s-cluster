@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gitea
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: gitea.availability
+      rules:
+        - alert: GiteaUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="development",deployment="gitea"} < 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Gitea has no available replica
+            description: Source control and Gitea Actions control-plane operations are unavailable.
+        - alert: GiteaReplicaDegraded
+          expr: kube_deployment_status_replicas_available{namespace="development",deployment="gitea"} < 2
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Gitea is running without application redundancy
+            description: One of the two Gitea replicas has been unavailable for at least 15 minutes.
+        - alert: GiteaMetricsDown
+          expr: absent(up{namespace="development",service="gitea-http"} == 1)
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Gitea metrics are unavailable
+            description: Prometheus cannot scrape the Gitea HTTP service.
+    - name: gitea.storage
+      rules:
+        - alert: GiteaCephFSNearCapacity
+          expr: 1 - (kubelet_volume_stats_available_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"} / kubelet_volume_stats_capacity_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"}) > 0.80
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: Gitea CephFS storage is over 80 percent full
+            description: Expand the retained gitea-shared-storage PVC before Git pushes are affected.
+        - alert: GiteaCephFSCriticalCapacity
+          expr: 1 - (kubelet_volume_stats_available_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"} / kubelet_volume_stats_capacity_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"}) > 0.90
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: Gitea CephFS storage is over 90 percent full
+            description: Repository writes are at immediate risk; expand or reclaim space.

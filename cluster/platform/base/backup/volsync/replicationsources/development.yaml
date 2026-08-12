@@ -1,0 +1,27 @@
+# This source is globally paused in kustomization.yaml until the shared
+# object-storage backup service is restored. The repository Secret deliberately
+# does not exist yet; see cluster/apps/development/gitea/README.md.
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: gitea-shared-storage-backup
+  namespace: development
+spec:
+  sourcePVC: gitea-shared-storage
+  trigger:
+    schedule: "15 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: cephfs-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-filesystem-snap
+    repository: gitea-data-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3

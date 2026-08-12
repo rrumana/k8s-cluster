@@ -1,0 +1,89 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: valkey-gitea-default-deny
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: valkey-gitea
+      app.kubernetes.io/component: node
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: valkey-gitea-allowed-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: valkey-gitea
+      app.kubernetes.io/component: node
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: valkey-gitea
+              app.kubernetes.io/component: node
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 26379
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: development
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: gitea
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 26379
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9121
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: valkey-gitea-allowed-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: valkey-gitea
+      app.kubernetes.io/component: node
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: valkey-gitea
+              app.kubernetes.io/component: node
+      ports:
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 26379

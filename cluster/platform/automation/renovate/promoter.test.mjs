@@ -194,8 +194,10 @@ assert.deepEqual(extractSeedImageReferences(`
 EXTRA_IMAGES=(
   "quay.io/prometheus-operator/prometheus-config-reloader:v0.88.0"
   "docker.io/library/busybox:1.38"
+  "docker.gitea.com/runner:2.0.1"
 )
 `), [
+  'docker.gitea.com/runner:2.0.1',
   'docker.io/library/busybox:1.38',
   'quay.io/prometheus-operator/prometheus-config-reloader:v0.88.0',
 ]);

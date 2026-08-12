@@ -103,6 +103,13 @@ spec:
             backend_roles:
               - "admin"
             description: "Cluster admin user"
+
+          gitea:
+            hash: '{{ .giteaPasswordHash }}'
+            reserved: false
+            backend_roles:
+              - "gitea_indexer"
+            description: "Gitea issue and repository indexer"
         nodes_dn.yml: |
           _meta:
             type: "nodesdn"
@@ -111,6 +118,18 @@ spec:
           _meta:
             type: "roles"
             config_version: 2
+
+          gitea_indexer:
+            reserved: false
+            cluster_permissions:
+              - "cluster:monitor/health"
+            index_permissions:
+              - index_patterns:
+                  - "gitea_issues*"
+                  - "gitea_codes*"
+                allowed_actions:
+                  - "indices_all"
+            tenant_permissions: []
         roles_mapping.yml: |
           ---
           _meta:
@@ -128,6 +147,12 @@ spec:
             backend_roles:
               - "admin"
             description: "Maps backend role admin to the built-in security REST API role"
+
+          gitea_indexer:
+            reserved: false
+            backend_roles:
+              - "gitea_indexer"
+            description: "Maps the Gitea service account to its dedicated indexes"
         tenants.yml: |
           ---
           _meta:
@@ -145,4 +170,8 @@ spec:
     - secretKey: passwordHash
       remoteRef:
         key: apps/search/opensearch-admin
+        property: passwordHash
+    - secretKey: giteaPasswordHash
+      remoteRef:
+        key: apps/development/gitea-opensearch
         property: passwordHash
