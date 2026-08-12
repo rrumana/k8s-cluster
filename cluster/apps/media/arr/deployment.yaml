@@ -276,7 +276,7 @@ spec:
             limits:   { cpu: "2", memory: "8Gi" }
 
         - name: sonarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.19.2979-ls320
+          image: harbor.rcrumana.xyz/mirror/linuxserver/sonarr:4.0.19.2979-ls321
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
@@ -302,7 +302,7 @@ spec:
             limits:   { cpu: "2", memory: "2Gi" }
 
         - name: lidarr
-          image: harbor.rcrumana.xyz/mirror/linuxserver/lidarr:3.1.0.4875-ls38
+          image: harbor.rcrumana.xyz/mirror/linuxserver/lidarr:3.1.0.4875-ls39
           env:
             - { name: PUID, value: "1000" }
             - { name: PGID, value: "1000" }
