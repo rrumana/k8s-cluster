@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        media.rcrumana.xyz/gluetun-credentials-version: "6"
+        media.rcrumana.xyz/gluetun-credentials-version: "7"
         media.rcrumana.xyz/pf-sync-config-version: "3"
         media.rcrumana.xyz/seerr-identity-revision: "2026-08-05-quick-connect"
       labels:
