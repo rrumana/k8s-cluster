@@ -17,16 +17,6 @@ spec:
               port: "3080"
     - fromEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: productivity
-            k8s:app: homepage
-      toPorts:
-        - ports:
-            - protocol: TCP
-              port: "3080"
-            - protocol: TCP
-              port: "4143"
-    - fromEndpoints:
-        - matchLabels:
             k8s:io.kubernetes.pod.namespace: monitoring
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: service-mesh

@@ -84,13 +84,11 @@ data:
             - Jellyseerr:
                 icon: jellyseerr.png
                 href: https://jellyseerr.rcrumana.xyz
-                siteMonitor: http://jellyseerr.media.svc.cluster.local
                 namespace: media
                 podSelector: app=arr-stack
             - Sonarr:
                 icon: sonarr.png
                 href: https://sonarr.rcrumana.xyz
-                siteMonitor: http://sonarr.media.svc.cluster.local
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -103,7 +101,6 @@ data:
             - Radarr:
                 icon: radarr.png
                 href: https://radarr.rcrumana.xyz
-                siteMonitor: http://radarr.media.svc.cluster.local
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -116,7 +113,6 @@ data:
             - Lidarr:
                 icon: lidarr.png
                 href: https://lidarr.rcrumana.xyz
-                siteMonitor: http://lidarr.media.svc.cluster.local
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -128,7 +124,6 @@ data:
             - Prowlarr:
                 icon: prowlarr.png
                 href: https://prowlarr.rcrumana.xyz
-                siteMonitor: http://prowlarr.media.svc.cluster.local
                 namespace: media
                 podSelector: app=arr-stack
                 widget:
@@ -140,7 +135,6 @@ data:
             - qBittorrent:
                 icon: qbittorrent.png
                 href: https://qbit.rcrumana.xyz
-                siteMonitor: http://qbit.media.svc.cluster.local
                 description: Primary torrent client
                 namespace: media
                 podSelector: app=arr-stack
@@ -188,7 +182,6 @@ data:
         - Nextcloud:
             icon: nextcloud.png
             href: https://nextcloud.rcrumana.xyz
-            siteMonitor: http://nextcloud.productivity.svc.cluster.local:8080/status.php
             description: Files and collaboration
             namespace: productivity
             app: nextcloud
@@ -202,7 +195,6 @@ data:
         - LibreChat:
             icon: librechat.png
             href: https://chat.rcrumana.xyz
-            siteMonitor: http://librechat.ai.svc.cluster.local
             description: AI chat frontend
             namespace: ai
             app: librechat
@@ -262,7 +254,6 @@ data:
         - Vaultwarden:
             icon: vaultwarden.png
             href: https://vault.rcrumana.xyz
-            siteMonitor: http://vaultwarden.productivity.svc.cluster.local/alive
             description: Password vault
             namespace: productivity
             app: vaultwarden
@@ -322,7 +313,6 @@ data:
         - UniFi:
             icon: unifi.png
             href: https://unifi.rcrumana.xyz
-            siteMonitor: https://unifi.rcrumana.xyz
             description: Network controller
             namespace: productivity
             app: unifi-os-server
@@ -336,7 +326,6 @@ data:
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
-            siteMonitor: http://uptime-kuma.productivity.svc.cluster.local
             description: Service uptime checks
             namespace: productivity
             app: uptime-kuma
@@ -478,7 +467,6 @@ data:
         - Gitea:
             icon: gitea.png
             href: https://git.rcrumana.xyz
-            siteMonitor: http://gitea-http.development.svc.cluster.local:3000/api/healthz
             description: Source control and automation
             namespace: development
             app: gitea
@@ -579,7 +567,6 @@ data:
         - Headscale:
             icon: headscale.png
             href: https://headscale.rcrumana.xyz/web
-            siteMonitor: http://headscale.other.svc.cluster.local/health
             description: Tailnet admin UI
             namespace: other
             app: headscale
@@ -629,7 +616,6 @@ data:
         - Grafana:
             icon: grafana.png
             href: https://grafana.rcrumana.xyz
-            siteMonitor: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
             description: Metrics and log dashboards
             namespace: monitoring
             podSelector: app.kubernetes.io/name=grafana
@@ -645,7 +631,6 @@ data:
         - Harbor:
             icon: harbor.png
             href: https://harbor.rcrumana.xyz
-            siteMonitor: http://harbor-core.harbor.svc.cluster.local/api/v2.0/health
             description: Container registry
             namespace: harbor
             podSelector: app=harbor
@@ -743,16 +728,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.13:9100",device="enp195s0"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.13:9100",device="enp195s0"}[5m])'
                     format:
@@ -791,16 +766,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.14:9100",device="enp196s0"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.14:9100",device="enp196s0"}[5m])'
                     format:
@@ -839,16 +804,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.15:9100",device="enp195s0"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.15:9100",device="enp195s0"}[5m])'
                     format:
@@ -887,16 +842,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.16:9100",device="enp5s0f1np1"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.16:9100",device="enp5s0f1np1"}[5m])'
                     format:
@@ -935,16 +880,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.17:9100",device="enp5s0f1np1"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.17:9100",device="enp5s0f1np1"}[5m])'
                     format:
@@ -983,16 +918,6 @@ data:
                       suffix: " °C"
                       options:
                         maximumFractionDigits: 0
-              - type: prometheusmetric
-                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-                refreshInterval: 15000
-                metrics:
-                  - label: Down
-                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.18:9100",device="enp5s0f1np1"}[5m])'
-                    format:
-                      type: bibyterate
-                      options:
-                        maximumFractionDigits: 1
                   - label: Up
                     query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.18:9100",device="enp5s0f1np1"}[5m])'
                     format:
