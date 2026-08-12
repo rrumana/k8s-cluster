@@ -12,6 +12,7 @@ data:
 
     PF_FILE="${PF_FILE:-/pf/state/forwarded_port}"
     WEBUI_PORT="${QB_WEBUI_PORT:?missing QB_WEBUI_PORT}"
+    RECONCILE_PERFORMANCE="${QB_RECONCILE_PERFORMANCE:-true}"
     GLOBAL_UPLOAD_SLOTS="${QB_GLOBAL_UPLOAD_SLOTS:?missing QB_GLOBAL_UPLOAD_SLOTS}"
     UPLOAD_SLOTS_PER_TORRENT="${QB_UPLOAD_SLOTS_PER_TORRENT:?missing QB_UPLOAD_SLOTS_PER_TORRENT}"
     DISK_IO_TYPE="${QB_DISK_IO_TYPE:?missing QB_DISK_IO_TYPE}"
@@ -22,6 +23,13 @@ data:
     SEND_BUFFER_WATERMARK_FACTOR="${QB_SEND_BUFFER_WATERMARK_FACTOR:?missing QB_SEND_BUFFER_WATERMARK_FACTOR}"
     ALTERNATIVE_WEBUI_ENABLED="${QB_ALTERNATIVE_WEBUI_ENABLED:?missing QB_ALTERNATIVE_WEBUI_ENABLED}"
     ALTERNATIVE_WEBUI_PATH="${QB_ALTERNATIVE_WEBUI_PATH:?missing QB_ALTERNATIVE_WEBUI_PATH}"
+    case "$RECONCILE_PERFORMANCE" in
+      true|false) ;;
+      *)
+        echo "pf-sync(sidecar): QB_RECONCILE_PERFORMANCE must be true or false" >&2
+        exit 1
+        ;;
+    esac
     echo "pf-sync(sidecar): watching $PF_FILE for qB WebUI :$WEBUI_PORT"
 
     qbit_available=false
@@ -50,20 +58,25 @@ data:
         # reconcile these values so controlled live performance tests remain
         # possible without restarting the deployment.
         if [ "$performance_initialized" = false ]; then
-          echo "pf-sync(sidecar): applying qBittorrent startup performance baseline"
-          performance_json=$(printf '{"max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s}' \
-            "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
-            "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
-            "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" \
-            "$SEND_BUFFER_WATERMARK_FACTOR")
-          if curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
-               --data-urlencode "json=$performance_json" \
-               "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
-          then
-            echo "pf-sync(sidecar): startup performance baseline applied"
-            performance_initialized=true
+          if [ "$RECONCILE_PERFORMANCE" = true ]; then
+            echo "pf-sync(sidecar): applying qBittorrent startup performance baseline"
+            performance_json=$(printf '{"max_uploads": %s, "max_uploads_per_torrent": %s, "disk_io_type": %s, "async_io_threads": %s, "hashing_threads": %s, "send_buffer_low_watermark": %s, "send_buffer_watermark": %s, "send_buffer_watermark_factor": %s}' \
+              "$GLOBAL_UPLOAD_SLOTS" "$UPLOAD_SLOTS_PER_TORRENT" \
+              "$DISK_IO_TYPE" "$ASYNC_IO_THREADS" "$HASHING_THREADS" \
+              "$SEND_BUFFER_LOW_WATERMARK" "$SEND_BUFFER_WATERMARK" \
+              "$SEND_BUFFER_WATERMARK_FACTOR")
+            if curl -fsS --connect-timeout 3 --max-time 10 -b /tmp/c \
+                 --data-urlencode "json=$performance_json" \
+                 "http://127.0.0.1:${WEBUI_PORT}/api/v2/app/setPreferences" >/dev/null
+            then
+              echo "pf-sync(sidecar): startup performance baseline applied"
+              performance_initialized=true
+            else
+              echo "pf-sync(sidecar): startup performance baseline failed"
+            fi
           else
-            echo "pf-sync(sidecar): startup performance baseline failed"
+            echo "pf-sync(sidecar): startup performance reconciliation disabled"
+            performance_initialized=true
           fi
         fi
 
