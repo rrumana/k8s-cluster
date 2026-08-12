@@ -35,7 +35,9 @@ global:
       maxUnavailable: 1
 
   podAnnotations:
-    identity.rcrumana.xyz/config-revision: "2026-08-05-jellyfin"
+    # ExternalSecret-backed environment values are read only at pod startup.
+    # Bump this whenever a blueprint introduces a new !Env dependency.
+    identity.rcrumana.xyz/config-revision: "2026-08-12-gitea"
     linkerd.io/inject: enabled
     config.linkerd.io/skip-outbound-ports: "587"
 
