@@ -103,6 +103,8 @@ statefulset:
     tag: 29.5.2-dind-rootless
     digest: sha256:dc9035ef22486e1acddcc01602d5b6302dfd73b1c353df7f724bd0537ad0df63
     pullPolicy: IfNotPresent
+    extraArgs:
+      - --data-root=/home/rootless/.local/share/docker/data
     resources:
       requests:
         cpu: 500m
