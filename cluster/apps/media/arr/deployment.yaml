@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        media.rcrumana.xyz/gluetun-credentials-version: "5"
+        media.rcrumana.xyz/gluetun-credentials-version: "6"
         media.rcrumana.xyz/pf-sync-config-version: "3"
         media.rcrumana.xyz/seerr-identity-revision: "2026-08-05-quick-connect"
       labels:
@@ -216,10 +216,6 @@ spec:
             - { name: VPN_PORT_FORWARDING_STATUS_FILE, value: "/pf/state/forwarded_port" }
             - { name: FIREWALL_OUTBOUND_SUBNETS, value: "10.44.0.0/16,10.45.0.0/16" }
             - { name: BLOCK_IPV6, value: "on" }
-            # This Proton endpoint blocks public encrypted DNS; use the resolver
-            # supplied by the WireGuard profile inside the tunnel instead.
-            - { name: DNS_SERVER, value: "off" }
-            - { name: DNS_ADDRESS, value: "10.2.0.1" }
           volumeMounts:
             - { name: dev-net-tun, mountPath: /dev/net/tun }
             - { name: gluetun, mountPath: /gluetun }
