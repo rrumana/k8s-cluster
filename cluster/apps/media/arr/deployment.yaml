@@ -218,8 +218,8 @@ spec:
             - { name: BLOCK_IPV6, value: "on" }
             # This Proton endpoint blocks public encrypted DNS; use the resolver
             # supplied by the WireGuard profile inside the tunnel instead.
-            - { name: DNS_UPSTREAM_RESOLVER_TYPE, value: "plain" }
-            - { name: DNS_UPSTREAM_PLAIN_ADDRESSES, value: "10.2.0.1:53" }
+            - { name: DNS_SERVER, value: "off" }
+            - { name: DNS_ADDRESS, value: "10.2.0.1" }
           volumeMounts:
             - { name: dev-net-tun, mountPath: /dev/net/tun }
             - { name: gluetun, mountPath: /gluetun }
