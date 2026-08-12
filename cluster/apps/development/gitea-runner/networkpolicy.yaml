@@ -62,6 +62,19 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+    # Harbor resolves to the shared LoadBalancer VIP. Cilium translates that
+    # VIP to a HAProxy pod before enforcing egress policy, so authorize the
+    # translated destination identity as well as the VIP below.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-haproxy
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: haproxy-ingress
+      ports:
+        - protocol: TCP
+          port: 443
     - to:
         - ipBlock:
             cidr: 192.168.1.230/32

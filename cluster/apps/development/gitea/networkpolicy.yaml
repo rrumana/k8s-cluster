@@ -105,6 +105,19 @@ spec:
       ports:
         - protocol: TCP
           port: 9200
+    # Cilium translates the shared LoadBalancer VIP to a HAProxy pod before
+    # enforcing egress policy. Permit that resulting pod identity for private
+    # HTTPS endpoints such as Authentik and Harbor.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-haproxy
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: haproxy-ingress
+      ports:
+        - protocol: TCP
+          port: 443
     - to:
         - ipBlock:
             cidr: 192.168.1.230/32
