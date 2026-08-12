@@ -369,10 +369,14 @@ spec:
   template:
     engineVersion: v2
     data:
-      password: "{{ .password }}"
-      # Generate the salted bcrypt value only during the initial Vault write;
-      # storing it avoids a new hash (and OpenSearch reload) every refresh.
-      passwordHash: '{{ trimPrefix "gitea:" (htpasswd "gitea" .password "bcrypt") }}'
+      # Vault treats a property-less JSON value as one secret map, so the
+      # password and its derived hash are created atomically. This avoids a
+      # usable password ever being paired with a hash from another reconcile.
+      credentials: |-
+        {
+          "password": "{{ .password }}",
+          "passwordHash": "{{ trimPrefix "gitea:" (htpasswd "gitea" .password "bcrypt") }}"
+        }
   secretStoreRefs:
     - name: vault
       kind: ClusterSecretStore
@@ -383,12 +387,6 @@ spec:
       name: gitea-opensearch-password
   data:
     - match:
-        secretKey: password
+        secretKey: credentials
         remoteRef:
           remoteKey: apps/development/gitea-opensearch
-          property: password
-    - match:
-        secretKey: passwordHash
-        remoteRef:
-          remoteKey: apps/development/gitea-opensearch
-          property: passwordHash
