@@ -11,6 +11,8 @@ spec:
       app: egress-qos
   template:
     metadata:
+      annotations:
+        egress-qos.rcrumana.xyz/config-version: "2"
       labels:
         app: egress-qos
     spec:
@@ -40,11 +42,11 @@ spec:
             - name: WAN_IFACE_LABEL
               value: "egress-qos/wan-iface"  # node label override
             - name: LINK_CEIL
-              value: "2500mbit"        # total link rate
+              value: "auto"            # derive the negotiated NIC speed
             - name: BULK_RATE
               value: "700mbit"         # guaranteed rate for bulk
             - name: BULK_CEIL
-              value: "2500mbit"        # bulk can borrow up to this
+              value: "auto"            # bulk can borrow up to the NIC speed
             - name: SYNC_INTERVAL
               value: "5"              # seconds between ipset refresh
             - name: LABEL_SELECTOR

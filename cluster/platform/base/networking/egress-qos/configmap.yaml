@@ -10,15 +10,20 @@ data:
 
     : "${WAN_IFACE:=}"                   # optional fixed iface; otherwise auto-detect
     : "${WAN_IFACE_LABEL:=egress-qos/wan-iface}" # node label to override iface
-    : "${LINK_CEIL:=2500mbit}"
+    : "${LINK_CEIL:=auto}"
     : "${BULK_RATE:=700mbit}"
-    : "${BULK_CEIL:=${LINK_CEIL}}"
+    : "${BULK_CEIL:=auto}"
     : "${SYNC_INTERVAL:=5}"
     : "${LABEL_SELECTOR:=traffic-tier=bulk-seed}"
     : "${IPSET_NAME:=bulkseed-pods}"
     : "${FW_MARK:=1}"
     # renovate: datasource=github-releases depName=kubernetes/kubernetes versioning=loose
     : "${KUBECTL_VERSION:=v1.36.2}"
+
+    WAN_IFACE_OVERRIDE="${WAN_IFACE}"
+    ACTIVE_IFACE=""
+    ACTIVE_LINK_CEIL=""
+    ACTIVE_BULK_CEIL=""
 
     install_tools() {
       apk add --no-cache iproute2 iptables ipset jq curl >/dev/null
@@ -30,20 +35,39 @@ data:
     }
 
     detect_iface() {
-      IFACE="${WAN_IFACE:-}"
-      # Try node label if not set
-      if [ -z "$IFACE" ] && [ -n "${MY_NODE_NAME:-}" ]; then
-        IFACE=$(kubectl get node "$MY_NODE_NAME" -o "jsonpath={.metadata.labels['${WAN_IFACE_LABEL}']}" 2>/dev/null || true)
+      iface="${WAN_IFACE_OVERRIDE}"
+      # Try the node label if no fixed override was supplied.
+      if [ -z "$iface" ] && [ -n "${MY_NODE_NAME:-}" ]; then
+        iface=$(kubectl get node "$MY_NODE_NAME" -o json 2>/dev/null \
+          | jq -r --arg label "$WAN_IFACE_LABEL" '.metadata.labels[$label] // empty' \
+          || true)
       fi
-      # Fallback to default route device
-      if [ -z "$IFACE" ]; then
-        IFACE=$(ip route get 1.1.1.1 2>/dev/null | awk '/ dev / {for (i=1;i<=NF;i++) if ($i=="dev") {print $(i+1); exit}}')
+      # Fall back to the device used by the current default route.
+      if [ -z "$iface" ]; then
+        iface=$(ip route get 1.1.1.1 2>/dev/null | awk '/ dev / {for (i=1;i<=NF;i++) if ($i=="dev") {print $(i+1); exit}}')
       fi
-      if [ -z "$IFACE" ]; then
+      if [ -z "$iface" ]; then
         echo "Unable to detect WAN interface; set WAN_IFACE or node label ${WAN_IFACE_LABEL}" >&2
-        exit 1
+        return 1
       fi
-      WAN_IFACE="$IFACE"
+      printf '%s\n' "$iface"
+    }
+
+    resolve_link_ceil() {
+      iface="$1"
+      if [ "$LINK_CEIL" != "auto" ]; then
+        printf '%s\n' "$LINK_CEIL"
+        return
+      fi
+
+      speed=$(cat "/sys/class/net/${iface}/speed" 2>/dev/null || true)
+      case "$speed" in
+        ''|*[!0-9]*|0)
+          echo "Unable to detect link speed for ${iface}; set LINK_CEIL explicitly" >&2
+          return 1
+          ;;
+      esac
+      printf '%smbit\n' "$speed"
     }
 
     ensure_ipset() {
@@ -51,16 +75,27 @@ data:
     }
 
     refresh_ipset() {
-      TMP="$(mktemp)"
-      kubectl get pods --all-namespaces -l "${LABEL_SELECTOR}" -o json \
-        | jq -r '.items[].status.podIP' \
-        | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' > "$TMP" || true
+      json_file="$(mktemp)"
+      ip_file="$(mktemp)"
+      next_set="${IPSET_NAME}-next"
 
-      ipset flush "${IPSET_NAME}"
+      if ! kubectl get pods --all-namespaces -l "${LABEL_SELECTOR}" -o json > "$json_file"; then
+        echo "egress-qos: pod lookup failed; retaining the previous ${IPSET_NAME} members" >&2
+        rm -f "$json_file" "$ip_file"
+        return 1
+      fi
+
+      jq -r '.items[].status.podIP' "$json_file" \
+        | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' > "$ip_file" || true
+
+      ipset create "$next_set" hash:ip family inet -exist
+      ipset flush "$next_set"
       while IFS= read -r ip; do
-        [ -n "$ip" ] && ipset add "${IPSET_NAME}" "$ip" -exist
-      done < "$TMP"
-      rm -f "$TMP"
+        [ -n "$ip" ] && ipset add "$next_set" "$ip" -exist
+      done < "$ip_file"
+      ipset swap "$next_set" "${IPSET_NAME}"
+      ipset destroy "$next_set"
+      rm -f "$json_file" "$ip_file"
     }
 
     ensure_fwmark_rule() {
@@ -70,21 +105,43 @@ data:
     }
 
     configure_tc() {
-      tc qdisc del dev "${WAN_IFACE}" root 2>/dev/null || true
-      tc qdisc replace dev "${WAN_IFACE}" root handle 1: htb default 10
+      tc qdisc del dev "${ACTIVE_IFACE}" root 2>/dev/null || true
+      tc qdisc replace dev "${ACTIVE_IFACE}" root handle 1: htb default 10
 
-      tc class replace dev "${WAN_IFACE}" parent 1: classid 1:1 htb rate "${LINK_CEIL}" ceil "${LINK_CEIL}" burst 1m cburst 1m
-      tc class replace dev "${WAN_IFACE}" parent 1:1 classid 1:10 htb rate "${LINK_CEIL}" ceil "${LINK_CEIL}" burst 1m cburst 1m
-      tc class replace dev "${WAN_IFACE}" parent 1:1 classid 1:20 htb rate "${BULK_RATE}" ceil "${BULK_CEIL}" burst 1m cburst 1m
+      tc class replace dev "${ACTIVE_IFACE}" parent 1: classid 1:1 htb rate "${ACTIVE_LINK_CEIL}" ceil "${ACTIVE_LINK_CEIL}" burst 1m cburst 1m quantum 15140
+      tc class replace dev "${ACTIVE_IFACE}" parent 1:1 classid 1:10 htb rate "${ACTIVE_LINK_CEIL}" ceil "${ACTIVE_LINK_CEIL}" burst 1m cburst 1m quantum 15140
+      tc class replace dev "${ACTIVE_IFACE}" parent 1:1 classid 1:20 htb rate "${BULK_RATE}" ceil "${ACTIVE_BULK_CEIL}" burst 1m cburst 1m quantum 15140
 
-      tc qdisc replace dev "${WAN_IFACE}" parent 1:10 handle 10: fq_codel
-      tc qdisc replace dev "${WAN_IFACE}" parent 1:20 handle 20: fq_codel
+      tc qdisc replace dev "${ACTIVE_IFACE}" parent 1:10 handle 10: fq_codel
+      tc qdisc replace dev "${ACTIVE_IFACE}" parent 1:20 handle 20: fq_codel
 
-      tc filter replace dev "${WAN_IFACE}" parent 1: protocol ip handle "${FW_MARK}" fw flowid 1:20
+      tc filter replace dev "${ACTIVE_IFACE}" parent 1: protocol ip handle "${FW_MARK}" fw flowid 1:20
+    }
+
+    reconcile_iface() {
+      detected_iface="$(detect_iface)" || return 1
+      if [ "$detected_iface" = "$ACTIVE_IFACE" ] \
+        && tc qdisc show dev "$ACTIVE_IFACE" 2>/dev/null | grep -q '^qdisc htb 1:'; then
+        return
+      fi
+
+      previous_iface="$ACTIVE_IFACE"
+      ACTIVE_IFACE="$detected_iface"
+      ACTIVE_LINK_CEIL="$(resolve_link_ceil "$ACTIVE_IFACE")" || return 1
+      if [ "$BULK_CEIL" = "auto" ]; then
+        ACTIVE_BULK_CEIL="$ACTIVE_LINK_CEIL"
+      else
+        ACTIVE_BULK_CEIL="$BULK_CEIL"
+      fi
+
+      if [ -n "$previous_iface" ] && [ "$previous_iface" != "$ACTIVE_IFACE" ]; then
+        tc qdisc del dev "$previous_iface" root 2>/dev/null || true
+      fi
+      configure_tc
+      echo "egress-qos: shaping ${ACTIVE_IFACE}, link=${ACTIVE_LINK_CEIL}, bulk=${BULK_RATE} ceil ${ACTIVE_BULK_CEIL}, label selector ${LABEL_SELECTOR}"
     }
 
     install_tools
-    detect_iface
     load_modules() {
       for mod in sch_htb sch_fq_codel cls_fw; do
         modprobe "$mod" 2>/dev/null || true
@@ -92,12 +149,11 @@ data:
     }
     load_modules
     ensure_ipset
-    configure_tc
     ensure_fwmark_rule
-
-    echo "egress-qos: shaping ${WAN_IFACE}, default class=link, bulk=${BULK_RATE} ceil ${BULK_CEIL}, label selector ${LABEL_SELECTOR}"
+    reconcile_iface
 
     while true; do
-      refresh_ipset
+      reconcile_iface || true
+      refresh_ipset || true
       sleep "${SYNC_INTERVAL}"
     done
