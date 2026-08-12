@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qdrant
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  sources:
+    - repoURL: harbor.rcrumana.xyz/thirdparty-charts
+      chart: qdrant
+      # renovate: datasource=helm depName=qdrant versioning=helm registryUrl=https://qdrant.github.io/qdrant-helm
+      targetRevision: "1.18.2"
+      helm:
+        releaseName: qdrant
+        skipTests: true
+        valueFiles:
+          - $values/cluster/platform/base/data/data-definitions/qdrant/values.yaml
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://github.com/rrumana/k8s-homelab-2.git
+      targetRevision: main
+      path: cluster/platform/base/data/data-definitions/qdrant
+      kustomize: {}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

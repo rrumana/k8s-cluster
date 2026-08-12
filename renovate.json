@@ -48,10 +48,10 @@
       "customType": "regex",
       "description": "Track upstream images hardcoded in prerequisite seeding scripts",
       "managerFilePatterns": [
-        "/^scripts/seed-(?:observability|gitea)-prereqs\\.sh$/"
+        "/^scripts/seed-(?:observability|gitea|qdrant)-prereqs\\.sh$/"
       ],
       "matchStrings": [
-        "[\\\"](?<depName>(?:docker\\.io|docker\\.gitea\\.com|quay\\.io|ghcr\\.io|registry\\.k8s\\.io|cr\\.fluentbit\\.io)/[^:\\\"@]+):(?<currentValue>[^\\\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"]"
+        "[\\\"](?<depName>(?:docker\\.io|docker\\.gitea\\.com|quay\\.io|ghcr\\.io|registry\\.k8s\\.io|registry\\.suse\\.com|cr\\.fluentbit\\.io)/[^:\\\"@]+):(?<currentValue>[^\\\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?[\\\"]"
       ],
       "datasourceTemplate": "docker",
       "versioningTemplate": "docker"
@@ -406,6 +406,20 @@
       "registryUrls": ["https://index.docker.io"]
     },
     {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/qdrant/ -> docker.io/qdrant/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/qdrant/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/qdrant/' 'docker.io/qdrant/' packageName}}",
+      "registryUrls": ["https://index.docker.io"]
+    },
+    {
+      "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/suse-bci/ -> registry.suse.com/bci/",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["harbor.rcrumana.xyz/mirror/suse-bci/**"],
+      "overridePackageName": "{{replace 'harbor.rcrumana.xyz/mirror/suse-bci/' 'registry.suse.com/bci/' packageName}}",
+      "registryUrls": ["https://registry.suse.com"]
+    },
+    {
       "description": "Upstream mapping: harbor.rcrumana.xyz/mirror/qmcgaw/ -> docker.io/qmcgaw/",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["harbor.rcrumana.xyz/mirror/qmcgaw/**"],
@@ -490,6 +504,13 @@
       "allowedVersions": "/^2\\.8\\.0$/"
     },
     {
+      "description": "Resolve mirrored Qdrant chart upstream",
+      "matchDatasources": ["helm"],
+      "matchPackageNames": ["qdrant", "harbor.rcrumana.xyz/thirdparty-charts/qdrant"],
+      "overridePackageName": "qdrant",
+      "registryUrls": ["https://qdrant.github.io/qdrant-helm"]
+    },
+    {
       "description": "Resolve mirrored Rook chart upstream",
       "matchDatasources": ["helm"],
       "matchPackageNames": ["rook-ceph", "harbor.rcrumana.xyz/thirdparty-charts/rook-ceph"],
@@ -525,6 +546,13 @@
     {
       "description": "Gate observability and search updates while keeping independent components separate",
       "matchFileNames": ["cluster/platform/observability/search/**", "scripts/seed-observability-prereqs.sh"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Coordinate Qdrant chart, runtime image, and prerequisite updates",
+      "matchFileNames": ["cluster/platform/base/data/data-definitions/qdrant/**", "cluster/platform/gitops/argocd/apps/qdrant-app.yaml", "scripts/seed-qdrant-prereqs.sh"],
+      "groupName": "Qdrant cluster updates",
+      "groupSlug": "qdrant-cluster",
       "dependencyDashboardApproval": true
     },
     {

@@ -99,6 +99,201 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
+  name: qdrant-node-0-backup-restic
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: qdrant-node-0-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/qdrant-node-0-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: qdrant-node-0-backup
+  namespace: databases
+spec:
+  sourcePVC: qdrant-storage-qdrant-0
+  trigger:
+    schedule: "50 4 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-block-snap
+    repository: qdrant-node-0-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: qdrant-node-1-backup-restic
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: qdrant-node-1-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/qdrant-node-1-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: qdrant-node-1-backup
+  namespace: databases
+spec:
+  sourcePVC: qdrant-storage-qdrant-1
+  trigger:
+    schedule: "5 5 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-block-snap
+    repository: qdrant-node-1-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: qdrant-node-2-backup-restic
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: qdrant-node-2-backup-restic
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      data:
+        RESTIC_REPOSITORY: "{{ .resticRepository }}/qdrant-node-2-backup"
+        RESTIC_PASSWORD: "{{ .resticPassword }}"
+        AWS_ACCESS_KEY_ID: "{{ .awsAccessKeyId }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .awsSecretAccessKey }}"
+  data:
+    - secretKey: resticRepository
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_REPOSITORY
+    - secretKey: resticPassword
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: RESTIC_PASSWORD
+    - secretKey: awsAccessKeyId
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_ACCESS_KEY_ID
+    - secretKey: awsSecretAccessKey
+      remoteRef:
+        key: apps/platform/volsync-object-store
+        property: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: qdrant-node-2-backup
+  namespace: databases
+spec:
+  sourcePVC: qdrant-storage-qdrant-2
+  trigger:
+    schedule: "20 5 * * *"
+  restic:
+    copyMethod: Snapshot
+    storageClassName: ceph-block-app-replicated
+    cacheStorageClassName: ceph-block-app-replicated
+    volumeSnapshotClassName: ceph-block-snap
+    repository: qdrant-node-2-backup-restic
+    pruneIntervalDays: 14
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    retain:
+      daily: 7
+      weekly: 4
+      monthly: 3
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
   name: valkey-queue-node-1-backup-restic
   namespace: databases
   annotations:

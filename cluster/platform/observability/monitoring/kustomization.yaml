@@ -6,6 +6,7 @@ namespace: monitoring
 resources:
   - grafana-dashboard-linkerd.yaml
   - grafana-dashboard-logging-stack.yaml
+  - grafana-dashboard-qdrant.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: observability-monitoring

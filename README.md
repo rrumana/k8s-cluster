@@ -16,7 +16,8 @@ A live, six-node bare-metal Kubernetes homelab run with GitOps and real workload
 - HAProxy Ingress behind MetalLB, with explicit public/private exposure policy
 - Authentik-backed identity, Vault-backed runtime secrets, and Harbor-backed
   runtime artifacts
-- Five three-instance CloudNativePG clusters plus shared Valkey cache and queue
+- Five three-instance CloudNativePG clusters, shared Valkey tiers, and a
+  three-peer Qdrant test cluster
 - Prometheus/Grafana metrics and Fluent Bit/Data Prepper/OpenSearch logs
 
 ### Nodes
@@ -52,8 +53,8 @@ Argo CD root app (prune + self-heal)
    |----------------------|----------------------|
    v                      v                      v
 Platform foundation    Shared data services    Workload apps
-CNI, ingress, TLS,     CNPG, Valkey, Ceph      identity, AI, media,
-mesh, secrets,         and snapshots           productivity, web
+CNI, ingress, TLS,     CNPG, Valkey, Qdrant,   identity, AI, media,
+mesh, secrets,         Ceph, snapshots         productivity, web
 observability, Harbor
 
 API clients -> k8s-api.lab.home -> kube-vip 192.168.1.11 -> API servers
@@ -63,7 +64,7 @@ LAN / Headscale -----------------+-> MetalLB 192.168.1.230 -> HAProxy Ingress
                                      -> public direct / Cloudflare edge
                                      -> private LAN / Headscale edge
                                      -> Authentik or application auth
-                                     -> Services -> CNPG / Valkey / Ceph
+                                     -> Services -> CNPG / Valkey / Qdrant / Ceph
 ```
 
 The API VIP and service VIPs are deliberately separate: kube-vip handles only
@@ -155,6 +156,7 @@ independent of Authentik.
 | Snapshots | CSI Snapshot Controller | Default `ceph-block-snap` plus CephFS snapshots |
 | SQL | CloudNativePG | Five three-instance clusters on storage nodes |
 | Cache / queue | Valkey | Replicated ephemeral cache and replicated AOF-backed queue |
+| Vector database | Qdrant | Internal three-peer test cluster with native TLS and API authentication |
 | Metrics | kube-prometheus-stack | Persistent Prometheus, Alertmanager, Grafana, and node monitoring |
 | Logs | Fluent Bit + Data Prepper + OpenSearch | Node collection into normalized daily OpenSearch indices |
 | Registry / charts | Harbor | Private registry, proxy cache, and OCI mirror |
@@ -173,7 +175,7 @@ capacity depends on the selected durability profile; there is no single
 | StorageClass | Layout | Intended use |
 |---|---|---|
 | `ceph-block-critical` (default) | RBD, 3x host replication | Critical data without application-level replication |
-| `ceph-block-app-replicated` | RBD, 2x host replication | CNPG, Valkey, OpenSearch, and other application-replicated data |
+| `ceph-block-app-replicated` | RBD, 2x host replication | CNPG, Valkey, Qdrant, OpenSearch, and other application-replicated data |
 | `cephfs-replicated` | CephFS, 3x host replication | Critical RWX data |
 | `cephfs-bulk` | CephFS, EC 2+1 | Reconstructible media, model caches, and other capacity-heavy RWX data |
 | `cephfs-bulk-retain` | CephFS, EC 2+1, `Retain` reclaim policy | Bulk data whose PV lifecycle must survive claim deletion |
@@ -195,8 +197,8 @@ CephNFS gateway exposes a LAN endpoint for the bulk filesystem at
 
 The shared data plane lives in `databases`: `pg-ai`, `pg-media`,
 `pg-platform`, `pg-productivity`, `pg-other`, `valkey-cache`, and
-`valkey-queue`. More detailed catalog and ingress notes are in
-[docs/apps.md](docs/apps.md).
+`valkey-queue`, plus the internal Qdrant test cluster. More detailed catalog and
+ingress notes are in [docs/apps.md](docs/apps.md).
 
 ## Service Addresses
 

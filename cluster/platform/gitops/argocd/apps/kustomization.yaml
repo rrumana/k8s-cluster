@@ -68,6 +68,7 @@ resources:
   - valkey-cache-app.yaml
   - valkey-queue-app.yaml
   - valkey-gitea-app.yaml
+  - qdrant-app.yaml
   - pg-platform-app.yaml
   - pg-media-app.yaml
   - pg-ai-app.yaml

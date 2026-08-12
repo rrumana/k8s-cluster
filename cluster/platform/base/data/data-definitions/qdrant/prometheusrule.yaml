@@ -1,0 +1,72 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: qdrant
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: qdrant.availability
+      rules:
+        - alert: QdrantPeerTargetsMissing
+          expr: |
+            absent(up{namespace="databases", service="qdrant-headless"})
+            or
+            count(up{namespace="databases", service="qdrant-headless"} == 1) < 3
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Fewer than three Qdrant peers are being scraped
+            description: The Qdrant HA topology is incomplete or one of its peer metrics endpoints is unavailable.
+        - alert: QdrantPeerUnavailable
+          expr: up{namespace="databases", service="qdrant-headless"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Qdrant peer {{ $labels.pod }} is unavailable
+            description: Inspect the peer, its Ceph RBD volume, and cluster consensus before another failure reduces availability.
+        - alert: QdrantConsensusPeerCountDegraded
+          expr: min(cluster_peers_total{namespace="databases"}) < 3
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Qdrant consensus has fewer than three peers
+            description: Cluster-wide operations require a majority; restore the missing peer before maintenance or another failure.
+        - alert: QdrantReplicaDegraded
+          expr: max(collection_dead_replicas{namespace="databases"}) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Qdrant has a dead collection replica
+            description: At least one collection shard replica is inactive. Check shard distribution and peer recovery immediately.
+        - alert: QdrantReplicationBelowHA
+          expr: |
+            min(collection_active_replicas_min{namespace="databases"}) < 2
+            and on()
+            max(collections_total{namespace="databases"}) > 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: A Qdrant shard has fewer than two active replicas
+            description: The affected collection no longer meets the configured single-peer-failure posture.
+        - alert: QdrantConsensusStopped
+          expr: max(cluster_working_state{namespace="databases", state="stopped"}) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: A Qdrant peer reports a stopped consensus thread
+            description: The peer is serving metrics but its consensus worker is stopped; inspect peer logs and Raft health immediately.
+        - alert: QdrantConsensusOperationsStalled
+          expr: max(cluster_pending_operations_total{namespace="databases"}) > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Qdrant consensus operations are pending
+            description: Consensus work has remained pending for 15 minutes; inspect peer connectivity, resources, and Raft health.

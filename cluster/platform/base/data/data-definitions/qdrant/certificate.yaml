@@ -1,0 +1,82 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: qdrant-selfsigned
+  annotations:
+    argocd.argoproj.io/sync-wave: "-40"
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: qdrant-internal-ca
+  annotations:
+    argocd.argoproj.io/sync-wave: "-35"
+spec:
+  secretName: qdrant-internal-ca
+  commonName: qdrant-internal-ca
+  isCA: true
+  duration: 87600h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Never
+  usages:
+    - cert sign
+    - crl sign
+  issuerRef:
+    name: qdrant-selfsigned
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: qdrant-internal-ca
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
+spec:
+  ca:
+    secretName: qdrant-internal-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: qdrant-tls
+  annotations:
+    argocd.argoproj.io/sync-wave: "-25"
+spec:
+  secretName: qdrant-tls
+  duration: 2160h
+  renewBefore: 360h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - qdrant
+    - qdrant.databases
+    - qdrant.databases.svc
+    - qdrant.databases.svc.cluster.local
+    - qdrant-headless
+    - qdrant-headless.databases
+    - qdrant-headless.databases.svc
+    - qdrant-headless.databases.svc.cluster.local
+    - qdrant-0.qdrant-headless
+    - qdrant-0.qdrant-headless.databases
+    - qdrant-0.qdrant-headless.databases.svc
+    - qdrant-0.qdrant-headless.databases.svc.cluster.local
+    - qdrant-1.qdrant-headless
+    - qdrant-1.qdrant-headless.databases
+    - qdrant-1.qdrant-headless.databases.svc
+    - qdrant-1.qdrant-headless.databases.svc.cluster.local
+    - qdrant-2.qdrant-headless
+    - qdrant-2.qdrant-headless.databases
+    - qdrant-2.qdrant-headless.databases.svc
+    - qdrant-2.qdrant-headless.databases.svc.cluster.local
+  issuerRef:
+    name: qdrant-internal-ca
+    kind: Issuer

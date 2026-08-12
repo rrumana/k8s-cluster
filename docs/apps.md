@@ -51,6 +51,7 @@ snapshot.
 | `pg-other` | Shared PostgreSQL cluster for miscellaneous workloads. |
 | `valkey-cache` | Shared replicated cache tier with LRU eviction and no persistence. |
 | `valkey-queue` | Shared replicated queue/state tier with AOF-backed persistence and no-eviction behavior. |
+| `qdrant` | Internal three-peer vector database test cluster with authenticated TLS APIs. |
 
 ### User-facing and domain apps
 
@@ -200,6 +201,21 @@ snapshot.
 - `valkey-cache-primary.databases.svc.cluster.local:6379`
 - `valkey-queue-primary.databases.svc.cluster.local:6379`
 - VolSync replication sources back up `valkey-queue` replica PVCs.
+
+### Qdrant platform
+
+- The official Qdrant community chart deploys three peers in `databases`; the
+  commercial Qdrant Enterprise Operator is not installed.
+- Hard anti-affinity places one peer on each storage node. Every peer has a
+  50 GiB Ceph RBD data claim and a separate 50 GiB snapshot claim.
+- New collections default to replication factor 2, write consistency 1, and
+  strict mode. Client applications can explicitly override collection layout.
+- REST and gRPC are cluster-internal, authenticated, and protected by native
+  TLS; there is no Ingress or `LoadBalancer` service.
+- Prometheus scrapes all peers, Grafana provisions a Qdrant dashboard, and the
+  VPA remains in recommendation-only mode.
+- The client and first-sync contracts are documented in the
+  [Qdrant cluster README](../cluster/platform/base/data/data-definitions/qdrant/README.md).
 
 ## 4) Workloads by namespace
 
@@ -357,7 +373,8 @@ snapshot.
   app-replicated RBD classes plus the bulk and replicated CephFS classes.
 - Snapshot Controller and VolSync definitions are retained but paused, and CNPG object-store backups are disabled pending a replacement target.
 - The emergency dump workflow gives a second operational recovery path for selected workloads.
-- CNPG provides shared relational storage and Valkey provides shared cache or queue storage.
+- CNPG provides shared relational storage, Valkey provides cache or queue
+  storage, and Qdrant provides the test vector-search tier.
 - The AI path is: LibreChat -> RAG API / PG / Valkey -> LiteLLM gateway -> `llama.cpp` workers.
 - The main media path is: Servarr / Jellyseerr / Prowlarr -> qBittorrent through Gluetun -> `/NAS` libraries -> Jellyfin or Plex playback.
 
@@ -373,7 +390,7 @@ snapshot.
 - `rook-ceph`: Ceph cluster, CSI drivers, toolbox, and dashboard.
 - `security`: Vault and External Secrets.
 - `backup`: VolSync controller and replication-source app.
-- `databases`: shared PostgreSQL clusters and Valkey releases.
+- `databases`: shared PostgreSQL clusters, Valkey releases, and Qdrant.
 - `harbor`: Harbor registry components.
 - `automation`: Renovate CronJob and related secrets.
 - `monitoring`: kube-prometheus-stack, Grafana, and dashboard provisioning.

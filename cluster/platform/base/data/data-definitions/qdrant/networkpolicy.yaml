@@ -1,0 +1,95 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qdrant-default-deny
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: qdrant
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qdrant-allowed-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: qdrant
+  policyTypes:
+    - Ingress
+  ingress:
+    # Peer traffic includes internal consensus, forwarding, and snapshot-based
+    # shard transfers. Port 6335 is never allowed from non-Qdrant pods.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: qdrant
+              app.kubernetes.io/instance: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+        - protocol: TCP
+          port: 6335
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 6333
+    # Future clients must opt in with this label. The namespace selector and
+    # pod selector are in the same peer entry, so both conditions are required.
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              qdrant.rcrumana.xyz/client: "true"
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qdrant-allowed-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: qdrant
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: qdrant
+              app.kubernetes.io/instance: qdrant
+      ports:
+        - protocol: TCP
+          port: 6333
+        - protocol: TCP
+          port: 6334
+        - protocol: TCP
+          port: 6335

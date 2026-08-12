@@ -40,6 +40,8 @@
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/hashicorp/", "sourcePrefix": "docker.io/hashicorp/", "registryUrl": "https://index.docker.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/opensearchproject/", "sourcePrefix": "docker.io/opensearchproject/", "registryUrl": "https://index.docker.io" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/bitnami/", "sourcePrefix": "docker.io/bitnami/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/qdrant/", "sourcePrefix": "docker.io/qdrant/", "registryUrl": "https://index.docker.io" },
+    { "destinationPrefix": "harbor.rcrumana.xyz/mirror/suse-bci/", "sourcePrefix": "registry.suse.com/bci/", "registryUrl": "https://registry.suse.com" },
     { "destinationPrefix": "harbor.rcrumana.xyz/mirror/qmcgaw/", "sourcePrefix": "docker.io/qmcgaw/", "registryUrl": "https://index.docker.io" }
   ],
   "charts": [
@@ -57,6 +59,7 @@
     { "name": "metallb", "applicationPath": "cluster/platform/gitops/argocd/apps/metallb-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://metallb.github.io/metallb" },
     { "name": "metrics-server", "applicationPath": "cluster/platform/gitops/argocd/apps/metrics-server-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://kubernetes-sigs.github.io/metrics-server/" },
     { "name": "opensearch-operator", "applicationPath": "cluster/platform/gitops/argocd/apps/opensearch-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://opensearch-project.github.io/opensearch-k8s-operator", "allowedVersionPattern": "^2\\.8\\.0$", "versionPolicyReason": "Charts 2.8.1 and 2.8.2 pass webhook flags unsupported by the stable 2.8.0 operator image; newer charts target operator 3.0.0-alpha." },
+    { "name": "qdrant", "applicationPath": "cluster/platform/gitops/argocd/apps/qdrant-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://qdrant.github.io/qdrant-helm" },
     { "name": "rook-ceph", "applicationPath": "cluster/platform/gitops/argocd/apps/rook-ceph-operator-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://charts.rook.io/release" },
     { "name": "valkey", "applicationPath": "cluster/platform/gitops/argocd/apps/valkey-cache-app.yaml", "additionalApplicationPaths": ["cluster/platform/gitops/argocd/apps/valkey-queue-app.yaml", "cluster/platform/gitops/argocd/apps/valkey-gitea-app.yaml"], "upstreamType": "oci", "upstreamRepository": "oci://registry-1.docker.io/bitnamicharts/valkey" },
     { "name": "vault", "applicationPath": "cluster/platform/gitops/argocd/apps/vault-app.yaml", "upstreamType": "helm", "upstreamRepository": "https://helm.releases.hashicorp.com" },

@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: qdrant
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: qdrant
+      app.kubernetes.io/component: cluster-discovery
+  endpoints:
+    - port: http
+      path: /metrics
+      scheme: https
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true
+      authorization:
+        type: Bearer
+        credentials:
+          name: qdrant-api-keys
+          key: read-only-api-key
+      tlsConfig:
+        ca:
+          secret:
+            name: qdrant-tls
+            key: ca.crt
+        serverName: qdrant.databases.svc.cluster.local
+        minVersion: TLS12
