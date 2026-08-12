@@ -216,8 +216,10 @@ spec:
             - { name: VPN_PORT_FORWARDING_STATUS_FILE, value: "/pf/state/forwarded_port" }
             - { name: FIREWALL_OUTBOUND_SUBNETS, value: "10.44.0.0/16,10.45.0.0/16" }
             - { name: BLOCK_IPV6, value: "on" }
-            # This Proton endpoint resets DNS-over-TLS connections on TCP/853.
-            - { name: DNS_UPSTREAM_RESOLVER_TYPE, value: "doh" }
+            # This Proton endpoint blocks public encrypted DNS; use the resolver
+            # supplied by the WireGuard profile inside the tunnel instead.
+            - { name: DNS_UPSTREAM_RESOLVER_TYPE, value: "plain" }
+            - { name: DNS_UPSTREAM_PLAIN_ADDRESSES, value: "10.2.0.1:53" }
           volumeMounts:
             - { name: dev-net-tun, mountPath: /dev/net/tun }
             - { name: gluetun, mountPath: /gluetun }
