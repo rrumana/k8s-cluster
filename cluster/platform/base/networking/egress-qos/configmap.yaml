@@ -86,7 +86,7 @@ data:
       fi
 
       jq -r '.items[].status.podIP' "$json_file" \
-        | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' > "$ip_file" || true
+        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' > "$ip_file" || true
 
       ipset create "$next_set" hash:ip family inet -exist
       ipset flush "$next_set"

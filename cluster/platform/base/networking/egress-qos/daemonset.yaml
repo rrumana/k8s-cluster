@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       annotations:
-        egress-qos.rcrumana.xyz/config-version: "2"
+        egress-qos.rcrumana.xyz/config-version: "3"
       labels:
         app: egress-qos
     spec:
