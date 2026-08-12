@@ -48,6 +48,16 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: productivity
+          podSelector:
+            matchLabels:
+              app: homepage
+      ports:
+        - protocol: TCP
+          port: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

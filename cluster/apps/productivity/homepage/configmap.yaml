@@ -188,6 +188,7 @@ data:
         - Nextcloud:
             icon: nextcloud.png
             href: https://nextcloud.rcrumana.xyz
+            siteMonitor: http://nextcloud.productivity.svc.cluster.local:8080/status.php
             description: Files and collaboration
             namespace: productivity
             app: nextcloud
@@ -196,23 +197,132 @@ data:
               url: http://nextcloud.productivity.svc.cluster.local:8080
               username: "{{HOMEPAGE_VAR_NEXTCLOUD_USERNAME}}"
               password: "{{HOMEPAGE_VAR_NEXTCLOUD_PASSWORD}}"
-              fields: ["numfiles"]
+              fields: ["activeusers", "numfiles", "numshares", "freespace"]
               hideErrors: true
         - LibreChat:
             icon: librechat.png
             href: https://chat.rcrumana.xyz
+            siteMonitor: http://librechat.ai.svc.cluster.local
             description: AI chat frontend
             namespace: ai
             app: librechat
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Success:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 95
+                    - level: warn
+                      when: lt
+                      value: 99
+                    - level: good
+                      when: gte
+                      value: 99
+                Storage:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 90
+                    - level: warn
+                      when: gte
+                      value: 75
+              metrics:
+                - label: Requests
+                  query: 'sum(rate(request_total{namespace="ai",deployment="librechat",direction="inbound",target_port="3080"}[5m])) * 60'
+                  format:
+                    type: number
+                    suffix: " /min"
+                    options:
+                      maximumFractionDigits: 1
+                - label: Success
+                  query: '1 - ((sum(increase(response_total{namespace="ai",deployment="librechat",direction="inbound",target_port="3080",classification="failure"}[1h])) or vector(0)) / clamp_min((sum(increase(response_total{namespace="ai",deployment="librechat",direction="inbound",target_port="3080"}[1h])) or vector(0)), 1))'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 1
+                - label: p95
+                  query: 'histogram_quantile(0.95, sum by (le) (rate(response_latency_ms_bucket{namespace="ai",deployment="librechat",direction="inbound",target_port="3080"}[5m])))'
+                  format:
+                    type: number
+                    suffix: " ms"
+                    options:
+                      maximumFractionDigits: 0
+                - label: Storage
+                  query: 'max(1 - kubelet_volume_stats_available_bytes{namespace="ai",persistentvolumeclaim=~"librechat-.*-critical"} / kubelet_volume_stats_capacity_bytes{namespace="ai",persistentvolumeclaim=~"librechat-.*-critical"})'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
         - Vaultwarden:
             icon: vaultwarden.png
             href: https://vault.rcrumana.xyz
+            siteMonitor: http://vaultwarden.productivity.svc.cluster.local/alive
             description: Password vault
             namespace: productivity
             app: vaultwarden
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Success:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 95
+                    - level: warn
+                      when: lt
+                      value: 99
+                    - level: good
+                      when: gte
+                      value: 99
+                Storage:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 90
+                    - level: warn
+                      when: gte
+                      value: 75
+              metrics:
+                - label: Requests
+                  query: 'sum(rate(request_total{namespace="productivity",deployment="vaultwarden",direction="inbound",target_port="80"}[5m])) * 60'
+                  format:
+                    type: number
+                    suffix: " /min"
+                    options:
+                      maximumFractionDigits: 1
+                - label: Success
+                  query: '1 - ((sum(increase(response_total{namespace="productivity",deployment="vaultwarden",direction="inbound",target_port="80",classification="failure"}[1h])) or vector(0)) / clamp_min((sum(increase(response_total{namespace="productivity",deployment="vaultwarden",direction="inbound",target_port="80"}[1h])) or vector(0)), 1))'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 1
+                - label: p95
+                  query: 'histogram_quantile(0.95, sum by (le) (rate(response_latency_ms_bucket{namespace="productivity",deployment="vaultwarden",direction="inbound",target_port="80"}[5m])))'
+                  format:
+                    type: number
+                    suffix: " ms"
+                    options:
+                      maximumFractionDigits: 0
+                - label: Storage
+                  query: '1 - max(kubelet_volume_stats_available_bytes{namespace="productivity",persistentvolumeclaim="vaultwarden-data-critical"}) / max(kubelet_volume_stats_capacity_bytes{namespace="productivity",persistentvolumeclaim="vaultwarden-data-critical"})'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
         - UniFi:
             icon: unifi.png
             href: https://unifi.rcrumana.xyz
+            siteMonitor: https://unifi.rcrumana.xyz
             description: Network controller
             namespace: productivity
             app: unifi-os-server
@@ -220,14 +330,22 @@ data:
               type: unifi
               url: https://unifi.rcrumana.xyz
               key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
-              fields: ["uptime", "wan", "lan_users", "wlan_users"]
+              site: "{{HOMEPAGE_VAR_UNIFI_SITE}}"
+              fields: ["uptime", "wlan", "wlan_devices"]
               hideErrors: true
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
+            siteMonitor: http://uptime-kuma.productivity.svc.cluster.local
             description: Service uptime checks
             namespace: productivity
             app: uptime-kuma
+            widget:
+              type: uptimekuma
+              url: http://uptime-kuma.productivity.svc.cluster.local
+              slug: "{{HOMEPAGE_VAR_UPTIME_KUMA_SLUG}}"
+              fields: ["up", "down", "uptime", "incident"]
+              hideErrors: true
         - Hypermind:
             icon: mdi-brain
             href: https://hypermind.rcrumana.xyz
@@ -351,22 +469,174 @@ data:
               key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
               fields: ["apps", "synced", "healthy"]
               hideErrors: true
+        - Authentik:
+            icon: authentik.png
+            href: https://auth.rcrumana.xyz/if/admin/
+            description: Identity and access management
+            namespace: identity
+            podSelector: app.kubernetes.io/component=server
+        - Gitea:
+            icon: gitea.png
+            href: https://git.rcrumana.xyz
+            siteMonitor: http://gitea-http.development.svc.cluster.local:3000/api/healthz
+            description: Source control and automation
+            namespace: development
+            app: gitea
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Storage:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 90
+                    - level: warn
+                      when: gte
+                      value: 75
+              metrics:
+                - label: Repositories
+                  query: 'max(gitea_repositories{namespace="development",service="gitea-http"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Users
+                  query: 'max(gitea_users{namespace="development",service="gitea-http",state="active"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Open Issues
+                  query: 'max(gitea_issues_open{namespace="development",service="gitea-http"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Storage
+                  query: '1 - max(kubelet_volume_stats_available_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"}) / max(kubelet_volume_stats_capacity_bytes{namespace="development",persistentvolumeclaim="gitea-shared-storage"})'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+        - Qdrant:
+            icon: qdrant.png
+            href: https://grafana.rcrumana.xyz/d/qdrant-cluster/qdrant-cluster
+            description: Distributed vector database
+            namespace: databases
+            app: qdrant
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Healthy Peers:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 2
+                    - level: warn
+                      when: lt
+                      value: 3
+                    - level: good
+                      when: eq
+                      value: 3
+                Dead Replicas:
+                  numeric:
+                    - level: danger
+                      when: gt
+                      value: 0
+                    - level: good
+                      when: eq
+                      value: 0
+              metrics:
+                - label: Healthy Peers
+                  query: 'sum(up{namespace="databases",service="qdrant-headless"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Collections
+                  query: 'max(collections_total{namespace="databases",service="qdrant-headless"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Vectors
+                  query: 'max(collections_vector_total{namespace="databases",service="qdrant-headless"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Dead Replicas
+                  query: 'max(collection_dead_replicas{namespace="databases",service="qdrant-headless"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
         - Headscale:
             icon: headscale.png
             href: https://headscale.rcrumana.xyz/web
+            siteMonitor: http://headscale.other.svc.cluster.local/health
             description: Tailnet admin UI
             namespace: other
             app: headscale
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Queue:
+                  numeric:
+                    - level: danger
+                      when: gte
+                      value: 10
+                    - level: warn
+                      when: gte
+                      value: 1
+                    - level: good
+                      when: eq
+                      value: 0
+              metrics:
+                - label: Nodes
+                  query: 'max(headscale_nodestore_nodes{namespace="other",service="headscale"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Updates
+                  query: 'sum(rate(headscale_mapresponse_endpoint_updates_total{namespace="other",service="headscale"}[5m])) * 60'
+                  format:
+                    type: number
+                    suffix: " /min"
+                    options:
+                      maximumFractionDigits: 1
+                - label: Queue
+                  query: 'max(headscale_nodestore_queue_depth{namespace="other",service="headscale"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Ops p95
+                  query: 'histogram_quantile(0.95, sum by (le) (rate(headscale_nodestore_operation_duration_seconds_bucket{namespace="other",service="headscale"}[5m])))'
+                  format:
+                    type: number
+                    suffix: " s"
+                    options:
+                      maximumFractionDigits: 3
         - Grafana:
             icon: grafana.png
             href: https://grafana.rcrumana.xyz
+            siteMonitor: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local/api/health
             description: Metrics and log dashboards
             namespace: monitoring
-            app: grafana
+            podSelector: app.kubernetes.io/name=grafana
             widget:
               type: grafana
               version: 2
-              alerts: alertmanager
+              alerts: grafana
               url: http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local
               username: "{{HOMEPAGE_VAR_GRAFANA_USERNAME}}"
               password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
@@ -375,270 +645,360 @@ data:
         - Harbor:
             icon: harbor.png
             href: https://harbor.rcrumana.xyz
+            siteMonitor: http://harbor-core.harbor.svc.cluster.local/api/v2.0/health
             description: Container registry
             namespace: harbor
             podSelector: app=harbor
+            widget:
+              type: prometheusmetric
+              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              refreshInterval: 15000
+              highlight:
+                Health:
+                  numeric:
+                    - level: danger
+                      when: lt
+                      value: 100
+                    - level: good
+                      when: eq
+                      value: 100
+              metrics:
+                - label: Health
+                  query: 'sum(harbor_up{namespace="harbor"}) / count(harbor_up{namespace="harbor"})'
+                  format:
+                    type: percent
+                    scale: 100
+                    options:
+                      maximumFractionDigits: 0
+                - label: Repositories
+                  query: 'sum(harbor_project_repo_total{namespace="harbor"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Artifacts
+                  query: 'sum(harbor_project_artifact_total{namespace="harbor"})'
+                  format:
+                    type: number
+                    options:
+                      maximumFractionDigits: 0
+                - label: Storage
+                  query: 'max(harbor_statistics_total_storage_consumption{namespace="harbor"})'
+                  format:
+                    type: bytes
     - Nodes:
         - melchior-1:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.13%3A9100
+            siteMonitor: http://192.168.1.13:9100/metrics
             description: Control plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: &node_health_highlights
-                Ready:
-                  numeric:
-                    - level: danger
-                      when: eq
-                      value: 0
-                    - level: good
-                      when: eq
-                      value: 100
-                CPU:
-                  numeric:
-                    - level: danger
-                      when: gte
-                      value: 95
-                    - level: warn
-                      when: gte
-                      value: 80
-                RAM:
-                  numeric:
-                    - level: danger
-                      when: gte
-                      value: 95
-                    - level: warn
-                      when: gte
-                      value: 85
-                Temp:
-                  numeric:
-                    - level: danger
-                      when: gte
-                      value: 90
-                    - level: warn
-                      when: gte
-                      value: 80
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="melchior-1",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="melchior-1"}[2m]) / on(node) kube_node_status_capacity{node="melchior-1",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="melchior-1"} / on(node) kube_node_status_capacity{node="melchior-1",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.13:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: &node_health_highlights
+                  CPU:
+                    numeric:
+                      - level: danger
+                        when: gte
+                        value: 95
+                      - level: warn
+                        when: gte
+                        value: 80
+                  RAM:
+                    numeric:
+                      - level: danger
+                        when: gte
+                        value: 95
+                      - level: warn
+                        when: gte
+                        value: 85
+                  Temp:
+                    numeric:
+                      - level: danger
+                        when: gte
+                        value: 90
+                      - level: warn
+                        when: gte
+                        value: 80
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="melchior-1"}[2m]) / on(node) kube_node_status_capacity{node="melchior-1",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="melchior-1"} / on(node) kube_node_status_capacity{node="melchior-1",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.13:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.13:9100",device="enp195s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.13:9100",device="enp195s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
         - balthasar-2:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.14%3A9100
+            siteMonitor: http://192.168.1.14:9100/metrics
             description: Control plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: *node_health_highlights
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="balthasar-2",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="balthasar-2"}[2m]) / on(node) kube_node_status_capacity{node="balthasar-2",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="balthasar-2"} / on(node) kube_node_status_capacity{node="balthasar-2",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.14:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: *node_health_highlights
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="balthasar-2"}[2m]) / on(node) kube_node_status_capacity{node="balthasar-2",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="balthasar-2"} / on(node) kube_node_status_capacity{node="balthasar-2",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.14:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.14:9100",device="enp196s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.14:9100",device="enp196s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
         - casper-3:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.15%3A9100
+            siteMonitor: http://192.168.1.15:9100/metrics
             description: Control plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: *node_health_highlights
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="casper-3",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="casper-3"}[2m]) / on(node) kube_node_status_capacity{node="casper-3",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="casper-3"} / on(node) kube_node_status_capacity{node="casper-3",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.15:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: *node_health_highlights
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="casper-3"}[2m]) / on(node) kube_node_status_capacity{node="casper-3",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="casper-3"} / on(node) kube_node_status_capacity{node="casper-3",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.15:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.15:9100",device="enp195s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.15:9100",device="enp195s0"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
         - eva-1:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.16%3A9100
+            siteMonitor: http://192.168.1.16:9100/metrics
             description: Storage plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: *node_health_highlights
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="eva-1",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="eva-1"}[2m]) / on(node) kube_node_status_capacity{node="eva-1",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="eva-1"} / on(node) kube_node_status_capacity{node="eva-1",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.16:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: *node_health_highlights
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="eva-1"}[2m]) / on(node) kube_node_status_capacity{node="eva-1",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="eva-1"} / on(node) kube_node_status_capacity{node="eva-1",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.16:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.16:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.16:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
         - eva-2:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.17%3A9100
+            siteMonitor: http://192.168.1.17:9100/metrics
             description: Storage plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: *node_health_highlights
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="eva-2",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="eva-2"}[2m]) / on(node) kube_node_status_capacity{node="eva-2",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="eva-2"} / on(node) kube_node_status_capacity{node="eva-2",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.17:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: *node_health_highlights
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="eva-2"}[2m]) / on(node) kube_node_status_capacity{node="eva-2",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="eva-2"} / on(node) kube_node_status_capacity{node="eva-2",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.17:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.17:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.17:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
         - eva-3:
             icon: mdi-server
             href: https://grafana.rcrumana.xyz/d/fac67cfbe174d3ef53eb473d73d9212f/node-exporter-use-method-node?orgId=1&var-datasource=prometheus&var-cluster=&var-instance=192.168.1.18%3A9100
+            siteMonitor: http://192.168.1.18:9100/metrics
             description: Storage plane
-            widget:
-              type: prometheusmetric
-              url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              refreshInterval: 15000
-              highlight: *node_health_highlights
-              metrics:
-                - label: Ready
-                  query: 'kube_node_status_condition{node="eva-3",condition="Ready",status="true"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: CPU
-                  query: 'rate(node_cpu_usage_seconds_total{node="eva-3"}[2m]) / on(node) kube_node_status_capacity{node="eva-3",resource="cpu",unit="core"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: RAM
-                  query: 'node_memory_working_set_bytes{node="eva-3"} / on(node) kube_node_status_capacity{node="eva-3",resource="memory",unit="byte"}'
-                  format:
-                    type: percent
-                    scale: 100
-                    options:
-                      maximumFractionDigits: 0
-                - label: Temp
-                  query: 'max(node_hwmon_temp_celsius{instance="192.168.1.18:9100",chip=~"pci.*18_3"})'
-                  format:
-                    type: number
-                    suffix: " °C"
-                    options:
-                      maximumFractionDigits: 0
+            widgets:
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                highlight: *node_health_highlights
+                metrics:
+                  - label: CPU
+                    query: 'rate(node_cpu_usage_seconds_total{node="eva-3"}[2m]) / on(node) kube_node_status_capacity{node="eva-3",resource="cpu",unit="core"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: RAM
+                    query: 'node_memory_working_set_bytes{node="eva-3"} / on(node) kube_node_status_capacity{node="eva-3",resource="memory",unit="byte"}'
+                    format:
+                      type: percent
+                      scale: 100
+                      options:
+                        maximumFractionDigits: 0
+                  - label: Temp
+                    query: 'max(node_hwmon_temp_celsius{instance="192.168.1.18:9100",chip=~"pci.*18_3"})'
+                    format:
+                      type: number
+                      suffix: " °C"
+                      options:
+                        maximumFractionDigits: 0
+              - type: prometheusmetric
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                refreshInterval: 15000
+                metrics:
+                  - label: Down
+                    query: 'rate(node_network_receive_bytes_total{instance="192.168.1.18:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
+                  - label: Up
+                    query: 'rate(node_network_transmit_bytes_total{instance="192.168.1.18:9100",device="enp5s0f1np1"}[5m])'
+                    format:
+                      type: bibyterate
+                      options:
+                        maximumFractionDigits: 1
     - Portfolio:
         - Portfolio:
             icon: mdi-web

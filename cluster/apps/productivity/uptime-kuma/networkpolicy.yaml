@@ -17,6 +17,16 @@ spec:
               protocol: TCP
     - fromEndpoints:
         - matchLabels:
+            k8s:io.kubernetes.pod.namespace: productivity
+            k8s:app: homepage
+      toPorts:
+        - ports:
+            - port: "3001"
+              protocol: TCP
+            - port: "4143"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
             k8s:io.kubernetes.pod.namespace: monitoring
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: service-mesh
