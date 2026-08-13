@@ -12,7 +12,7 @@ spec:
   template:
     metadata:
       annotations:
-        egress-qos.rcrumana.xyz/config-version: "5"
+        egress-qos.rcrumana.xyz/config-version: "6"
       labels:
         app: egress-qos
     spec:
@@ -46,9 +46,9 @@ spec:
             - name: BULK_RATE
               value: "700mbit"         # guaranteed rate for bulk
             - name: BULK_CEIL
-              value: "1000mbit"        # permit full WAN rate while smoothing bursts
+              value: "975mbit"        # permit full WAN rate while smoothing bursts
             - name: BULK_BURST
-              value: "128k"            # prevent multi-gigabit microbursts
+              value: "64kk"            # prevent multi-gigabit microbursts
             - name: VPN_UDP_PORT
               value: "51820"           # classify the post-Cilium WireGuard flow
             - name: SYNC_INTERVAL
