@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rook-ceph-out-osd-11
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: rook-ceph-out-osd
+        ceph-osd-id: "11"
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: mark-out
+          image: harbor.rcrumana.xyz/mirror/rook/ceph:v1.19.3
+          command:
+            - /bin/bash
+            - -euo
+            - pipefail
+            - -c
+            - |
+              mon_host="$(echo "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')"
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${mon_host}
+              EOF
+              cp /etc/ceph-admin/keyring /etc/ceph/ceph.client.admin.keyring
+
+              test "$(ceph osd find 11 --format json | jq -r .crush_location.host)" = eva-3
+              ceph osd out 11
+              test "$(ceph osd dump --format json | jq -r '.osds[] | select(.osd == 11) | .in')" = "0"
+              echo "OSD 11 is out; Ceph can now evacuate it"
+          env:
+            - name: ROOK_CEPH_MON_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: rook-ceph-mon-endpoints
+                  key: data
+            - name: ROOK_CEPH_FSID
+              valueFrom:
+                secretKeyRef:
+                  name: rook-ceph-mon
+                  key: fsid
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
