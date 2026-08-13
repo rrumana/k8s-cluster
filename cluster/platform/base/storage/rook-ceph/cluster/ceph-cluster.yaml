@@ -131,9 +131,9 @@ spec:
       osd_mclock_override_recovery_settings: "true"
       osd_mclock_profile: high_client_ops
       osd_max_scrubs: "4"
-      osd_max_backfills: "6"
-      osd_recovery_max_active: "6"
-      osd_recovery_max_single_start: "6"
+      osd_max_backfills: "12"
+      osd_recovery_max_active: "12"
+      osd_recovery_max_single_start: "12"
       osd_recovery_sleep: "0.2"
     client:
       client_readahead_max_periods: "1"
