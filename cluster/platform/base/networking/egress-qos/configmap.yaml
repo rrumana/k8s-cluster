@@ -12,7 +12,9 @@ data:
     : "${WAN_IFACE_LABEL:=egress-qos/wan-iface}" # node label to override iface
     : "${LINK_CEIL:=auto}"
     : "${BULK_RATE:=700mbit}"
-    : "${BULK_CEIL:=auto}"
+    : "${BULK_CEIL:=950mbit}"
+    : "${BULK_BURST:=128k}"
+    : "${VPN_UDP_PORT:=51820}"
     : "${SYNC_INTERVAL:=5}"
     : "${LABEL_SELECTOR:=traffic-tier=bulk-seed}"
     : "${IPSET_NAME:=bulkseed-pods}"
@@ -110,12 +112,20 @@ data:
 
       tc class replace dev "${ACTIVE_IFACE}" parent 1: classid 1:1 htb rate "${ACTIVE_LINK_CEIL}" ceil "${ACTIVE_LINK_CEIL}" burst 1m cburst 1m quantum 15140
       tc class replace dev "${ACTIVE_IFACE}" parent 1:1 classid 1:10 htb rate "${ACTIVE_LINK_CEIL}" ceil "${ACTIVE_LINK_CEIL}" burst 1m cburst 1m quantum 15140
-      tc class replace dev "${ACTIVE_IFACE}" parent 1:1 classid 1:20 htb rate "${BULK_RATE}" ceil "${ACTIVE_BULK_CEIL}" burst 1m cburst 1m quantum 15140
+      tc class replace dev "${ACTIVE_IFACE}" parent 1:1 classid 1:20 htb rate "${BULK_RATE}" ceil "${ACTIVE_BULK_CEIL}" burst "${BULK_BURST}" cburst "${BULK_BURST}" quantum 15140
 
       tc qdisc replace dev "${ACTIVE_IFACE}" parent 1:10 handle 10: fq_codel
       tc qdisc replace dev "${ACTIVE_IFACE}" parent 1:20 handle 20: fq_codel
 
-      tc filter replace dev "${ACTIVE_IFACE}" parent 1: protocol ip handle "${FW_MARK}" fw flowid 1:20
+      # Cilium masquerades pod traffic before it reaches the physical egress
+      # qdisc, so the pod source address used by the fwmark classifier is no
+      # longer visible here. Match the outer WireGuard flow directly to pace
+      # it at the WAN boundary while leaving Ceph and LAN traffic in class 10.
+      tc filter replace dev "${ACTIVE_IFACE}" parent 1: protocol ip priority 10 u32 \
+        match ip protocol 17 0xff \
+        match ip dport "${VPN_UDP_PORT}" 0xffff \
+        flowid 1:20
+      tc filter replace dev "${ACTIVE_IFACE}" parent 1: protocol ip priority 20 handle "${FW_MARK}" fw flowid 1:20
     }
 
     reconcile_iface() {
@@ -138,7 +148,7 @@ data:
         tc qdisc del dev "$previous_iface" root 2>/dev/null || true
       fi
       configure_tc
-      echo "egress-qos: shaping ${ACTIVE_IFACE}, link=${ACTIVE_LINK_CEIL}, bulk=${BULK_RATE} ceil ${ACTIVE_BULK_CEIL}, label selector ${LABEL_SELECTOR}"
+      echo "egress-qos: shaping ${ACTIVE_IFACE}, link=${ACTIVE_LINK_CEIL}, bulk=${BULK_RATE} ceil ${ACTIVE_BULK_CEIL}, WireGuard UDP/${VPN_UDP_PORT}, label selector ${LABEL_SELECTOR}"
     }
 
     install_tools
