@@ -18,3 +18,4 @@ resources:
   - storage-class-cephfs-bulk-retain.yaml
   - volume-snapshot-class.yaml
   - toolbox.yaml
+  - archive-historical-warnings-job.yaml

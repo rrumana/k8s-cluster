@@ -1,0 +1,123 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rook-ceph-archive-historical-warnings-20260813
+  namespace: rook-ceph
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: rook-ceph-archive-historical-warnings
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: harbor-pull-creds
+      nodeSelector:
+        homelab.rcrumana.xyz/node-plane: storage
+      tolerations:
+        - key: homelab.rcrumana.xyz/storage
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - name: archive
+          image: harbor.rcrumana.xyz/mirror/rook/ceph:v1.19.3
+          command:
+            - /bin/bash
+            - -Eeuo
+            - pipefail
+            - -c
+            - |
+              mon_host="$(echo "${ROOK_CEPH_MON_ENDPOINTS}" | sed -e 's/[a-z]=//g')"
+              cat > /etc/ceph/ceph.conf <<EOF
+              [global]
+                fsid = ${ROOK_CEPH_FSID}
+                mon_host = ${mon_host}
+              EOF
+              cp /etc/ceph-admin/keyring /etc/ceph/ceph.client.admin.keyring
+
+              pg_status="$(ceph pg stat --format json)"
+              test "$(jq -r '.pg_summary.num_pgs' <<<"${pg_status}")" = "417"
+              jq -e '.pg_summary.num_pg_by_state | all(.name | startswith("active+clean"))' \
+                <<<"${pg_status}"
+
+              osd_status="$(ceph osd stat --format json)"
+              test "$(jq -r '.num_osds' <<<"${osd_status}")" = "12"
+              test "$(jq -r '.num_up_osds' <<<"${osd_status}")" = "12"
+              test "$(jq -r '.num_in_osds' <<<"${osd_status}")" = "12"
+
+              health="$(ceph health detail --format json)"
+              unexpected_checks="$(
+                jq -r '.checks | keys[] |
+                  select(. != "RECENT_CRASH" and . != "BLUESTORE_SLOW_OP_ALERT")' \
+                  <<<"${health}"
+              )"
+              test -z "${unexpected_checks}"
+
+              new_crashes="$(ceph crash ls-new --format json)"
+              jq -e 'all(.entity_name == "osd.11")' <<<"${new_crashes}"
+              echo "Archiving $(jq 'length' <<<"${new_crashes}") historical osd.11 crashes"
+              ceph crash archive-all
+              test "$(ceph crash ls-new --format json | jq 'length')" = "0"
+
+              if jq -e '.checks.BLUESTORE_SLOW_OP_ALERT' <<<"${health}" >/dev/null; then
+                slow_lifetime="$(ceph tell osd.4 config get bluestore_slow_ops_warn_lifetime | \
+                  jq -r '.bluestore_slow_ops_warn_lifetime')"
+                test "${slow_lifetime}" = "86400"
+                restore_lifetime=true
+                restore_slow_lifetime() {
+                  if ${restore_lifetime}; then
+                    ceph tell osd.4 config set bluestore_slow_ops_warn_lifetime "${slow_lifetime}"
+                  fi
+                }
+                trap restore_slow_lifetime EXIT
+
+                echo "Expiring osd.4's historical BlueStore slow-op window"
+                ceph tell osd.4 config set bluestore_slow_ops_warn_lifetime 1
+                for attempt in $(seq 1 24); do
+                  if ! ceph health detail --format json | \
+                    jq -e '.checks.BLUESTORE_SLOW_OP_ALERT' >/dev/null; then
+                    break
+                  fi
+                  sleep 5
+                done
+                if ceph health detail --format json | \
+                  jq -e '.checks.BLUESTORE_SLOW_OP_ALERT' >/dev/null; then
+                  echo "BlueStore warning did not expire" >&2
+                  exit 1
+                fi
+
+                ceph tell osd.4 config set bluestore_slow_ops_warn_lifetime "${slow_lifetime}"
+                restore_lifetime=false
+                sleep 15
+                test "$(ceph tell osd.4 config get bluestore_slow_ops_warn_lifetime | \
+                  jq -r '.bluestore_slow_ops_warn_lifetime')" = "${slow_lifetime}"
+              fi
+
+              ceph health detail
+          env:
+            - name: ROOK_CEPH_MON_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: rook-ceph-mon-endpoints
+                  key: data
+            - name: ROOK_CEPH_FSID
+              valueFrom:
+                secretKeyRef:
+                  name: rook-ceph-mon
+                  key: fsid
+          volumeMounts:
+            - name: ceph-config
+              mountPath: /etc/ceph
+            - name: ceph-admin-keyring
+              mountPath: /etc/ceph-admin/keyring
+              subPath: keyring
+      volumes:
+        - name: ceph-config
+          emptyDir: {}
+        - name: ceph-admin-keyring
+          secret:
+            secretName: rook-ceph-admin-keyring
