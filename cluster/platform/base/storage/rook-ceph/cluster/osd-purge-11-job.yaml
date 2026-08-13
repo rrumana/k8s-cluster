@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: rook-ceph-purge-osd-11
+  name: rook-ceph-purge-osd-11-final
   namespace: rook-ceph
   annotations:
     argocd.argoproj.io/sync-wave: "10"
