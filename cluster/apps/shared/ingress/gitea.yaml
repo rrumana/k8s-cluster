@@ -4,7 +4,9 @@ metadata:
   name: gitea
   namespace: development
   labels:
-    security.rcrumana.xyz/exposure: private
+    security.rcrumana.xyz/exposure: public
+    security.rcrumana.xyz/public-approved: "true"
+    security.rcrumana.xyz/public-edge: direct
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     haproxy-ingress.github.io/backend-protocol: "http"
