@@ -67,9 +67,14 @@ The dashboard links to each available service:
   complete the browser authorization.
 - **LibreChat:** choose **Continue with Authentik**. Your account is created on
   first login.
-- **Jellyfin:** use Authentik in a browser. Television and streaming clients can
-  display a Quick Connect code that you approve from an already authenticated
-  Jellyfin browser session.
+- **Jellyfin:** first open `https://jellyfin.rcrumana.xyz` in a browser and use
+  Authentik. This creates or links the Jellyfin profile. On every television,
+  streaming, or mobile client, use `https://jellyfin.rcrumana.xyz` as the
+  server address, choose **Quick Connect**, and approve the displayed code from
+  **Settings > Quick Connect** in the already authenticated browser or mobile
+  app. Native clients do not perform the Authentik browser flow themselves;
+  Quick Connect gives them a Jellyfin session without entering a Jellyfin
+  password. Do not use the private LAN address as a client server address.
 - **Jellyseerr:** sign in through Jellyfin and approve its Quick Connect code.
 - **HyperMind and Uptime Kuma:** opening the dashboard link uses the existing
   Authentik session; there is no separate application password.

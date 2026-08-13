@@ -97,7 +97,9 @@ snapshot.
 ### North-south networking: MetalLB + HAProxy Ingress
 
 - MetalLB advertises bare-metal `LoadBalancer` addresses on the LAN with L2 mode.
-- The default IP pool is `192.168.1.230-192.168.1.250` on interface `enp196s0`.
+- The default IP pool is `192.168.1.230-192.168.1.250`. MetalLB advertises it
+  on the active LAN interface names used by the control-plane and Eva storage
+  nodes: `enp195s0`, `enp196s0`, and `enp5s0f1np1`.
 - HAProxy Ingress is the main HTTP(S) entrypoint and is exposed at `192.168.1.230`.
 - Two ingress classes are defined:
 - `haproxy`: default or broader-exposure traffic profile
@@ -417,7 +419,7 @@ snapshot.
 | `headscale.rcrumana.xyz` | `/web` | `other` | `headscale-ui` | `haproxy-restricted` | `headscale-ui:80` |
 | `hypermind.rcrumana.xyz` | `/` | `other` | `hypermind` | `haproxy-restricted` | `hypermind:80` |
 | `immich.rcrumana.xyz` | `/` | `media` | `immich` | `haproxy-restricted` | `immich-server:2283` |
-| `jellyfin.rcrumana.xyz` | `/` | `media` | `jellyfin` | `haproxy-restricted` | `jellyfin:8096` |
+| `jellyfin.rcrumana.xyz` | `/` | `media` | `jellyfin` | `haproxy` | `jellyfin:8096` |
 | `jellyseerr.rcrumana.xyz` | `/` | `media` | `jellyseerr` | `haproxy-restricted` | `jellyseerr:80` |
 | `lidarr.rcrumana.xyz` | `/` | `media` | `lidarr` | `haproxy-restricted` | `lidarr:80` |
 | `nextcloud.rcrumana.xyz` | `/` | `productivity` | `nextcloud` | `haproxy` | `nextcloud:8080` |

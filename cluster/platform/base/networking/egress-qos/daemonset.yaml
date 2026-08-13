@@ -48,7 +48,7 @@ spec:
             - name: BULK_CEIL
               value: "975mbit"        # permit full WAN rate while smoothing bursts
             - name: BULK_BURST
-              value: "64kk"            # prevent multi-gigabit microbursts
+              value: "64k"            # prevent multi-gigabit microbursts
             - name: VPN_UDP_PORT
               value: "51820"           # classify the post-Cilium WireGuard flow
             - name: SYNC_INTERVAL
