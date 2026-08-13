@@ -15,11 +15,6 @@ image:
 imagePullSecrets:
   - name: harbor-pull-creds
 
-# Administrative replacement window for OSD 11. Rook's host-device removal
-# procedure requires the operator to be paused between purging an OSD and
-# wiping its old BlueStore signature so it cannot be rediscovered mid-step.
-scaleDownOperator: true
-
 monitoring:
   enabled: true
 
