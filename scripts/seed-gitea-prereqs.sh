@@ -63,7 +63,7 @@ helm push "${work_dir}/gitea-${GITEA_CHART_VERSION}.tgz" "$HARBOR_CHARTS_REPO"
 helm push "${work_dir}/actions-${ACTIONS_CHART_VERSION}.tgz" "$HARBOR_CHARTS_REPO"
 
 source_images=(
-  "docker.gitea.com/gitea:1.27.0-rootless@sha256:caa57d932c7b78eb19b638dc38fd7c2f5512d4f90d8369c680a73bebf1b1de28"
+  "docker.gitea.com/gitea:1.27.2-rootless@sha256:7de5f49ada687b8c8d2938f547cdb7634839764ba51f297457bae35cee3abd2c"
   "docker.gitea.com/runner:2.0.1@sha256:3acd61cdcfe5dc05dda0a66029af457ac2ff803b8ae95ab13701f22b1136903e"
   "docker.gitea.com/runner-images:ubuntu-latest@sha256:cd31050dc1563b8aef5ea7b8d6704301ef92d908faed98c97ec0f2d82f559041"
   "docker.io/library/docker:29.5.2-dind-rootless@sha256:dc9035ef22486e1acddcc01602d5b6302dfd73b1c353df7f724bd0537ad0df63"
