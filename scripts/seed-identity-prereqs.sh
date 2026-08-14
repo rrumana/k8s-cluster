@@ -248,7 +248,7 @@ IMMICH_CONFIG=$(
           "tokenEndpointAuthMethod": "client_secret_post"
         },
         "passwordLogin": {
-          "enabled": true
+          "enabled": false
         },
         "server": {
           "externalDomain": "https://immich.rcrumana.xyz",

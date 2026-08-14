@@ -15,7 +15,7 @@ spec:
       annotations:
         media.rcrumana.xyz/gluetun-credentials-version: "10"
         media.rcrumana.xyz/pf-sync-config-version: "3"
-        media.rcrumana.xyz/seerr-identity-revision: "2026-08-05-quick-connect"
+        media.rcrumana.xyz/seerr-identity-revision: "2026-08-14-quick-connect-only"
       labels:
         app: arr-stack
         traffic-tier: bulk-seed
@@ -59,6 +59,9 @@ spec:
         - name: jellyseerr-config
           persistentVolumeClaim:
             claimName: arr-stack-jellyseerr-config-critical
+        - name: patched-seerr-next
+          emptyDir:
+            sizeLimit: 128Mi
         - name: media
           persistentVolumeClaim:
             claimName: media-library-bulk-torrent-eva-3
@@ -153,7 +156,7 @@ spec:
               const settings = JSON.parse(fs.readFileSync(path, 'utf8'));
 
               settings.main.localLogin = false;
-              settings.main.mediaServerLogin = true;
+              settings.main.mediaServerLogin = false;
               settings.main.newPlexLogin = true;
               settings.main.applicationUrl = 'https://jellyseerr.rcrumana.xyz';
 
@@ -161,10 +164,74 @@ spec:
                 mode: 0o600,
               });
               fs.renameSync(temporaryPath, path);
-              console.log('Seerr identity settings configured: Jellyfin and Quick Connect only');
+              console.log('Seerr identity settings configured: Quick Connect only');
               NODE
           volumeMounts:
             - { name: jellyseerr-config, mountPath: /app/config }
+        - name: patch-seerr-login
+          # Seerr 3.4.1 has no Quick Connect-only UI mode: disabling media
+          # server login rejects password authentication but leaves the form
+          # visible. Patch and cache-bust the pinned client assets separately.
+          image: harbor.rcrumana.xyz/proxy-ghcr/seerr-team/seerr:v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              cp -a /app/.next/. /patched-next/
+              chown 1000:1000 /patched-next
+
+              stylesheets=0
+              for stylesheet in /patched-next/static/chunks/*.css; do
+                test -f "$stylesheet" || continue
+                original_name=$(basename "$stylesheet")
+                patched_name="${original_name%.css}.quick-connect.css"
+                patched_stylesheet="$(dirname "$stylesheet")/${patched_name}"
+
+                printf '\nform[data-form-type="login"]{display:none!important}\n' >> "$stylesheet"
+                mv "$stylesheet" "$patched_stylesheet"
+
+                references=$(grep -rlF "$original_name" /patched-next || true)
+                if [ -z "$references" ]; then
+                  echo "Seerr client patch found no references to ${original_name}" >&2
+                  exit 1
+                fi
+                escaped_original=$(printf '%s' "$original_name" | sed 's/\./\\./g')
+                printf '%s\n' "$references" | while IFS= read -r reference; do
+                  sed -i "s/${escaped_original}/${patched_name}/g" "$reference"
+                done
+
+                if grep -rlF "$original_name" /patched-next >/dev/null; then
+                  echo "Seerr client patch left stale references to ${original_name}" >&2
+                  exit 1
+                fi
+                stylesheets=$((stylesheets + 1))
+              done
+
+              if [ "$stylesheets" -lt 1 ]; then
+                echo "Seerr client patch found no stylesheets" >&2
+                exit 1
+              fi
+              echo "Seerr Quick Connect-only client patch applied to ${stylesheets} stylesheets"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: patched-seerr-next
+              mountPath: /patched-next
         - name: install-vuetorrent
           image: harbor.rcrumana.xyz/mirror/linuxserver/qbittorrent:5.2.3_v2.0.13-ls469
           securityContext:
@@ -364,6 +431,7 @@ spec:
             - { name: http, containerPort: 5055, protocol: TCP }
           volumeMounts:
             - { name: jellyseerr-config, mountPath: /app/config }
+            - { name: patched-seerr-next, mountPath: /app/.next }
           resources:
             requests: { cpu: "50m", memory: "256Mi" }
             limits:   { cpu: "2", memory: "2Gi" }

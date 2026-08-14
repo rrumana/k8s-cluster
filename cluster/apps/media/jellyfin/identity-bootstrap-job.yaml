@@ -110,7 +110,7 @@ spec:
 
               branding_payload='{
                 "LoginDisclaimer":"<form action=\"https://jellyfin.rcrumana.xyz/sso/OID/start/authentik\"><button class=\"raised block emby-button button-submit\">Sign in with Authentik</button></form>",
-                "CustomCss":"a.raised.emby-button { padding: 0.9em 1em; color: inherit !important; } .disclaimerContainer { display: block; }",
+                "CustomCss":"a.raised.emby-button { padding: 0.9em 1em; color: inherit !important; } .disclaimerContainer { display: block; } #loginPage .manualLoginForm, #loginPage .btnManual, #loginPage .btnForgotPassword { display: none !important; }",
                 "SplashscreenEnabled":false
               }'
               curl -fsS -X POST \
@@ -118,7 +118,7 @@ spec:
                 -H "X-Emby-Token: ${JELLYFIN_API_KEY}" \
                 --data-binary "$branding_payload" \
                 "${base_url}/System/Configuration/Branding"
-              echo "Jellyfin SSO login button configured"
+              echo "Jellyfin Authentik and Quick Connect-only login configured"
         - name: harden-users
           image: harbor.rcrumana.xyz/proxy-dockerhub/library/python:3.14-slim
           imagePullPolicy: IfNotPresent

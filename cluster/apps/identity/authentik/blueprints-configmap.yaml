@@ -323,7 +323,7 @@ data:
 
             client_group_names = {
                 "app-homepage-client",
-                "app-hypermind",
+                "app-gitea",
                 "app-immich",
                 "app-jellyfin",
                 "app-librechat",

@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        librechat.rcrumana.xyz/config-revision: "2026-08-06-authentik-label"
+        librechat.rcrumana.xyz/config-revision: "2026-08-14-openid-readiness"
         linkerd.io/inject: enabled
         config.linkerd.io/skip-outbound-ports: "6379"
       labels:
@@ -79,6 +79,51 @@ spec:
         - name: librechat
           image: harbor.rcrumana.xyz/proxy-ghcr/danny-avila/librechat:v0.8.7@sha256:c5db3331b845e1f289f8d04c0c77936c4bbe372f76730a804abc1c37e44d23a9
           imagePullPolicy: IfNotPresent
+          # LibreChat registers its OpenID strategy only once during startup.
+          # Do not start the API until Authentik returns valid discovery data.
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              node <<'NODE'
+              const endpoint = 'https://auth.rcrumana.xyz/application/o/librechat/.well-known/openid-configuration';
+              const expectedIssuer = 'https://auth.rcrumana.xyz/application/o/librechat/';
+              const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+              (async () => {
+                for (let attempt = 1; attempt <= 60; attempt += 1) {
+                  try {
+                    const response = await fetch(endpoint, {
+                      signal: AbortSignal.timeout(5000),
+                    });
+                    if (!response.ok) {
+                      throw new Error(`discovery returned HTTP ${response.status}`);
+                    }
+
+                    const metadata = await response.json();
+                    if (metadata.issuer !== expectedIssuer) {
+                      throw new Error(`unexpected issuer ${JSON.stringify(metadata.issuer)}`);
+                    }
+
+                    console.log('Authentik LibreChat OpenID discovery is ready');
+                    return;
+                  } catch (error) {
+                    console.error(`OpenID readiness attempt ${attempt}/60 failed: ${error.message}`);
+                    if (attempt < 60) {
+                      await delay(5000);
+                    }
+                  }
+                }
+
+                throw new Error('Authentik LibreChat OpenID discovery did not become ready');
+              })().catch((error) => {
+                console.error(error);
+                process.exit(1);
+              });
+              NODE
+
+              exec npm run backend
           ports:
             - containerPort: 3080
               name: http
@@ -118,6 +163,12 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /oauth/openid
+              port: http
+            failureThreshold: 150
+            periodSeconds: 5
           livenessProbe:
             tcpSocket:
               port: http

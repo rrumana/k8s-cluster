@@ -16,8 +16,9 @@ repository source used by Argo CD during the initial migration.
 - OpenSearch-backed issue and repository indexes. The `gitea` OpenSearch user
   can only operate on `gitea_issues*` and `gitea_codes*` plus read cluster
   health. Indexes are rebuildable and are not part of the authoritative data.
-- Authentik OpenID Connect for normal sign-in, plus a generated local
-  `gitea-admin` break-glass account.
+- Authentik OpenID Connect as the only displayed web sign-in method. Password
+  and passkey sign-in are disabled; a generated local `gitea-admin` account is
+  retained for GitOps-enabled break-glass recovery.
 - Private HAProxy ingress with HTTPS only. SSH Git transport is disabled.
 - One organization-scoped Actions runner in the isolated `ci` namespace. It
   has capacity one, a rootless DinD sidecar, no Kubernetes token, no host
@@ -61,12 +62,13 @@ order:
    provider and `app-gitea` group are created.
 4. Verify Authentik discovery returns a document at
    `https://auth.rcrumana.xyz/application/o/gitea/.well-known/openid-configuration`.
-5. Sync/verify the `gitea` Application and sign in with the local break-glass
-   account first. Its username is `gitea-admin`; read the password from Vault
-   path `kv/apps/development/gitea-admin`, property `password`.
-6. Add the intended operators to Authentik `app-gitea` (platform administrators
-   are already authorized), test OIDC, then retain the local account solely for
-   recovery.
+5. Add the intended operators to Authentik `app-gitea` (platform administrators
+   are already authorized), then sync/verify the `gitea` Application and test
+   OIDC.
+6. Retain the local `gitea-admin` account solely for recovery. Its password is
+   in Vault at `kv/apps/development/gitea-admin`, property `password`. A reviewed
+   GitOps change that temporarily sets `ENABLE_PASSWORD_SIGNIN_FORM: true` is
+   required before the account can sign in through the web UI.
 
 The `gitea-actions` Application is intentionally manual. Gitea must exist before
 its organization registration token can be created.
@@ -160,7 +162,8 @@ existing safety hold. Until both database and filesystem backup/restore tests
 pass, Gitea must not contain the only copy of any repository.
 
 A valid recovery captures both PostgreSQL and CephFS within a controlled
-window. Restore in this order:
+window. If Authentik is unavailable, first prepare the reviewed temporary
+GitOps override described above. Restore in this order:
 
 1. Vault/External Secrets values, especially Gitea encryption and JWT keys.
 2. `pg-platform` and the `gitea` database.

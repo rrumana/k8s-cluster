@@ -4,6 +4,9 @@ metadata:
   name: immich-server
 spec:
   template:
+    metadata:
+      annotations:
+        media.rcrumana.xyz/identity-config-revision: "2026-08-14-disable-password-login"
     spec:
       containers:
         - name: immich-server

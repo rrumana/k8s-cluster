@@ -181,27 +181,12 @@ data:
             description: Password vault
             namespace: productivity
             app: vaultwarden
-        - Hypermind:
-            icon: mdi-brain
-            href: https://hypermind.rcrumana.xyz
-            description: Shared map and chat
-            namespace: other
-            app: hypermind
-            widget:
-              type: customapi
-              url: http://hypermind.other.svc.cluster.local/api/stats
-              refreshInterval: 30000
-              mappings:
-                - field: peers
-                  label: Peers
-                  format: size
-                - field: totalUnique
-                  label: Known
-                  format: number
-                - field: diagnostics.heartbeatsReceived
-                  label: Received
-                  format: number
-              hideErrors: true
+        - Gitea:
+            icon: gitea.png
+            href: https://git.rcrumana.xyz
+            description: Git repositories and collaboration
+            namespace: development
+            app: gitea
         - Uptime Kuma:
             icon: uptime-kuma.png
             href: https://uptime.rcrumana.xyz
