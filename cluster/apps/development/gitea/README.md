@@ -19,8 +19,11 @@ repository source used by Argo CD during the initial migration.
 - Authentik OpenID Connect as the only displayed web sign-in method. Password
   and passkey sign-in are disabled. The Authentik-backed `admin` account is the
   instance administrator; no permanent local administrator is retained.
-- Private HAProxy ingress with HTTPS only. SSH Git transport is disabled.
-- One organization-scoped Actions runner in the isolated `ci` namespace. It
+- Private HAProxy ingress for HTTPS and a dedicated MetalLB service at
+  `ssh.git.rcrumana.xyz:22` (`192.168.1.237`) for Git-over-SSH. Gitea's
+  rootless built-in server listens on unprivileged container port `2222` and
+  accepts only Gitea-managed SSH keys.
+- One instance-scoped Actions runner in the isolated `ci` namespace. It
   has capacity one, a rootless DinD sidecar, no Kubernetes token, no host
   mounts, and egress limited to Gitea, Harbor, DNS, and public HTTP(S).
 
@@ -41,8 +44,8 @@ encrypted credentials and signed tokens depend on them.
 No live-cluster command is required to prepare this change. Before merging:
 
 1. Review the complete diff and rendered output.
-2. Confirm private DNS resolves `git.rcrumana.xyz` to `192.168.1.230` from the
-   LAN and tailnet.
+2. Confirm private DNS resolves `git.rcrumana.xyz` to `192.168.1.230` and
+   `ssh.git.rcrumana.xyz` to `192.168.1.237` from the LAN and tailnet.
 3. Seed the pinned charts and images in Harbor. This changes Harbor, not the
    Kubernetes API. The script requires Helm and `crane`; `crane copy` preserves
    and verifies the manifest digests referenced by the workloads:
@@ -68,45 +71,106 @@ order:
    local administrator account exists.
 
 The `gitea-actions` Application is intentionally manual. Gitea must exist before
-its organization registration token can be created.
+its instance registration token can be created.
 
 ## Actions runner bootstrap
 
-Create a dedicated trusted organization in Gitea, then generate an
-organization-scoped runner registration token. Write only that token to Vault:
+Generate an instance-scoped runner registration token from the Gitea
+administrator settings. This is appropriate while the instance has one trusted
+repository owner and avoids registering the same runner separately for every
+personal repository. Write only that token to Vault:
 
 - path: `kv/apps/development/gitea-actions-runner`
 - property: `token`
 
 After writing the token, manually sync the `gitea-actions` Application. Its
 negative sync wave makes Argo wait for the `gitea-actions-token` ExternalSecret
-before starting the runner. Keep runner ownership at the organization level,
-do not register it instance-wide, and initially enable Actions only for repos
-whose workflow changes require trusted review. Fork pull requests and
+before starting the runner. Initially enable Actions only for repositories
+whose workflow changes receive trusted review. Fork pull requests and
 untrusted contributors must require approval before a workflow receives
 repository secrets.
 
 The configured `ubuntu-latest` job image is a digest-pinned Gitea runner image
 mirrored in Harbor. Repository secrets such as Harbor robot credentials belong
-in Gitea's organization/repository Actions secrets, not in this cluster repo.
+in Gitea's repository Actions secrets, not in this cluster repo.
 
 ## Repository migration
 
-Migrate one repository at a time:
+The authoritative inventory and dry-run-first migration utility live in
+`docs/gitea-repository-migration.json` and
+`scripts/gitea-repository-migrate.py`. They preserve the personal ownership
+model: GitHub owner `rrumana` maps directly to Gitea owner `rcrumana`; no
+organization or service account is required for repository ownership.
 
-1. Create an empty private repository in the trusted Gitea organization.
-2. Push all refs and verify branches, tags, releases, LFS objects, and default
-   branch protection.
-3. Configure a Gitea push mirror to the existing public GitHub repository with
-   a narrowly scoped GitHub token.
-4. Push a test commit to Gitea and verify the GitHub mirror advances.
-5. Move developer `origin` to the HTTPS Gitea URL. Keep a read-only `github`
+Migrate repositories in controlled batches:
+
+1. Refresh the inventory with an authenticated GitHub token so private
+   repositories are included.
+2. Review the plan. Existing repositories are preserved unless named with the
+   explicit `--replace` option; the current `k8s-cluster` and `portfolio`
+   proof-of-concept repositories are intended one-time replacements.
+3. Import GitHub repositories as ordinary, non-mirror Gitea repositories.
+4. Verify every branch and tag ref before adding the outbound mirror.
+5. Configure a Gitea push mirror to the existing GitHub repository using a
+   narrowly scoped GitHub token, then verify the mirror remains current.
+6. Move developer `origin` to the SSH Gitea URL. Keep a read-only `github`
    remote for diagnostics if useful.
-6. Leave Argo CD pointed at GitHub until the Gitea backup/restore path has been
-   tested and the desired control-plane dependency has been reviewed.
+7. Leave Argo CD pointed at GitHub until the later controlled GitOps cutover.
 
 Gitea push mirroring is deliberately one-way. Do not accept independent writes
 to both Gitea and GitHub after cutover; that creates divergent authorities.
+
+Create a GitHub fine-grained personal access token for `rrumana` with access
+to every repository in the inventory. It needs repository metadata read,
+contents read/write, issues read, pull requests read, and workflows write when
+workflow files are present. Create a Gitea token on the `rcrumana` account with
+`read:user` and `write:repository`. Use separate named tokens if narrower
+rotation and audit boundaries are useful; separate Gitea user accounts are not
+required.
+
+Load both tokens without writing them to disk, refresh the complete inventory,
+and review the result:
+
+```bash
+read -rsp 'GitHub token: ' GITHUB_TOKEN && echo
+export GITHUB_TOKEN
+read -rsp 'Gitea token: ' GITEA_TOKEN && echo
+export GITEA_TOKEN
+
+./scripts/gitea-repository-migrate.py discover --write
+git diff -- docs/gitea-repository-migration.json
+./scripts/gitea-repository-migrate.py plan \
+  --replace k8s-cluster \
+  --replace portfolio
+```
+
+After reviewing that plan, perform the imports. These are the only two names
+authorized for deletion; every other existing repository is preserved:
+
+```bash
+./scripts/gitea-repository-migrate.py apply \
+  --execute \
+  --replace k8s-cluster \
+  --replace portfolio
+./scripts/gitea-repository-migrate.py verify
+unset GITHUB_TOKEN GITEA_TOKEN
+```
+
+Use repeated `--repository NAME` arguments on `plan`, `apply`, or `verify` to
+operate on a smaller batch. The apply command stops before configuring a push
+mirror if GitHub and Gitea branch/tag refs differ. Archived GitHub repositories
+must be unarchived before they can receive mirror updates, or their inventory
+entry must override `githubPushMirror.enabled` to `false`.
+
+Add a public key under Gitea **Settings -> SSH / GPG Keys**, then test without
+changing a repository:
+
+```bash
+ssh -T git@ssh.git.rcrumana.xyz
+```
+
+Gitea intentionally rejects an interactive shell; a successful authentication
+prints the account name and exits.
 
 ## Storage choice: CephFS and RGW
 

@@ -120,10 +120,10 @@ Export the OPNsense configuration before making changes.
    - WAN TCP 80 to `K8S_INGRESS_VIP:80` for HTTPS redirects
 3. Enable logging on those rules.
 4. Confirm there are no WAN forwards to the Kubernetes API, nodes,
-   `192.168.1.232-192.168.1.236`, Ceph/NFS, UniFi, or Harbor.
+   `192.168.1.232-192.168.1.237`, Ceph/NFS, UniFi, Gitea SSH, or Harbor.
 5. Prevent UPnP from creating rules into the node and MetalLB ranges.
-6. Keep Unbound split-DNS overrides for cluster names pointed at
-   `192.168.1.230`.
+6. Keep Unbound split-DNS overrides for HTTP(S) cluster names pointed at
+   `192.168.1.230`; point `ssh.git.rcrumana.xyz` at `192.168.1.237`.
 7. Disable NAT reflection for these names; split DNS provides internal routing.
 8. Do not publish IPv6/AAAA records during this rollout.
 

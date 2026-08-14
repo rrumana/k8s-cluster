@@ -103,9 +103,10 @@ HAProxy has two ingress classes:
 
 Cloudflare-proxied origins accept only Cloudflare and private-network sources.
 Direct public services retain client source addresses for native clients,
-large uploads, and access policy. The documented perimeter exposes only TCP
-80/443 to the HAProxy VIP; it does not expose the Kubernetes API, nodes,
-storage services, Harbor, or the other MetalLB VIPs to WAN.
+large uploads, and access policy. The documented WAN perimeter exposes only
+TCP 80/443 to the HAProxy VIP; it does not expose the Kubernetes API, nodes,
+storage services, Harbor, or the other MetalLB VIPs. Gitea SSH uses a separate
+LAN/tailnet MetalLB VIP and has no WAN rule by default.
 
 A Kubernetes `ValidatingAdmissionPolicy` checks the ingress contract, explicit
 TLS secrets, approved namespaces, and non-wildcard `rcrumana.xyz` hosts.
@@ -219,6 +220,7 @@ ingress notes are in [docs/apps.md](docs/apps.md).
 | `media/immich-server` | `192.168.1.234` |
 | `productivity/unifi-os-server-tcp` and `unifi-os-server-udp` | `192.168.1.235` |
 | `rook-ceph/ceph-nfs-bulk` | `192.168.1.236` |
+| `development/gitea-ssh` | `192.168.1.237` |
 
 These LAN addresses are not a statement of WAN exposure. Public HTTP(S)
 traffic terminates through HAProxy at `192.168.1.230`.

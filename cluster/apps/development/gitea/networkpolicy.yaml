@@ -21,6 +21,12 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # The rootless built-in SSH server listens on 2222 behind the dedicated
+    # MetalLB service at ssh.git.rcrumana.xyz:22. Authentication is exclusively
+    # by Gitea-managed SSH keys; WAN exposure remains an OPNsense decision.
+    - ports:
+        - protocol: TCP
+          port: 2222
     - from:
         - namespaceSelector:
             matchLabels:

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "inventory": {
+    "generatedAt": "2026-08-14T21:16:14+00:00",
+    "scope": "public-only",
+    "repositoryCount": 29,
+    "notes": "Refresh with an authenticated GITHUB_TOKEN before applying so private repositories are included."
+  },
+  "github": {
+    "apiUrl": "https://api.github.com",
+    "owner": "rrumana"
+  },
+  "gitea": {
+    "apiUrl": "https://git.rcrumana.xyz/api/v1",
+    "owner": "rcrumana"
+  },
+  "defaults": {
+    "migrateMetadata": {
+      "issues": true,
+      "labels": true,
+      "milestones": true,
+      "pullRequests": true,
+      "releases": true,
+      "wiki": true,
+      "lfs": true
+    },
+    "githubPushMirror": {
+      "enabled": true,
+      "interval": "8h0m0s",
+      "syncOnCommit": true
+    }
+  },
+  "repositories": [
+    { "sourceName": "Advent-Of-Code-2023", "destinationName": "Advent-Of-Code-2023", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Advent_Of_Code_2024", "destinationName": "Advent_Of_Code_2024", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "arch", "destinationName": "arch", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "arch-dcli", "destinationName": "arch-dcli", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "CPP_Refresher", "destinationName": "CPP_Refresher", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "EE292D-Labs", "destinationName": "EE292D-Labs", "enabled": true, "visibility": "public", "archived": false, "fork": true, "defaultBranch": "main" },
+    { "sourceName": "fix_sys", "destinationName": "fix_sys", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "game_of_life", "destinationName": "game_of_life", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "hello_golang", "destinationName": "hello_golang", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "homelab", "destinationName": "homelab", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "k8s-cluster", "destinationName": "k8s-cluster", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "k8s-homelab", "destinationName": "k8s-homelab", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Leetcode", "destinationName": "Leetcode", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Neovim", "destinationName": "Neovim", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "OpenAI", "destinationName": "OpenAI", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "ParKissat-rs", "destinationName": "ParKissat-rs", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "password-manager", "destinationName": "password-manager", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "portfolio", "destinationName": "portfolio", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Random-Scripts", "destinationName": "Random-Scripts", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Reverse_Game_Of_Life", "destinationName": "Reverse_Game_Of_Life", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Rosu", "destinationName": "Rosu", "enabled": true, "visibility": "public", "archived": false, "fork": true, "defaultBranch": "master" },
+    { "sourceName": "rrumana", "destinationName": "rrumana", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "RuID", "destinationName": "RuID", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Rust-ToDo", "destinationName": "Rust-ToDo", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "Rust-Webapp", "destinationName": "Rust-Webapp", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "rust_gpt_cli", "destinationName": "rust_gpt_cli", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "rust_lecture", "destinationName": "rust_lecture", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "SFML_Doodle_Jump", "destinationName": "SFML_Doodle_Jump", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" },
+    { "sourceName": "text_to_input", "destinationName": "text_to_input", "enabled": true, "visibility": "public", "archived": false, "fork": false, "defaultBranch": "main" }
+  ]
+}
