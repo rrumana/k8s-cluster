@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/rrumana/k8s-homelab-2.git
     targetRevision: main
-    path: cluster/apps/media/immich-identity
+    path: cluster/apps/media/immich
 
   destination:
     server: https://kubernetes.default.svc

@@ -21,6 +21,7 @@ spec:
       annotations:
         linkerd.io/inject: enabled
         config.linkerd.io/skip-outbound-ports: "6379"
+        media.rcrumana.xyz/identity-config-revision: "2026-08-14-disable-password-login"
       labels:
         app: immich
         component: server
@@ -34,12 +35,18 @@ spec:
           ports:
             - containerPort: 2283
               name: http
+          env:
+            - name: IMMICH_CONFIG_FILE
+              value: /etc/immich/immich.json
           envFrom:
             - configMapRef:
                 name: immich-config
             - secretRef:
                 name: immich-secret
           volumeMounts:
+            - name: identity-config
+              mountPath: /etc/immich
+              readOnly: true
             - name: upload
               mountPath: /usr/src/app/upload
             - name: dri
@@ -67,6 +74,12 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
       volumes:
+        - name: identity-config
+          secret:
+            secretName: immich-identity-config
+            items:
+              - key: immich.json
+                path: immich.json
         - name: upload
           persistentVolumeClaim:
             claimName: immich-photos-critical

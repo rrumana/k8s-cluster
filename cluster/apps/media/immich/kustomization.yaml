@@ -6,6 +6,7 @@ namespace: media
 resources:
   - serviceaccount.yaml
   - externalsecret.yaml
+  - identity-externalsecret.yaml
   - server-deployment.yaml
   - ml-deployment.yaml
   - services.yaml

@@ -47,7 +47,7 @@ material, or recovery code in Git.
 ## Vault prerequisites
 
 Create these KV v2 entries before enabling the corresponding Argo CD
-application or overlay:
+application configuration:
 
 | Vault path | Required properties |
 |---|---|
@@ -75,10 +75,10 @@ existing shared pull credential at
 Harbor account.
 
 The Immich `config.json` value must be a complete export of the current Immich
-system configuration, not merely the example committed beside the overlay.
-Merge the OIDC and new SMTP values into that export. Keep password login enabled
-during the pilot. The example exists to document the required identity fields
-and must not be used verbatim.
+system configuration, not merely the example committed beside the application.
+Merge the OIDC and new SMTP values into that export. The ExternalSecret enforces
+disabled password login when it renders the runtime configuration. The example
+exists to document the required identity fields and must not be used verbatim.
 
 For Vaultwarden, copy `scripts/seed-vaultwarden-access.sh` to the Balthasar
 directory containing `vault-init.json` and run it from that directory. It
@@ -204,9 +204,7 @@ Only after these checks should `auth.rcrumana.xyz` be published as DNS-only.
 3. Export the current Immich configuration from the administration page.
 4. Merge the OIDC settings and dedicated SMTP credential into the export and
    write the complete JSON document to the Vault path above.
-5. Change the Immich Argo CD source path from
-   `cluster/apps/media/immich` to
-   `cluster/apps/media/immich-identity`.
+5. Confirm the Immich Argo CD source path is `cluster/apps/media/immich`.
 6. Sync and validate OIDC while the Ingress remains private.
 7. Invite a test user into `app-immich`.
 8. After web, iOS, Android, refresh, logout, upload, and mail tests pass, change
@@ -217,8 +215,10 @@ Only after these checks should `auth.rcrumana.xyz` be published as DNS-only.
    - public edge `direct`
    - no private source allowlist
 
-Rollback by restoring the base Argo path and private Ingress. The local Immich
-administrator and password login remain available during the pilot.
+Rollback public exposure by restoring the private Ingress. Re-enabling Immich
+password login requires an explicit, reviewed GitOps change to the
+ExternalSecret template; changing the Argo source path does not bypass the
+identity configuration.
 
 ## Nextcloud cutover
 
