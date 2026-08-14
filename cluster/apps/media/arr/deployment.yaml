@@ -182,13 +182,17 @@ spec:
             capabilities:
               drop:
                 - ALL
+              add:
+                # Hand the completed emptyDir tree to Seerr's runtime UID.
+                - CHOWN
           command:
             - /bin/sh
             - -ec
           args:
             - |
-              cp -a /app/.next/. /patched-next/
-              chown 1000:1000 /patched-next
+              # Keep the copied tree root-owned while it is being edited. The
+              # finished tree is handed to Seerr's runtime UID below.
+              cp -R /app/.next/. /patched-next/
 
               stylesheets=0
               for stylesheet in /patched-next/static/chunks/*.css; do
@@ -200,7 +204,7 @@ spec:
                 printf '\nform[data-form-type="login"]{display:none!important}\n' >> "$stylesheet"
                 mv "$stylesheet" "$patched_stylesheet"
 
-                references=$(grep -rlF "$original_name" /patched-next || true)
+                references=$(grep -rlF "$original_name" /patched-next 2>/dev/null || true)
                 if [ -z "$references" ]; then
                   echo "Seerr client patch found no references to ${original_name}" >&2
                   exit 1
@@ -210,7 +214,7 @@ spec:
                   sed -i "s/${escaped_original}/${patched_name}/g" "$reference"
                 done
 
-                if grep -rlF "$original_name" /patched-next >/dev/null; then
+                if grep -rlF "$original_name" /patched-next >/dev/null 2>&1; then
                   echo "Seerr client patch left stale references to ${original_name}" >&2
                   exit 1
                 fi
@@ -221,6 +225,7 @@ spec:
                 echo "Seerr client patch found no stylesheets" >&2
                 exit 1
               fi
+              chown -R 1000:1000 /patched-next
               echo "Seerr Quick Connect-only client patch applied to ${stylesheets} stylesheets"
           resources:
             requests:
