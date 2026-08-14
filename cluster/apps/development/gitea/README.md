@@ -64,11 +64,8 @@ order:
 5. Add the intended operators to Authentik `app-gitea` (platform administrators
    are already authorized), then complete one OIDC login for the intended
    `admin` identity.
-6. Sync or resync the `gitea` Application. Its idempotent PostSync migration
-   promotes the OIDC-backed `admin`, verifies the result, and purges both the
-   legacy local `gitea-admin` and any chart-default `gitea_admin`. The migration
-   uses a short-lived API token and retains neither a local password nor a
-   second administrator.
+6. Verify the OIDC-backed `admin` has instance administrator privileges and no
+   local administrator account exists.
 
 The `gitea-actions` Application is intentionally manual. Gitea must exist before
 its organization registration token can be created.

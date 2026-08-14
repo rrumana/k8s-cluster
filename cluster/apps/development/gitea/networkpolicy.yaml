@@ -48,13 +48,6 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: gitea-admin-migration
-      ports:
-        - protocol: TCP
-          port: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -148,46 +141,3 @@ spec:
           port: 80
         - protocol: TCP
           port: 443
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: gitea-admin-migration
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: gitea-admin-migration
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: gitea
-              app.kubernetes.io/name: gitea
-      ports:
-        - protocol: TCP
-          port: 3000
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: databases
-          podSelector:
-            matchLabels:
-              cnpg.io/cluster: pg-platform
-      ports:
-        - protocol: TCP
-          port: 5432
