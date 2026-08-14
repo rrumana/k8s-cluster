@@ -56,12 +56,12 @@ service:
     port: 3000
     clusterIP: None
   ssh:
-    type: LoadBalancer
+    # Keep the chart-owned Service headless. Kubernetes cannot convert its
+    # immutable clusterIP=None into a LoadBalancer cluster IP in place; the
+    # separate gitea-ssh-external Service provides MetalLB exposure.
+    type: ClusterIP
     port: 22
-    loadBalancerIP: 192.168.1.237
-    externalTrafficPolicy: Local
-    annotations:
-      metallb.io/address-pool: default-pool
+    clusterIP: None
 
 persistence:
   enabled: true

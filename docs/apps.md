@@ -446,7 +446,7 @@ snapshot.
 | `media` | `immich-server` | `192.168.1.234` | `2283/TCP` |
 | `productivity` | `unifi-os-server-tcp` | `192.168.1.235` | `11443/TCP`, `5005/TCP`, `5671/TCP`, `6789/TCP`, `8080/TCP`, `8443/TCP`, `8843/TCP`, `8444/TCP`, `8880/TCP`, `8881/TCP`, `8882/TCP`, `9543/TCP`, `11084/TCP` |
 | `productivity` | `unifi-os-server-udp` | `192.168.1.235` | `3478/UDP`, `5514/UDP`, `10001/UDP`, `10003/UDP` |
-| `development` | `gitea-ssh` | `192.168.1.237` | `22/TCP` |
+| `development` | `gitea-ssh-external` | `192.168.1.237` | `22/TCP` |
 
 ## Appendix C: External service bridges
 

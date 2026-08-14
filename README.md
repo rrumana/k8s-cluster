@@ -220,7 +220,7 @@ ingress notes are in [docs/apps.md](docs/apps.md).
 | `media/immich-server` | `192.168.1.234` |
 | `productivity/unifi-os-server-tcp` and `unifi-os-server-udp` | `192.168.1.235` |
 | `rook-ceph/ceph-nfs-bulk` | `192.168.1.236` |
-| `development/gitea-ssh` | `192.168.1.237` |
+| `development/gitea-ssh-external` | `192.168.1.237` |
 
 These LAN addresses are not a statement of WAN exposure. Public HTTP(S)
 traffic terminates through HAProxy at `192.168.1.230`.
