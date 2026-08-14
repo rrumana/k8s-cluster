@@ -5,6 +5,7 @@ namespace: development
 
 resources:
   - externalsecrets.yaml
+  - admin-migration-job.yaml
   - networkpolicy.yaml
   - prometheusrule.yaml
 

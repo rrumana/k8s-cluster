@@ -17,8 +17,8 @@ repository source used by Argo CD during the initial migration.
   can only operate on `gitea_issues*` and `gitea_codes*` plus read cluster
   health. Indexes are rebuildable and are not part of the authoritative data.
 - Authentik OpenID Connect as the only displayed web sign-in method. Password
-  and passkey sign-in are disabled; a generated local `gitea-admin` account is
-  retained for GitOps-enabled break-glass recovery.
+  and passkey sign-in are disabled. The Authentik-backed `admin` account is the
+  instance administrator; no permanent local administrator is retained.
 - Private HAProxy ingress with HTTPS only. SSH Git transport is disabled.
 - One organization-scoped Actions runner in the isolated `ci` namespace. It
   has capacity one, a rootless DinD sidecar, no Kubernetes token, no host
@@ -30,12 +30,11 @@ and pushes them into Vault with `IfNotExists`; normal reconciliation never
 rotates those stateful values.
 
 The generated Vault records live under `kv/apps/development/` as
-`gitea-postgresql`, `gitea-valkey`, `gitea-admin`, `gitea-oidc`,
-`gitea-secret-key`, `gitea-internal-token`, `gitea-lfs-jwt`,
-`gitea-oauth2-jwt`, and `gitea-opensearch`. Back up these records before
-accepting authoritative data. In particular, never casually regenerate the
-Gitea secret/JWT keys: existing encrypted credentials and signed tokens depend
-on them.
+`gitea-postgresql`, `gitea-valkey`, `gitea-oidc`, `gitea-secret-key`,
+`gitea-internal-token`, `gitea-lfs-jwt`, `gitea-oauth2-jwt`, and
+`gitea-opensearch`. Back up these records before accepting authoritative data.
+In particular, never casually regenerate the Gitea secret/JWT keys: existing
+encrypted credentials and signed tokens depend on them.
 
 ## Review and first deployment
 
@@ -63,12 +62,12 @@ order:
 4. Verify Authentik discovery returns a document at
    `https://auth.rcrumana.xyz/application/o/gitea/.well-known/openid-configuration`.
 5. Add the intended operators to Authentik `app-gitea` (platform administrators
-   are already authorized), then sync/verify the `gitea` Application and test
-   OIDC.
-6. Retain the local `gitea-admin` account solely for recovery. Its password is
-   in Vault at `kv/apps/development/gitea-admin`, property `password`. A reviewed
-   GitOps change that temporarily sets `ENABLE_PASSWORD_SIGNIN_FORM: true` is
-   required before the account can sign in through the web UI.
+   are already authorized), then complete one OIDC login for the intended
+   `admin` identity.
+6. Sync or resync the `gitea` Application. Its idempotent PostSync migration
+   promotes the OIDC-backed `admin`, verifies the result, and purges the legacy
+   local `gitea-admin`. The migration uses a short-lived API token and retains
+   neither a local password nor a second administrator.
 
 The `gitea-actions` Application is intentionally manual. Gitea must exist before
 its organization registration token can be created.
@@ -162,13 +161,13 @@ existing safety hold. Until both database and filesystem backup/restore tests
 pass, Gitea must not contain the only copy of any repository.
 
 A valid recovery captures both PostgreSQL and CephFS within a controlled
-window. If Authentik is unavailable, first prepare the reviewed temporary
-GitOps override described above. Restore in this order:
+window. Authentik must be available before interactive Gitea access is restored.
+Restore in this order:
 
 1. Vault/External Secrets values, especially Gitea encryption and JWT keys.
 2. `pg-platform` and the `gitea` database.
 3. The `gitea-shared-storage` CephFS data from a matching recovery point.
-4. Gitea replicas and local break-glass authentication.
+4. The Authentik application/group membership and Gitea replicas.
 5. Valkey (sessions and queued work may be discarded if necessary).
 6. Recreate the OpenSearch indexes from Gitea.
 7. Re-register the Actions runner only if its retained state is unusable.

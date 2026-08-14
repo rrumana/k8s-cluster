@@ -85,47 +85,6 @@ spec:
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: Password
 metadata:
-  name: gitea-admin-password
-  namespace: security
-  annotations:
-    argocd.argoproj.io/sync-wave: "-30"
-spec:
-  length: 32
-  digits: 10
-  symbols: 0
-  noUpper: false
-  allowRepeat: true
-  encoding: hex
----
-apiVersion: external-secrets.io/v1alpha1
-kind: PushSecret
-metadata:
-  name: gitea-admin-password
-  namespace: security
-  annotations:
-    argocd.argoproj.io/sync-wave: "-29"
-spec:
-  refreshInterval: 1h
-  updatePolicy: IfNotExists
-  deletionPolicy: None
-  secretStoreRefs:
-    - name: vault
-      kind: ClusterSecretStore
-  selector:
-    generatorRef:
-      apiVersion: generators.external-secrets.io/v1alpha1
-      kind: Password
-      name: gitea-admin-password
-  data:
-    - match:
-        secretKey: password
-        remoteRef:
-          remoteKey: apps/development/gitea-admin
-          property: password
----
-apiVersion: generators.external-secrets.io/v1alpha1
-kind: Password
-metadata:
   name: gitea-oidc-secret
   namespace: security
   annotations:

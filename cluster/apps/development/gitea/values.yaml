@@ -133,10 +133,6 @@ deployment:
       value: /etc/ssl/certs:/etc/gitea/opensearch
 
 gitea:
-  admin:
-    existingSecret: gitea-admin
-    email: ryan.rumana@gmail.com
-    passwordMode: keepUpdated
   metrics:
     enabled: true
     serviceMonitor:

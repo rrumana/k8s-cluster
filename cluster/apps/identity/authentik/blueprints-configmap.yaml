@@ -949,6 +949,7 @@ data:
         attrs:
           name: Gitea
           provider: !KeyOf gitea-provider
+          meta_launch_url: https://git.rcrumana.xyz/user/oauth2/authentik
           policy_engine_mode: any
 
       - model: authentik_policies.policybinding
