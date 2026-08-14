@@ -43,6 +43,19 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          env:
+            - name: GITEA_APP_INI
+              value: /data/gitea/conf/app.ini
+            - name: GITEA_CUSTOM
+              value: /data/gitea
+            - name: GITEA_WORK_DIR
+              value: /data
+            - name: GITEA_TEMP
+              value: /tmp/gitea
+            - name: HOME
+              value: /data/gitea/git
+            - name: SSL_CERT_DIR
+              value: /etc/ssl/certs:/etc/gitea/opensearch
           command:
             - /bin/sh
             - -ec
@@ -50,24 +63,39 @@ spec:
             - |
               target_user="admin"
               legacy_admin="gitea-admin"
+              chart_admin="gitea_admin"
               transient_admin="gitops-admin-migration"
               api_base="http://gitea-http.development.svc.cluster.local:3000/api/v1"
 
+              refresh_users() {
+                if ! all_users=$(gitea admin user list); then
+                  echo "Unable to read the Gitea user list" >&2
+                  exit 1
+                fi
+                if ! admin_users=$(gitea admin user list --admin); then
+                  echo "Unable to read the Gitea administrator list" >&2
+                  exit 1
+                fi
+              }
+
               user_exists() {
-                gitea admin user list | awk -v username="$1" \
+                printf '%s\n' "$all_users" | awk -v username="$1" \
                   'NR > 1 && $2 == username { found = 1 } END { exit(found ? 0 : 1) }'
               }
 
               user_is_admin() {
-                gitea admin user list --admin | awk -v username="$1" \
+                printf '%s\n' "$admin_users" | awk -v username="$1" \
                   'NR > 1 && $2 == username { found = 1 } END { exit(found ? 0 : 1) }'
               }
 
               delete_user_if_present() {
                 if user_exists "$1"; then
                   gitea admin user delete --username "$1" --purge
+                  refresh_users
                 fi
               }
+
+              refresh_users
 
               if ! user_exists "$target_user"; then
                 echo "Gitea user '${target_user}' does not exist; complete its Authentik login and resync" >&2
@@ -76,6 +104,7 @@ spec:
 
               if user_is_admin "$target_user"; then
                 delete_user_if_present "$legacy_admin"
+                delete_user_if_present "$chart_admin"
                 delete_user_if_present "$transient_admin"
                 echo "Gitea user '${target_user}' is the administrator and legacy accounts are absent"
                 exit 0
@@ -83,8 +112,11 @@ spec:
 
               if user_exists "$legacy_admin" && user_is_admin "$legacy_admin"; then
                 bootstrap_admin="$legacy_admin"
+              elif user_exists "$chart_admin" && user_is_admin "$chart_admin"; then
+                bootstrap_admin="$chart_admin"
               else
                 delete_user_if_present "$legacy_admin"
+                delete_user_if_present "$chart_admin"
                 if user_exists "$transient_admin" && user_is_admin "$transient_admin"; then
                   bootstrap_admin="$transient_admin"
                 else
@@ -98,6 +130,7 @@ spec:
                     --admin)
                   unset create_output
                   bootstrap_admin="$transient_admin"
+                  refresh_users
                 fi
               fi
 
@@ -142,15 +175,18 @@ spec:
               fi
               unset update_json
 
+              refresh_users
               if ! user_is_admin "$target_user"; then
                 echo "Gitea CLI did not confirm '${target_user}' as an administrator" >&2
                 exit 1
               fi
 
               delete_user_if_present "$legacy_admin"
+              delete_user_if_present "$chart_admin"
               delete_user_if_present "$transient_admin"
 
-              if user_exists "$legacy_admin" || ! user_is_admin "$target_user"; then
+              if user_exists "$legacy_admin" || user_exists "$chart_admin" || \
+                 ! user_is_admin "$target_user"; then
                 echo "Gitea administrator migration did not reach the requested final state" >&2
                 exit 1
               fi

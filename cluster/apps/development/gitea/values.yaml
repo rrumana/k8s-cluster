@@ -133,6 +133,11 @@ deployment:
       value: /etc/ssl/certs:/etc/gitea/opensearch
 
 gitea:
+  # The chart defaults create a local gitea_admin account unless both values
+  # are explicitly empty. Authentik is the only account authority here.
+  admin:
+    username: ""
+    password: ""
   metrics:
     enabled: true
     serviceMonitor:
