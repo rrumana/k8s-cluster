@@ -46,7 +46,7 @@ spec:
             - name: BULK_RATE
               value: "700mbit"         # guaranteed rate for bulk
             - name: BULK_CEIL
-              value: "975mbit"        # permit full WAN rate while smoothing bursts
+              value: "950mbit"        # permit full WAN rate while smoothing bursts
             - name: BULK_BURST
               value: "64k"            # prevent multi-gigabit microbursts
             - name: VPN_UDP_PORT

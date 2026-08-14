@@ -12,8 +12,8 @@ data:
     : "${WAN_IFACE_LABEL:=egress-qos/wan-iface}" # node label to override iface
     : "${LINK_CEIL:=auto}"
     : "${BULK_RATE:=700mbit}"
-    : "${BULK_CEIL:=1000mbit}"
-    : "${BULK_BURST:=128k}"
+    : "${BULK_CEIL:=950mbit}"
+    : "${BULK_BURST:=64k}"
     : "${VPN_UDP_PORT:=51820}"
     : "${SYNC_INTERVAL:=5}"
     : "${LABEL_SELECTOR:=traffic-tier=bulk-seed}"
