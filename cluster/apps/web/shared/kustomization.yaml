@@ -6,6 +6,8 @@ namespace: web
 resources:
   - externalsecret.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: web-shared
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: web-shared
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

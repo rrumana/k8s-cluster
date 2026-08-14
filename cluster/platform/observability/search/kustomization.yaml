@@ -18,6 +18,8 @@ resources:
   - opensearch-retention-stage1-configmap.yaml
   - opensearch-retention-stage1-job.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: observability-logging
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: observability-logging
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

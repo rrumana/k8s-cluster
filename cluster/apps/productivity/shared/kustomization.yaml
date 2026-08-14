@@ -6,6 +6,8 @@ namespace: productivity
 resources:
   - externalsecret.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: productivity-shared
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: productivity-shared
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

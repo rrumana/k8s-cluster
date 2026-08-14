@@ -6,6 +6,8 @@ namespace: metallb-system
 resources:
   - externalsecret.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: metallb-system-shared
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: metallb-system-shared
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

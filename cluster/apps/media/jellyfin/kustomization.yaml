@@ -12,6 +12,8 @@ resources:
   - vpa.yaml
   - identity-bootstrap-job.yaml
 
-commonLabels:
-  app.kubernetes.io/name: jellyfin
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: jellyfin
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

@@ -23,6 +23,8 @@ resources:
   - pdb.yaml
   - vpa.yaml
 
-commonLabels:
-  app.kubernetes.io/name: librechat
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: librechat
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

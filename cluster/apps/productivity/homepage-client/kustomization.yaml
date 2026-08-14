@@ -22,6 +22,8 @@ configMapGenerator:
       annotations:
         argocd.argoproj.io/sync-wave: "-1"
 
-commonLabels:
-  app.kubernetes.io/name: homepage-client
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: homepage-client
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

@@ -41,7 +41,7 @@ place for recovery material.
 The flow assigns exactly these groups:
 
 - `app-homepage-client`
-- `app-hypermind`
+- `app-gitea`
 - `app-immich`
 - `app-jellyfin`
 - `app-librechat`
@@ -85,7 +85,7 @@ Then have the client verify:
 - Passkey login in a fresh private browser session
 - Password plus TOTP fallback
 - Dashboard access
-- Immich, Nextcloud, LibreChat, Jellyfin, Jellyseerr, HyperMind, and Uptime Kuma
+- Immich, Nextcloud, LibreChat, Jellyfin, Jellyseerr, Gitea, and Uptime Kuma
 - No administrative role in any application
 - Vaultwarden registration, native MFA, logout, and login
 

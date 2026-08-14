@@ -7,6 +7,8 @@ resources:
   - service.yaml
   - endpoints.yaml
 
-commonLabels:
-  app.kubernetes.io/name: opnsense
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: opnsense
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

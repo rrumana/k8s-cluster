@@ -11,6 +11,8 @@ resources:
   - vpa.yaml
   - networkpolicy.yaml
 
-commonLabels:
-  app.kubernetes.io/name: uptime-kuma
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: uptime-kuma
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

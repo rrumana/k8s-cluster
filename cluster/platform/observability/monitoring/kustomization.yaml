@@ -8,6 +8,8 @@ resources:
   - grafana-dashboard-logging-stack.yaml
   - grafana-dashboard-qdrant.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: observability-monitoring
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: observability-monitoring
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

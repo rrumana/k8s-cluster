@@ -8,6 +8,8 @@ resources:
   - fluent-bit-servicemonitor.yaml
   - fluent-bit-prometheusrule.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: observability-search-monitors
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: observability-search-monitors
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

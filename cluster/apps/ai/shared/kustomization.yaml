@@ -7,6 +7,8 @@ resources:
   - externalsecret.yaml
   - llama-models-cache-bulk-pv.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: ai-shared
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: ai-shared
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

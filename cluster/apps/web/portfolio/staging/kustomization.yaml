@@ -11,6 +11,8 @@ resources:
   - networkpolicy.yaml
   - vpa.yaml
 
-commonLabels:
-  app.kubernetes.io/name: portfolio-staging
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: portfolio-staging
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

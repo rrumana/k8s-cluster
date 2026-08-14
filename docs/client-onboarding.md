@@ -76,8 +76,10 @@ The dashboard links to each available service:
   Quick Connect gives them a Jellyfin session without entering a Jellyfin
   password. Do not use the private LAN address as a client server address.
 - **Jellyseerr:** sign in through Jellyfin and approve its Quick Connect code.
-- **HyperMind and Uptime Kuma:** opening the dashboard link uses the existing
-  Authentik session; there is no separate application password.
+- **Gitea:** opening the dashboard link redirects through Authentik and creates
+  the account on first login. There is no separate Gitea password.
+- **Uptime Kuma:** opening the dashboard link uses the existing Authentik
+  session; there is no separate application password.
 
 An application might take a short time to create its local profile on the first
 visit. Subsequent visits should be immediate.

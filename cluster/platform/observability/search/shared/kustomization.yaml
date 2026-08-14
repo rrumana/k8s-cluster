@@ -12,6 +12,8 @@ resources:
   - data-prepper-serviceaccount.yaml
   - fluent-bit-serviceaccount.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: observability-search-shared
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: observability-search-shared
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

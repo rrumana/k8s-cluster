@@ -23,6 +23,8 @@ resources:
   - llama-swap-service.yaml
   - vpa.yaml
 
-commonLabels:
-  app.kubernetes.io/name: llama-backend
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: llama-backend
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true

@@ -1,17 +1,17 @@
-# Identity and direct-access rollout
+# Identity and direct-access operations
 
-This runbook turns on the GitOps resources for self-hosted identity without
-publishing Immich or Nextcloud before their OIDC clients are ready. The cluster
-is live: execute one phase at a time and finish its verification before moving
-on.
+This runbook documents the deployed GitOps resources and operating safeguards
+for self-hosted identity and direct client access. The cluster is live: apply
+identity and exposure changes one at a time and finish verification before
+moving on.
 
 ## Exposure model
 
 | Host | Public edge | Intended access |
 |---|---|---|
 | `auth.rcrumana.xyz` | DNS-only/direct | Invited users |
-| `immich.rcrumana.xyz` | DNS-only/direct after OIDC cutover | `app-immich` |
-| `nextcloud.rcrumana.xyz` | DNS-only/direct after OIDC cutover | `app-nextcloud` |
+| `immich.rcrumana.xyz` | DNS-only/direct | `app-immich` |
+| `nextcloud.rcrumana.xyz` | DNS-only/direct | `app-nextcloud` |
 | `collabora.rcrumana.xyz` | DNS-only/direct | Nextcloud-issued WOPI sessions |
 | `whiteboard.rcrumana.xyz` | DNS-only/direct | Nextcloud-issued JWT sessions |
 | `headscale.rcrumana.xyz` | DNS-only/direct | Infrastructure users |
@@ -75,10 +75,9 @@ existing shared pull credential at
 Harbor account.
 
 The Immich `config.json` value must be a complete export of the current Immich
-system configuration, not merely the example committed beside the application.
-Merge the OIDC and new SMTP values into that export. The ExternalSecret enforces
-disabled password login when it renders the runtime configuration. The example
-exists to document the required identity fields and must not be used verbatim.
+system configuration. Merge the OIDC and SMTP values into that export. The
+ExternalSecret enforces disabled password login when it renders the runtime
+configuration; do not replace the Vault value with a partial example.
 
 For Vaultwarden, copy `scripts/seed-vaultwarden-access.sh` to the Balthasar
 directory containing `vault-init.json` and run it from that directory. It
@@ -97,7 +96,7 @@ Do not save application configuration through that page unless the same change
 is first represented in GitOps: `/data/config.json` values override environment
 variables and can otherwise make the live configuration diverge from this repo.
 
-The Jellyfin pilot uses the same pattern. Copy
+The Jellyfin integration uses the same pattern. Copy
 `scripts/seed-jellyfin-identity-secret.sh` beside `vault-init.json` on
 Balthasar and run it there. The deployment reuses the existing Homepage
 Jellyfin API key only for its declarative plugin and login-button bootstrap; it
@@ -106,10 +105,10 @@ does not create another Jellyfin service account.
 Seerr remains on a stable upstream release rather than the experimental OIDC
 preview. Stable `v3.4.1` supports Jellyfin Quick Connect, so users authenticate
 to Jellyfin through Authentik and authorize the Seerr login code from their
-Jellyfin session. Local Seerr sign-in is disabled; direct Jellyfin credentials
-remain available as a compatibility fallback. This preserves Seerr's existing
-Jellyfin user IDs and request attribution without maintaining a vulnerable
-preview image or placing forward-auth in front of its API.
+Jellyfin session. Local Seerr and direct Jellyfin credential sign-in are
+disabled. This preserves Seerr's existing Jellyfin user IDs and request
+attribution without maintaining a vulnerable preview image or placing
+forward-auth in front of its API.
 
 ## OPNsense
 
@@ -167,6 +166,7 @@ forced update test and alerting.
    routine administration.
 5. Confirm the declarative groups exist:
    - `app-homepage-client`
+   - `app-gitea`
    - `app-hypermind`
    - `app-immich`
    - `app-jellyfin`
@@ -193,7 +193,7 @@ and send `docs/client-onboarding.md` to invited clients.
 
 Only after these checks should `auth.rcrumana.xyz` be published as DNS-only.
 
-## Immich cutover
+## Immich identity configuration
 
 1. In Authentik, verify the `immich` provider has only these redirects:
    - `app.immich:///oauth-callback`
@@ -201,26 +201,22 @@ Only after these checks should `auth.rcrumana.xyz` be published as DNS-only.
    - `https://immich.rcrumana.xyz/user-settings`
 2. Configure the back-channel logout URI as
    `https://immich.rcrumana.xyz/api/oauth/backchannel-logout`.
-3. Export the current Immich configuration from the administration page.
-4. Merge the OIDC settings and dedicated SMTP credential into the export and
-   write the complete JSON document to the Vault path above.
-5. Confirm the Immich Argo CD source path is `cluster/apps/media/immich`.
-6. Sync and validate OIDC while the Ingress remains private.
-7. Invite a test user into `app-immich`.
-8. After web, iOS, Android, refresh, logout, upload, and mail tests pass, change
-   the shared Immich Ingress to:
-   - class `haproxy`
-   - exposure `public`
-   - public approval `"true"`
-   - public edge `direct`
-   - no private source allowlist
+3. Keep a complete current Immich configuration export in the Vault path
+   above, including the OIDC settings and dedicated SMTP credential.
+4. Confirm the Immich Argo CD source path is `cluster/apps/media/immich` and
+   the `immich-identity-config` ExternalSecret is Ready.
+5. After changing the Vault configuration, update the deployment's
+   `identity-config-revision` annotation through GitOps so Immich restarts and
+   reads the new file.
+6. Validate web, iOS, Android, refresh, logout, upload, and mail behavior with a
+   user in `app-immich`.
 
 Rollback public exposure by restoring the private Ingress. Re-enabling Immich
 password login requires an explicit, reviewed GitOps change to the
 ExternalSecret template; changing the Argo source path does not bypass the
 identity configuration.
 
-## Nextcloud cutover
+## Nextcloud identity configuration
 
 The pinned derived image from
 `cluster/apps/productivity/nextcloud/image/Dockerfile` has been built and
@@ -234,18 +230,13 @@ sha256:ff71a5b9d74d8d9db95e5679de069b7b0d7a46ab502789320c914648adab65f4
 The build verifies the upstream `user_oidc` 8.10.1 archive against its committed
 SHA-256 digest.
 
-1. Populate `apps/productivity/nextcloud-identity` in Vault.
-2. Add `identity-externalsecret.yaml` to the Nextcloud kustomization.
-3. Add `$values/cluster/apps/productivity/nextcloud/values-identity.yaml` after
-   the existing values file in the Nextcloud Argo CD application.
-4. Sync while the Ingress remains private.
-5. Verify the `user_oidc` app is enabled and the `authentik` provider exists.
-6. Invite a new test user into `app-nextcloud`. Do not merge the existing local
-   administrator into OIDC.
-7. Test browser, desktop, mobile, WebDAV, app passwords, sharing, large uploads,
-   logout, and SMTP.
-8. Make the shared Nextcloud Ingress public using the same four direct-edge
-   settings listed for Immich.
+1. Keep `apps/productivity/nextcloud-identity` populated in Vault.
+2. Confirm `identity-externalsecret.yaml` remains in the Nextcloud
+   kustomization and `values-identity.yaml` remains in the Argo CD Helm source.
+3. Verify the `user_oidc` app is enabled and the `authentik` provider exists.
+4. Do not merge the existing local administrator into OIDC.
+5. Test browser, desktop, mobile, WebDAV, app passwords, sharing, large uploads,
+   logout, and SMTP after identity changes.
 
 The before-starting hook is idempotent, reads the client secret from an
 environment variable, maps the stable `sub` claim to the Nextcloud UID, and

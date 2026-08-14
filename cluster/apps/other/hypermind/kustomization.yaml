@@ -9,6 +9,8 @@ resources:
   - service.yaml
   - vpa.yaml
 
-commonLabels:
-  app.kubernetes.io/name: hypermind
-  app.kubernetes.io/managed-by: argocd
+labels:
+  - pairs:
+      app.kubernetes.io/name: hypermind
+      app.kubernetes.io/managed-by: argocd
+    includeSelectors: true
