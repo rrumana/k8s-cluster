@@ -7,7 +7,7 @@ replicaCount: 2
 image:
   registry: harbor.rcrumana.xyz
   repository: mirror/gitea/gitea
-  tag: 1.27.0
+  tag: 1.27.2
   digest: sha256:caa57d932c7b78eb19b638dc38fd7c2f5512d4f90d8369c680a73bebf1b1de28
   pullPolicy: IfNotPresent
   rootless: true
