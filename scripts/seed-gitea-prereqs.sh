@@ -70,7 +70,7 @@ source_images=(
   "docker.io/library/busybox:1.38.0@sha256:1cfa4e2b09e127b9c4ed43578d3f3c18e7d44ea47b9ea98475c0cbe9086525f8"
   "docker.io/bitnami/valkey:latest@sha256:8ec3a39c0d650d76164688d6b0463e1760d4c0a7f09473587828c49b928a06a6"
   "docker.io/bitnami/valkey-sentinel:latest@sha256:e28132b5d4e6507c40afe6b0b6ec43bdf64870e0bb51a5ab938ef3757518c4cf"
-  "docker.io/bitnami/redis-exporter:latest@sha256:5b10891636c5c53f475e8989130e5128a9d46aebf528bdea6e43b9409d538041"
+  "docker.io/bitnami/redis-exporter:latest@sha256:80eea65dd56946cecde83710de21c0955c30636131d7c86620232fe6052fa2ed"
 )
 
 destination_images=(
