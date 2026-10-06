@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
+  - alertmanager-config.yaml
   - harbor-pull-creds.yaml
   - opensearch-admin-credentials.yaml
 
