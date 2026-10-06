@@ -1,0 +1,118 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-runtime-config
+  namespace: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "-20"
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: alertmanager-runtime-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      # Keep addresses and credentials in Vault, including the private recipient.
+      # Backtick strings preserve Alertmanager's templates through ESO rendering.
+      data:
+        alertmanager.yaml: |
+          global:
+            resolve_timeout: 5m
+            smtp_smarthost: smtp.mailgun.org:587
+            smtp_require_tls: true
+            smtp_from: {{ .smtpFrom | toJson }}
+            smtp_auth_username: {{ .smtpUsername | toJson }}
+            smtp_auth_password_file: /etc/alertmanager/config/smtp-password
+          route:
+            receiver: blackhole
+            group_by: [namespace, alertname]
+            group_wait: 30s
+            group_interval: 5m
+            repeat_interval: 12h
+            routes:
+              - receiver: blackhole
+                matchers:
+                  - 'alertname=~"Watchdog|InfoInhibitor"'
+              - receiver: homelab-email
+                matchers:
+                  - 'severity="critical"'
+                repeat_interval: 4h
+              # Persistent node/storage warnings are actionable across namespaces.
+              - receiver: homelab-email
+                matchers:
+                  - 'severity="warning"'
+                  - 'alertname=~"CephHealthWarning|CephOSDDown|CephOSDNearFull|CephPoolNearFull|CephMgrPrometheusCollectorStalled|KubeNodeNotReady|KubeNodeUnreachable|KubePersistentVolumeFillingUp|KubePersistentVolumeErrors"'
+              # Only email sustained workload warnings in core platform services.
+              - receiver: homelab-email
+                matchers:
+                  - 'severity="warning"'
+                  - 'namespace=~"argocd|databases|identity|monitoring|rook-ceph|security"'
+                  - 'alertname=~"KubePodCrashLooping|KubePodNotReady|KubeDeploymentReplicasMismatch|KubeStatefulSetReplicasMismatch"'
+          # Preserve the chart's severity and InfoInhibitor suppression.
+          inhibit_rules:
+            - source_matchers: ['severity="critical"']
+              target_matchers: ['severity=~"warning|info"']
+              equal: [namespace, alertname]
+            - source_matchers: ['severity="warning"']
+              target_matchers: ['severity="info"']
+              equal: [namespace, alertname]
+            - source_matchers: ['alertname="InfoInhibitor"']
+              target_matchers: ['severity="info"']
+              equal: [namespace]
+            - target_matchers: ['alertname="InfoInhibitor"']
+          receivers:
+            - name: blackhole
+            - name: homelab-email
+              email_configs:
+                - to: {{ .smtpTo | toJson }}
+                  send_resolved: true
+                  headers:
+                    Subject: '{{ `{{ template "homelab.subject" . }}` }}'
+                  # Override default HTML, which would disclose all labels/annotations.
+                  html: ''
+                  text: '{{ `{{ template "homelab.text" . }}` }}'
+          templates:
+            - /etc/alertmanager/config/notifications.tmpl
+        # A separate file avoids config-reloader environment expansion in passwords.
+        smtp-password: "{{ .smtpPassword }}"
+        notifications.tmpl: |
+          {{ `{{ define "homelab.subject" }}[Homelab] {{ .Status | toUpper }} {{ .CommonLabels.alertname }}{{ end }}` }}
+          {{ `{{ define "homelab.text" }}` }}
+          Homelab cluster notification: {{ `{{ .Status }}` }}
+          {{ `{{ range .Alerts }}` }}
+          Alert: {{ `{{ .Labels.alertname }}` }}
+          Status: {{ `{{ .Status }}` }}
+          Severity: {{ `{{ .Labels.severity }}` }}
+          Namespace: {{ `{{ .Labels.namespace }}` }}
+          Pod: {{ `{{ .Labels.pod }}` }}
+          Node: {{ `{{ .Labels.node }}` }}
+          Deployment: {{ `{{ .Labels.deployment }}` }}
+          StatefulSet: {{ `{{ .Labels.statefulset }}` }}
+          Volume claim: {{ `{{ .Labels.persistentvolumeclaim }}` }}
+          Started: {{ `{{ .StartsAt }}` }}
+          {{ `{{ if eq .Status "resolved" }}Resolved: {{ .EndsAt }}{{ end }}` }}
+          {{ `{{ end }}` }}
+          Review current status before acting. These alerts do not trigger repairs.
+          Private dashboard (LAN/Headscale): https://grafana.rcrumana.xyz
+          Operations: https://github.com/rrumana/k8s-cluster/blob/main/docs/cluster-alerting.md
+          {{ `{{ end }}` }}
+  data:
+    - secretKey: smtpUsername
+      remoteRef:
+        key: apps/monitoring/alertmanager
+        property: smtp-username
+    - secretKey: smtpPassword
+      remoteRef:
+        key: apps/monitoring/alertmanager
+        property: smtp-password
+    - secretKey: smtpFrom
+      remoteRef:
+        key: apps/monitoring/alertmanager
+        property: smtp-from
+    - secretKey: smtpTo
+      remoteRef:
+        key: apps/monitoring/alertmanager
+        property: smtp-to
